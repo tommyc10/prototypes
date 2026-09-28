@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { Menu } from '@base-ui/react/menu';
 import { Command } from 'cmdk';
 import { toast } from 'sonner';
-import { ThinkingOrb } from 'thinking-orbs';
+import { BotAvatar } from 'bot-avatars';
 import {
   AlertTriangle,
   ArrowDownWideNarrow,
@@ -373,6 +373,7 @@ export function Midnight() {
           ))}
           {visible.length === 0 && (
             <div className="mn-empty">
+              <BotAvatar type="ghost" size={96} aria-hidden="true" />
               <div>No rules match</div>
               <button className="mn-btn" onClick={() => update({ query: '', status: 'all', groupId: 'all' })}>
                 Clear filters
@@ -671,10 +672,11 @@ function Detail({
             <div className="mn-rail-card">
               {composer || (
                 <div className="mn-decide">
+                  <Proposer rule={rule} />
                   <div className="mn-decide-title">Decision</div>
                   <p>
                     {rule.status === 'proposed'
-                      ? 'Proposed by a machine. Nothing is suppressed until a person approves it.'
+                      ? `${rule.source === 'operator' ? 'Suggested by an operator' : 'Proposed by the rule engine'}. Nothing is suppressed until a person approves it.`
                       : rule.status === 'active'
                         ? `Suppressing matching incidents for ${g.name}.`
                         : `Not suppressing. Matching incidents page ${g.name}.`}
@@ -723,6 +725,35 @@ function Detail({
               )}
             </section>
           </aside>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Who proposed the rule. Machines get the ghost (the rule engine); people get initials. */
+function Proposer({ rule }: { rule: Rule }) {
+  const human = rule.source === 'operator';
+  const name = human ? rule.sourceDetail.replace(/^Suggested by /, '') : rule.sourceDetail;
+  return (
+    <div className="mn-proposer">
+      {human ? (
+        <span className="mn-proposer-human" aria-hidden="true">
+          {name
+            .split(/[\s.-]+/)
+            .filter(Boolean)
+            .slice(-2)
+            .map((w) => w[0])
+            .join('')
+            .toUpperCase()}
+        </span>
+      ) : (
+        <BotAvatar type="ghost" size={32} aria-hidden="true" />
+      )}
+      <div className="mn-proposer-text">
+        <div className="mn-proposer-name">{name}</div>
+        <div className="mn-subtle">
+          {human ? 'Operator' : 'Rule engine'} · proposed {ago(rule.createdAt)}
         </div>
       </div>
     </div>
@@ -787,12 +818,16 @@ function Composer({
       }}
     >
       <div className="mn-composer-head">
-        <div>
-          <div className="mn-composer-title">
-            {ACTION_LABEL[action]} {rule.id}
-          </div>
-          <div className="mn-subtle">
-            {on ? 'Starts suppressing' : 'Stops suppressing'} matching incidents for {groupById(rule.groupId).name}
+        <div className="mn-composer-id">
+          {/* The rule engine is the agent: it works while the backtest runs, idles once results land. */}
+          <BotAvatar type="ghost" size={32} state={on && !backtest ? 'working' : 'default'} aria-hidden="true" />
+          <div>
+            <div className="mn-composer-title">
+              {ACTION_LABEL[action]} {rule.id}
+            </div>
+            <div className="mn-subtle">
+              {on ? 'Starts suppressing' : 'Stops suppressing'} matching incidents for {groupById(rule.groupId).name}
+            </div>
           </div>
         </div>
         {on && (
@@ -809,10 +844,7 @@ function Composer({
                 </div>
               </>
             ) : (
-              <span className="mn-backtest-wait">
-                <ThinkingOrb state="searching" size={20} theme="auto" aria-hidden="true" />
-                Backtesting 90 days…
-              </span>
+              <span className="mn-backtest-wait">Rule engine is backtesting 90 days…</span>
             )}
           </div>
         )}
