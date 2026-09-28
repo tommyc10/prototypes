@@ -1929,18 +1929,21 @@
   background: var(--l3);
 }
 
-/* ---------- theme switch: circular reveal from the toggle (rare action → delight allowed) ---------- */
+/* ---------- theme switch: dissolve the new theme in over the old ---------- */
 
-html.mn-vt:not(.mn-vt-reduce)::view-transition-old(root),
-html.mn-vt:not(.mn-vt-reduce)::view-transition-new(root) {
+::view-transition-old(root) {
   animation: none;
+}
+
+::view-transition-new(root) {
+  animation: mn-dissolve 200ms var(--ease-out);
   mix-blend-mode: normal;
 }
 
-/* Reduced motion: no expanding shape, just a short cross-fade so brightness doesn't jump. */
-html.mn-vt-reduce::view-transition-old(root),
-html.mn-vt-reduce::view-transition-new(root) {
-  animation-duration: 200ms;
+@keyframes mn-dissolve {
+  from {
+    opacity: 0;
+  }
 }
 
 .mn-theme-btn svg {

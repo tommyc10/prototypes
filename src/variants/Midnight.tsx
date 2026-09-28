@@ -57,8 +57,7 @@ const SORTS = Object.keys(SORT_LABEL) as SortKey[];
 type Theme = 'dark' | 'light';
 
 /* Theme lives on <html> too, so portalled menus, ⌘K and toasts follow it.
- * Switching is rare, so it earns a moment: a circular reveal from the toggle,
- * driven by the View Transitions API + WAAPI. Reduced motion gets a cross-fade. */
+ * Switching dissolves the new theme in over the old one (see midnight.css). */
 function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('mn-theme') === 'light' ? 'light' : 'dark'));
 
@@ -71,29 +70,10 @@ function useTheme() {
     };
   }, [theme]);
 
-  const toggle = (origin?: { x: number; y: number }) => {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark';
-    const apply = () => flushSync(() => setTheme(next));
+  const toggle = () => {
+    const apply = () => flushSync(() => setTheme(theme === 'dark' ? 'light' : 'dark'));
     if (!document.startViewTransition) return apply();
-
-    const root = document.documentElement;
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    root.classList.add('mn-vt');
-    if (reduce) root.classList.add('mn-vt-reduce');
-
-    const vt = document.startViewTransition(apply);
-    if (!reduce) {
-      vt.ready.then(() => {
-        const x = origin?.x ?? innerWidth / 2;
-        const y = origin?.y ?? innerHeight / 2;
-        const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-        root.animate(
-          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
-          { duration: 480, easing: 'cubic-bezier(0.23, 1, 0.32, 1)', pseudoElement: '::view-transition-new(root)' },
-        );
-      });
-    }
-    vt.finished.finally(() => root.classList.remove('mn-vt', 'mn-vt-reduce'));
+    document.startViewTransition(apply);
   };
 
   return [theme, toggle] as const;
@@ -258,7 +238,7 @@ export function Midnight() {
           </div>
           <button
             className="mn-icon-btn mn-theme-btn"
-            onClick={(e) => toggleTheme({ x: e.clientX, y: e.clientY })}
+            onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
           >
@@ -419,7 +399,7 @@ export function Midnight() {
         onSort={(k) => update({ sort: k })}
         onAction={(a) => act(a, 'key')}
         theme={theme}
-        onToggleTheme={() => toggleTheme()}
+        onToggleTheme={toggleTheme}
       />
     </div>
   );
