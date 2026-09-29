@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How Midnight works: a guided tour of the rule management app</title>
+<style>
+  /* ============ guide tokens (borrowed from Midnight itself) ============ */
+  :root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --bg: #0b0b0b; --panel: #101010; --card: #161616; --raised: #1c1c1c; --hover: #242424;
+    --line: rgba(255,255,255,.07); --line-2: rgba(255,255,255,.11);
+    --fg: #ededed; --fg-2: #a3a3a3; --fg-3: #737373;
+    --green: #45c47a; --amber: #e0a93e; --orange: #f08a4b; --red: #f0565c; --blue: #7aa7ff; --violet: #b69cff;
+    --code-bg: #0e0e0e; --accent: #fafafa; --accent-fg: #0a0a0a;
+    --c-comment: #6b6b6b; --c-string: #a8d8a0; --c-keyword: #c9a7ff; --c-number: #f2b37a; --c-var: #8ec7ff;
+    color-scheme: dark;
+  }
+  html[data-theme='light'] {
+    --bg: #f7f7f7; --panel: #ffffff; --card: #fafafa; --raised: #ececec; --hover: #e2e2e2;
+    --line: rgba(0,0,0,.07); --line-2: rgba(0,0,0,.11);
+    --fg: #171717; --fg-2: #525252; --fg-3: #737373;
+    --green: #1f9d55; --amber: #b67c07; --orange: #c2570c; --red: #d42a31; --blue: #2f63d6; --violet: #6d45d8;
+    --code-bg: #f4f4f4; --accent: #171717; --accent-fg: #fafafa;
+    --c-comment: #8a8a8a; --c-string: #2f7d32; --c-keyword: #7b3fd1; --c-number: #b3530f; --c-var: #1f5fbf;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.65 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(127,127,127,.3); }
+  a { color: inherit; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--fg-3); }
+  code, kbd, pre { font-family: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+  :not(pre) > code {
+    padding: 1px 6px; border-radius: 5px; background: var(--raised);
+    box-shadow: inset 0 0 0 1px var(--line); font-size: .86em; white-space: nowrap;
+  }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+    border-radius: 6px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 0 var(--line-2);
+    font-size: 12px; color: var(--fg-2);
+  }
+
+  /* ============ layout ============ */
+  .shell { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100vh; }
+  .toc {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 28px 18px 40px; background: var(--panel); border-right: 1px solid var(--line);
+  }
+  .toc-brand { display: flex; align-items: center; gap: 10px; margin: 0 8px 24px; font-weight: 600; }
+  .toc-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--accent); color: var(--accent-fg); }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: ch; }
+  .toc li a {
+    display: flex; gap: 10px; padding: 6px 8px; border-radius: 7px;
+    color: var(--fg-3); font-size: 13.5px; text-decoration: none; transition: color 120ms ease, background-color 120ms ease;
+  }
+  .toc li a::before { counter-increment: ch; content: counter(ch, decimal-leading-zero); font: 11px/2 ui-monospace, monospace; color: var(--fg-3); opacity: .6; }
+  .toc li a:hover { color: var(--fg); background: var(--card); }
+  .toc li a[data-active] { color: var(--fg); background: var(--raised); }
+  .toc-foot { margin: 28px 8px 0; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--fg-3); }
+  .theme-btn {
+    display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 0; border-radius: 8px;
+    background: var(--raised); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--fg-2); font: inherit; font-size: 12.5px; cursor: pointer;
+  }
+  .theme-btn:active { transform: scale(.97); }
+  main { padding: 56px clamp(24px, 6vw, 88px) 120px; }
+  .read { max-width: 780px; }
+  .wide { max-width: 1080px; }
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: 1fr; }
+    .toc { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+
+  /* ============ type ============ */
+  h1 { margin: 0 0 14px; font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -.03em; font-weight: 650; }
+  h2 { margin: 0 0 6px; font-size: 30px; line-height: 1.15; letter-spacing: -.02em; font-weight: 620; }
+  h3 { margin: 36px 0 10px; font-size: 18px; letter-spacing: -.01em; font-weight: 600; }
+  p { margin: 0 0 14px; color: var(--fg-2); }
+  p strong, li strong { color: var(--fg); font-weight: 600; }
+  ul, ol.steps { color: var(--fg-2); padding-left: 20px; margin: 0 0 16px; }
+  li { margin: 4px 0; }
+  .lede { font-size: 18px; line-height: 1.6; color: var(--fg-2); max-width: 680px; }
+  .eyebrow { font: 12px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 14px; }
+  section.chapter { padding-top: 72px; margin-top: 72px; border-top: 1px solid var(--line); }
+  .chapter-num { font: 12px ui-monospace, monospace; color: var(--fg-3); margin-bottom: 10px; }
+  .sub { color: var(--fg-3); font-size: 16px; margin-bottom: 26px; }
+
+  /* ============ components ============ */
+  .hero-img, figure img { display: block; width: 100%; border-radius: 14px; box-shadow: 0 0 0 1px var(--line-2), 0 30px 80px rgba(0,0,0,.35); }
+  figure { margin: 26px 0; }
+  figcaption { margin-top: 10px; font-size: 13px; color: var(--fg-3); }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 30px 0; }
+  .stat { padding: 16px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .stat b { display: block; font-size: 26px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12.5px; color: var(--fg-3); }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  .callout {
+    display: flex; gap: 12px; margin: 22px 0; padding: 14px 16px; border-radius: 12px;
+    background: var(--card); box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .icon { flex: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .callout.why .icon { background: color-mix(in srgb, var(--blue) 18%, transparent); color: var(--blue); }
+  .callout.tip .icon { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+  .callout.warn .icon { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+  .callout .title { display: block; margin-bottom: 2px; color: var(--fg); font-weight: 600; font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 18px 0 24px; font-size: 14px; }
+  th { text-align: left; font-weight: 500; color: var(--fg-3); font-size: 12.5px; padding: 8px 12px; border-bottom: 1px solid var(--line-2); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--fg-2); vertical-align: top; }
+  td:first-child { color: var(--fg); white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--fg-3); }
+
+  /* code blocks */
+  .code { margin: 18px 0 24px; border-radius: 12px; overflow: hidden; background: var(--code-bg); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); font: 12px ui-monospace, monospace; color: var(--fg-3); }
+  .code-head .lang { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+  .code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; color: var(--fg); tab-size: 2; }
+  .tk-c { color: var(--c-comment); font-style: italic; }
+  .tk-s { color: var(--c-string); }
+  .tk-k { color: var(--c-keyword); }
+  .tk-n { color: var(--c-number); }
+  .tk-v { color: var(--c-var); }
+
+  /* diagrams */
+  .flow { display: grid; gap: 10px; margin: 24px 0; }
+  .flow-row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .node {
+    flex: 1; min-width: 150px; padding: 12px 14px; border-radius: 12px; background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--line-2); font-size: 13px; color: var(--fg-2);
+  }
+  .node b { display: block; color: var(--fg); font-size: 13.5px; margin-bottom: 2px; }
+  .node code { font-size: 11.5px; }
+  .node[data-tone='data'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 45%, transparent); }
+  .node[data-tone='state'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--violet) 45%, transparent); }
+  .node[data-tone='ui'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 45%, transparent); }
+  .node[data-tone='act'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 50%, transparent); }
+  .arrow { display: grid; place-items: center; color: var(--fg-3); font-size: 18px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--fg-3); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  .tree { margin: 20px 0; padding: 18px 20px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font: 13px/1.9 ui-monospace, monospace; color: var(--fg-3); white-space: pre; overflow-x: auto; }
+  .tree b { color: var(--fg); font-weight: 600; }
+  .tree em { color: var(--fg-2); font-style: normal; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12.5px; }
+
+  .ladder { counter-reset: step; list-style: none; padding: 0; margin: 20px 0; }
+  .ladder li { position: relative; padding: 12px 14px 12px 52px; margin: 8px 0; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg-2); font-size: 14px; }
+  .ladder li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 11px; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: var(--raised); color: var(--fg); font: 600 12px ui-monospace, monospace; }
+  .ladder li strong { color: var(--fg); }
+
+  .states { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 20px 0; font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--fg); }
+  .dot { width: 8px; height: 8px; border-radius: 99px; }
+  .dot.proposed { background: var(--amber); box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 16%, transparent); }
+  .dot.active { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 16%, transparent); }
+  .dot.inactive { box-shadow: inset 0 0 0 1.5px var(--fg-3); }
+  .edge { color: var(--fg-3); font: 12px ui-monospace, monospace; }
+
+  .swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 18px 0; }
+  .sw { border-radius: 10px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line-2); font-size: 11.5px; }
+  .sw div { height: 64px; }
+  .sw span { display: block; padding: 7px 9px; background: var(--card); color: var(--fg); font-weight: 500; }
+  .sw span small { display: block; color: var(--fg-3); font-family: ui-sans-serif, system-ui; font-size: 11px; }
+  @media (max-width: 700px) { .swatches { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ============ demos ============ */
+  .demo { margin: 22px 0 28px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line-2); overflow: hidden; }
+  .demo-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--fg-3); }
+  .demo-head::before { content: ''; width: 7px; height: 7px; border-radius: 99px; background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 20%, transparent); }
+  .demo-body { padding: 22px; }
+  .controls { display: flex; gap: 22px; flex-wrap: wrap; align-items: center; margin-top: 16px; font-size: 13px; color: var(--fg-2); }
+  .controls label { display: flex; align-items: center; gap: 10px; }
+  .controls output { font: 12px ui-monospace, monospace; color: var(--fg); min-width: 56px; }
+  input[type='range'] { accent-color: var(--fg); width: 180px; }
+
+  /* pane-mode demo */
+  .pane-stage { position: relative; height: 150px; border-radius: 10px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+  .pane { position: absolute; top: 12px; left: 12px; bottom: 12px; display: grid; gap: 8px; padding: 8px; border-radius: 8px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2); transition: width 120ms linear; }
+  .pane[data-mode='narrow'] { grid-template-columns: 1fr; }
+  .pane[data-mode='wide'] { grid-template-columns: 1fr 34%; }
+  .pane[data-mode='ultra'] { grid-template-columns: 1fr 1fr 28%; }
+  .pane > div { border-radius: 6px; background: var(--raised); display: grid; place-items: center; font-size: 11px; color: var(--fg-3); }
+  .pane > div.rail { background: color-mix(in srgb, var(--green) 14%, var(--raised)); color: var(--green); }
+  .mode-badge { display: inline-flex; gap: 8px; align-items: center; padding: 4px 10px; border-radius: 99px; background: var(--raised); font: 12px ui-monospace, monospace; color: var(--fg); }
+
+  /* hold demo (same technique as .mn-hold) */
+  .hold-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 16px; border-radius: 12px; background: color-mix(in srgb, var(--orange) 7%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 30%, transparent); }
+  .hold-row .t { flex: 1; min-width: 200px; font-size: 13.5px; color: var(--fg-2); }
+  .hold-row .t strong { display: block; color: var(--orange); }
+  .hold {
+    position: relative; height: 34px; padding: 0 16px; border: 0; border-radius: 8px; overflow: hidden;
+    background: color-mix(in srgb, var(--orange) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 45%, transparent);
+    color: var(--orange); font: 500 13px ui-sans-serif, system-ui, sans-serif; cursor: pointer;
+    user-select: none; -webkit-user-select: none; touch-action: none; transition: transform 160ms var(--ease-out);
+  }
+  .hold:active { transform: scale(.97); }
+  .hold-fill {
+    position: absolute; inset: 0; display: grid; place-items: center; background: var(--orange); color: #1a0d05;
+    clip-path: inset(0 100% 0 0); transition: clip-path 200ms var(--ease-out);
+  }
+  .hold[data-holding] .hold-fill { clip-path: inset(0 0 0 0); transition: clip-path 2s linear; }
+  .hold[data-done] { background: color-mix(in srgb, var(--green) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 40%, transparent); color: var(--green); }
+  .hold[data-done] .hold-fill { display: none; }
+  .ghost-btn { height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: var(--raised); color: var(--fg-2); font: inherit; font-size: 12.5px; cursor: pointer; }
+
+  /* glass demo */
+  .glass-stage { position: relative; height: 300px; border-radius: 12px; overflow: hidden; background: var(--bg); }
+  .glass-stage .behind { position: absolute; inset: 0; padding: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .glass-stage .behind div { border-radius: 10px; padding: 12px; font-size: 13px; color: var(--fg-2); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(2px); opacity: .9; }
+  .glass {
+    position: absolute; left: 50%; top: 50%; width: min(420px, 80%); transform: translate(-50%, -50%);
+    border-radius: 14px; padding: 16px 18px;
+    --tint: .6; --blur: 40px;
+    background: rgba(22, 22, 22, var(--tint));
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(1.8); backdrop-filter: blur(var(--blur)) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 0 1px rgba(255,255,255,.11), 0 24px 64px rgba(0,0,0,.5);
+    color: #ededed;
+  }
+  html[data-theme='light'] .glass { background: rgba(255,255,255,var(--tint)); color: #171717; box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(0,0,0,.1), 0 24px 64px rgba(0,0,0,.16); }
+  .glass .row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; }
+  .glass .row:first-of-type { background: rgba(127,127,127,.14); }
+  .glass .search { padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid rgba(127,127,127,.2); font-size: 14px; opacity: .7; }
+
+  /* composer enter demo (@starting-style) */
+  .enter-stage { min-height: 132px; display: grid; place-items: center; }
+  .enter-card {
+    width: min(360px, 100%); padding: 16px; border-radius: 14px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2), 0 16px 40px rgba(0,0,0,.35);
+    font-size: 13.5px; color: var(--fg-2);
+  }
+  .enter-card b { display: block; color: var(--fg); }
+  .enter-card[data-animate] {
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out), filter 220ms var(--ease-out);
+    @starting-style { opacity: 0; transform: translateY(8px) scale(.99); filter: blur(4px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .enter-card[data-animate] { transition: opacity 150ms ease; @starting-style { opacity: 0; transform: none; filter: none; } }
+  }
+
+  /* the theme dissolve — the guide uses the exact same technique as Midnight */
+  ::view-transition-old(root) { animation: none; }
+  ::view-transition-new(root) { animation: dissolve 200ms var(--ease-out); mix-blend-mode: normal; }
+  @keyframes dissolve { from { opacity: 0; } }
+
+  .kbd-table td:first-child { white-space: nowrap; }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 18px; }
+  .pill-list span { padding: 3px 10px; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2); font-size: 12.5px; color: var(--fg-2); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+  .end { margin-top: 90px; padding: 28px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="toc" aria-label="Contents">
+  <div class="toc-brand"><span class="toc-mark">◐</span> How Midnight works</div>
+  <ol>
+    <li><a href="#organised">How the project is organised</a></li>
+    <li><a href="#reading">Reading the code</a></li>
+    <li><a href="#flow">How data flows</a></li>
+    <li><a href="#model">The data model</a></li>
+    <li><a href="#policy">The rules of the game</a></li>
+    <li><a href="#state">State: store, derive, keep</a></li>
+    <li><a href="#layout">Layout & pane modes</a></li>
+    <li><a href="#tabs">The working set (tabs)</a></li>
+    <li><a href="#components">Component tour</a></li>
+    <li><a href="#keyboard">The keyboard system</a></li>
+    <li><a href="#decision">Making a decision</a></li>
+    <li><a href="#hold">Hold to override</a></li>
+    <li><a href="#impact">Impact & incidents</a></li>
+    <li><a href="#styling">The styling system</a></li>
+    <li><a href="#glass">Glass & materials</a></li>
+    <li><a href="#motion">Motion</a></li>
+    <li><a href="#palette">The ⌘K palette</a></li>
+    <li><a href="#small">Small pieces worth stealing</a></li>
+    <li><a href="#fake">What's mock, what's real</a></li>
+    <li><a href="#issues">Known issues</a></li>
+    <li><a href="#exercises">Exercises</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+  <div class="toc-foot">
+    <span>Theme</span>
+    <button class="theme-btn" id="themeBtn" type="button">◐ <span>Light</span></button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================= intro ================= -->
+<header class="wide">
+  <div class="eyebrow">Rule management · Midnight · guide</div>
+  <h1>How Midnight works</h1>
+  <p class="lede">A guided tour of the rule management app: how the project is organised, how to read the code, how the pieces talk to each other, and why each decision was made. Read it with the code open beside you. Every section points to the file and line it's describing.</p>
+  <div class="stats">
+    <div class="stat"><b>39</b><span>TypeScript files</span></div>
+    <div class="stat"><b>25</b><span>CSS files, each next to its component</span></div>
+    <div class="stat"><b>21</b><span>components · 8 hooks</span></div>
+    <div class="stat"><b>0</b><span>network calls (mock data)</span></div>
+  </div>
+  <figure>
+    <img class="hero-img" src="img/wide-dark.jpg" alt="Midnight: sidebar, rule list, tab bar, and the selected rule with a decision rail" />
+    <figcaption>Left to right: <strong>sidebar</strong> (navigation and groups), <strong>list</strong> (finding rules), and the <strong>detail pane</strong>. It has a tab bar of the rules you're working on across the top, and in wide windows a <strong>decision rail</strong> on the right.</figcaption>
+  </figure>
+  <div class="callout tip"><span class="icon">i</span><div><span class="title">How to use this guide</span><p>Paths like <code>hooks/usePaneMode.ts:8</code> are inside <code>src/pages/rule-management/</code>, unless they start with <code>src/</code>, <code>lib/</code> or <code>styles/</code>. The <strong>live demos</strong> (green dot) are small working copies of the real technique, so press, drag and resize them. The theme button in the sidebar switches this page the same way the app switches its own theme.</p></div></div>
+</header>
+
+<!-- ================= organised ================= -->
+<section class="chapter read" id="organised">
+  <div class="chapter-num">01</div>
+  <h2>How the project is organised</h2>
+  <p class="sub">Every file has one job, and the folder it lives in tells you what kind of job.</p>
+
+<div class="tree"><b>src/</b>
+├─ <b>main.tsx</b>                   <em>entry point: fonts, global styles, renders the app</em>
+├─ <b>App.tsx</b>                    <em>the page + the toast container</em>
+├─ <b>lib/</b>                       <em>helpers that know nothing about rules</em>
+│  ├─ clock.ts                <em>the frozen "now" the mock data is built around</em>
+│  └─ format.ts               <em>93% · 2h ago · 28 Sept · 1h 5m</em>
+├─ <b>styles/</b>                    <em>styles for the whole app</em>
+│  ├─ base.css                <em>resets + easing curves</em>
+│  ├─ theme.css               <em>colour tokens (dark + light) + the theme dissolve</em>
+│  ├─ ui.css                  <em>shared building blocks: buttons, search, tabs, dots…</em>
+│  └─ accessibility.css       <em>reduced transparency, high contrast (loaded last)</em>
+└─ <b>pages/rule-management/</b>
+   ├─ <b>RuleManagementPage.tsx</b>  <em>owns the page's state, wires the pieces together</em>
+   ├─ RuleManagementPage.css  <em>the three-column layout</em>
+   ├─ <b>data/</b>mockData.ts        <em>the fake rules and groups (the API replaces this)</em>
+   ├─ <b>model/</b>                  <em>the rules of the domain: plain TypeScript, no React</em>
+   │  ├─ types.ts · policy.ts · labels.ts · browse.ts
+   ├─ <b>hooks/</b>                  <em>state and behaviour, one job each</em>
+   │  ├─ useRulesStore · useRuleView · useWorkingSet · useDecision
+   │  └─ useBacktest · usePaneMode · useTheme · useKeyboardShortcuts
+   └─ <b>components/</b>             <em>what you see; each has its CSS next to it</em>
+      ├─ Sidebar/ · RuleList/ · RuleTabs/ · RuleDetail/
+      └─ Composer/ · Incidents/ · CommandPalette/ · common/</div>
+
+  <h3>The four kinds of file</h3>
+  <table>
+    <thead><tr><th>Folder</th><th>Holds</th><th>Uses React?</th></tr></thead>
+    <tbody>
+      <tr><td><code>model/</code></td><td><strong>Knowledge</strong>: what a rule is, what's allowed, what things are called. Pure functions and lookup tables.</td><td>No</td></tr>
+      <tr><td><code>hooks/</code></td><td><strong>Behaviour</strong>: state that changes over time, and reacting to the outside world (keys, window size, timers).</td><td>Yes: <code>useState</code>, <code>useEffect</code>…</td></tr>
+      <tr><td><code>components/</code></td><td><strong>Looks</strong>: what's drawn on screen, and passing clicks back up.</td><td>Yes: returns JSX</td></tr>
+      <tr><td><code>data/</code></td><td><strong>Where data comes from</strong>. Today it's mock data; in the real app, the API.</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Where does new code go?</h3>
+  <table>
+    <thead><tr><th>You want to…</th><th>Put it in</th></tr></thead>
+    <tbody>
+      <tr><td>Change who can approve what, or the 60% floor</td><td><code>model/policy.ts</code></td></tr>
+      <tr><td>Change some wording, like a status name</td><td><code>model/labels.ts</code> (or the component, for one-off text)</td></tr>
+      <tr><td>Add a keyboard shortcut</td><td>The <code>keys</code> map in <code>RuleManagementPage.tsx:83</code></td></tr>
+      <tr><td>Add a new section to the rule detail</td><td>A new file in <code>components/RuleDetail/</code> + a line in <code>RuleDetail.tsx</code></td></tr>
+      <tr><td>Change a colour everywhere</td><td><code>src/styles/theme.css</code>, both dark and light</td></tr>
+      <tr><td>Style one component</td><td>The <code>.css</code> file next to it</td></tr>
+      <tr><td>Connect the real backend</td><td><code>data/mockData.ts</code> and <code>hooks/useRulesStore.ts</code> (<a href="#fake">chapter 19</a>)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Why split it like this</span><p>The old version was one 1,400-line file. Now every file is short enough to read in one go, and its name tells you what's inside. When you have a question, you can point at one file. Keeping <code>model/</code> free of React also means the rules can be tested, or reused on a server, without any UI.</p></div></div>
+</section>
+
+<!-- ================= reading ================= -->
+<section class="chapter read" id="reading">
+  <div class="chapter-num">02</div>
+  <h2>Reading the code</h2>
+  <p class="sub">Most of the symbols that look confusing are plain JavaScript. Here's a decoder, using lines from this project.</p>
+
+  <h3>JavaScript: the language</h3>
+  <table>
+    <thead><tr><th>You see</th><th>It means</th><th>From this project</th></tr></thead>
+    <tbody>
+      <tr><td><code>const x = …</code></td><td>A named value that won't be reassigned</td><td><code>const LOW_CONFIDENCE = 0.6</code></td></tr>
+      <tr><td><code>(a) =&gt; …</code></td><td>A function (an "arrow function")</td><td><code>onClick={() =&gt; onSelect(rule.id)}</code></td></tr>
+      <tr><td><code>{ rule, wide }</code> as a parameter</td><td>Pull named values out of an object ("destructuring")</td><td><code>function History({ rule })</code></td></tr>
+      <tr><td><code>[a, b] = …</code></td><td>The same, from an array</td><td><code>const [theme, toggleTheme] = useTheme()</code></td></tr>
+      <tr><td><code>...</code></td><td>Copy everything from this object or array</td><td><code>{ ...r, status: 'active' }</code></td></tr>
+      <tr><td><code>`${a} ${b}`</code></td><td>Text with values inserted</td><td><code>`${rule.id} ${rule.name}`</code></td></tr>
+      <tr><td><code>a ? b : c</code></td><td>If a, then b, otherwise c</td><td><code>theme === 'dark' ? &lt;Sun/&gt; : &lt;Moon/&gt;</code></td></tr>
+      <tr><td><code>a &amp;&amp; b</code></td><td>If a, then b (otherwise nothing)</td><td><code>{low &amp;&amp; &lt;span&gt;Below 60%&lt;/span&gt;}</code></td></tr>
+      <tr><td><code>a?.b</code> / <code>a ?? b</code></td><td>Only read b if a exists / use b if a is missing</td><td><code>decision.target?.rule.id ?? null</code></td></tr>
+      <tr><td><code>.map() .filter() .find()</code></td><td>Transform each item / keep some / find one</td><td><code>rules.filter((r) =&gt; r.groupId === id)</code></td></tr>
+      <tr><td><code>import</code> / <code>export</code></td><td>Share code between files</td><td><code>export function Sidebar()</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>TypeScript: labels on the data</h3>
+  <p>TypeScript is JavaScript plus labels that describe the shape of data, so your editor catches mistakes before you run anything. Delete the labels and it's plain JavaScript.</p>
+  <script type="text/x-code" data-lang="ts" data-file="model/types.ts">export type RuleStatus = 'active' | 'inactive' | 'proposed';   // `|` means "one of these"
+
+export interface Rule {          // an interface describes an object's shape
+  id: string;
+  confidence: number;
+  status: RuleStatus;
+  related: RelatedIncident[];    // `[]` means "a list of"
+}
+
+function statusLabel(rule: Rule): string { … }    // `: Rule` labels the input, `: string` the output
+useState<string | null>(null)                     // `<…>` says what kind of value goes in</script>
+
+  <h3>React: nine ideas cover almost everything</h3>
+  <ol class="ladder">
+    <li><strong>Components</strong> are functions that return what to show: <code>function Stats() { return &lt;div&gt;…&lt;/div&gt; }</code></li>
+    <li><strong>JSX</strong> is the HTML-looking part. Inside it, <code>{ }</code> means "JavaScript goes here".</li>
+    <li><strong>Props</strong> are a component's inputs: <code>&lt;History rule={selected} /&gt;</code></li>
+    <li><strong><code>useState</code></strong> is a value that redraws the screen when it changes: open/closed, search text, the selected rule.</li>
+    <li><strong>Derived values:</strong> anything you can work out from state is calculated, not stored. See <a href="#state">chapter 6</a>.</li>
+    <li><strong><code>useEffect</code></strong> means "after drawing, do something outside React": listen for keys, start a timer, measure.</li>
+    <li><strong><code>useRef</code></strong> is a box that keeps a value without redrawing: an input to focus, a timer id.</li>
+    <li><strong><code>useMemo</code></strong> saves a calculation until its inputs change.</li>
+    <li><strong><code>key</code></strong> is how React tells list items apart. Change a component's key and React starts it fresh.</li>
+  </ol>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Where to learn more</span><p><strong>react.dev → Learn React</strong> (free, official) teaches exactly those nine, in that order. <strong>javascript.info</strong> covers the language. The <strong>TypeScript Handbook</strong> page "TypeScript for JavaScript Programmers" is enough TypeScript to start. Then try the <a href="#exercises">exercises</a>.</p></div></div>
+</section>
+
+<!-- ================= flow ================= -->
+<section class="chapter wide" id="flow">
+  <div class="chapter-num">03</div>
+  <h2>How data flows</h2>
+  <p class="sub read">The single most important picture. Data goes <strong>down</strong>; events come back <strong>up</strong>.</p>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node" data-tone="data"><b>Mock data</b><code>data/mockData.ts</code><br />20 rules as plain objects</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="state"><b>The store</b><code>hooks/useRulesStore.ts</code><br />holds the rules, can <code>apply()</code> a change</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="state"><b>The view</b><code>hooks/useRuleView.ts</code><br />filter + search + sort → <code>visible</code></div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="ui"><b>The page</b><code>RuleManagementPage.tsx</code><br />passes them to every component</div>
+    </div>
+    <div class="flow-row">
+      <div class="node" data-tone="act"><b>You press <kbd>A</kbd></b><code>act('approve')</code><br />opens the decision form</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="act"><b>Form checks itself</b><code>useDecision → validate()</code><br />reason long enough? override needed?</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="state"><b>Store updates</b><code>apply(id, action, reason)</code><br />new status + audit entry</div>
+      <div class="arrow">↺</div>
+      <div class="node" data-tone="ui"><b>Everything re-renders</b><br />list, counts, tabs, history and toast all update on their own</div>
+    </div>
+  </div>
+  <div class="legend"><span><i style="background:var(--blue)"></i>data</span><span><i style="background:var(--violet)"></i>state</span><span><i style="background:var(--green)"></i>UI</span><span><i style="background:var(--orange)"></i>user action</span></div>
+
+  <div class="read">
+    <h3>Why it's built this way</h3>
+    <p>No component ever edits a rule directly. There's exactly <strong>one place</strong> that changes rules (<code>apply()</code> in <code>hooks/useRulesStore.ts:18</code>), and everything on screen is <strong>calculated from</strong> the rules. So after a decision, the tab counts, the sidebar dot, the tab's ✓, the history timeline and the list all update at once. Nothing has to be told to refresh.</p>
+    <div class="callout tip"><span class="icon">✓</span><div><span class="title">The rule to take away</span><p><strong>Store the minimum, derive the rest.</strong> The tab counts aren't stored anywhere; they're counted from the rules on every change. You can't forget to update a number that's always recalculated.</p></div></div>
+  </div>
+</section>
+
+<!-- ================= model ================= -->
+<section class="chapter read" id="model">
+  <div class="chapter-num">04</div>
+  <h2>The data model</h2>
+  <p class="sub">What a "rule" is. Everything on screen is one of these fields, formatted.</p>
+  <script type="text/x-code" data-lang="ts" data-file="model/types.ts:47">export interface Rule {
+  id: string;              // "RUL-0412"
+  name: string;
+  status: RuleStatus;      // 'proposed' | 'active' | 'inactive'
+  groupId: string;         // which assignment group it suppresses incidents for
+  confidence: number;      // 0–1, how sure the engine is
+  purity: number;          // 0–1, share of matched incidents that were noise
+  incidentCount: number;
+  source: RuleSource;      // 'pattern-miner' | 'correlation-engine' | … | 'operator'
+  sourceDetail: string;    // "Pattern miner v4.2" or "Suggested by TK-421"
+  createdAt: string;       // ISO dates
+  updatedAt: string;
+  evidence: Evidence;      // summary, conditions, weekly counts, escalations…
+  related: RelatedIncident[];  // a small sample of matched incidents
+  audit: AuditEntry[];     // every decision ever made, oldest first
+}</script>
+  <ul>
+    <li><strong>Numbers stay raw.</strong> Confidence is stored as <code>0.93</code>, never <code>"93%"</code>. Turning it into text is the UI's job (<code>pct()</code> in <code>src/lib/format.ts:6</code>). The same goes for dates (<code>ago()</code>, <code>shortDate()</code>).</li>
+    <li><strong>The audit log is append-only.</strong> A decision adds a new entry; it never edits an old one.</li>
+    <li><strong>"Rejected" isn't a status.</strong> A rejected rule is <code>inactive</code> with a last audit entry of <code>rejected</code>. <code>statusLabel()</code> tells them apart (<code>model/labels.ts:39</code>).</li>
+  </ul>
+</section>
+
+<!-- ================= policy ================= -->
+<section class="chapter read" id="policy">
+  <div class="chapter-num">05</div>
+  <h2>The rules of the game</h2>
+  <p class="sub">Who can do what, and when. All small pure functions in <code>model/policy.ts</code>.</p>
+  <div class="states">
+    <span class="pill"><span class="dot proposed"></span>Proposed</span>
+    <span class="edge">— approve →</span>
+    <span class="pill"><span class="dot active"></span>Active</span>
+    <span class="edge">⇄ deactivate / activate ⇄</span>
+    <span class="pill"><span class="dot inactive"></span>Inactive</span>
+  </div>
+  <p>A proposed rule can also be <strong>rejected</strong>, which sends it straight to Inactive.</p>
+  <script type="text/x-code" data-lang="ts" data-file="model/policy.ts:15">export function actionsFor(rule: Rule): RuleAction[] {
+  if (rule.status === 'proposed') return ['approve', 'reject'];
+  if (rule.status === 'active') return ['deactivate'];
+  return ['activate'];
+}
+
+export const isLowConfidence = (rule: Rule) => rule.confidence < LOW_CONFIDENCE;   // 0.6
+export const turnsOn = (action: RuleAction) => action === 'approve' || action === 'activate';
+export const needsOverride = (rule: Rule, action: RuleAction) => turnsOn(action) && isLowConfidence(rule);</script>
+  <p><code>actionsFor</code> decides <strong>which buttons exist</strong>. Nothing hard-codes "show Approve here". The action bar, decision card, incidents panel and ⌘K all ask <code>actionsFor(rule)</code>, so they can never disagree.</p>
+  <script type="text/x-code" data-lang="ts" data-file="model/policy.ts:45">export function validate(rule: Rule, action: RuleAction, reason: string, override: boolean) {
+  const errors: { reason?: string; override?: string } = {};
+  const len = reason.trim().length;
+  if (len === 0) errors.reason = 'A written reason is required for every rule change.';
+  else if (len < MIN_REASON) errors.reason = `Add a little more detail (${MIN_REASON - len} more characters).`;
+  if (needsOverride(rule, action) && !override)
+    errors.override = `Confidence is ${pct(rule.confidence)}, below the ${pct(LOW_CONFIDENCE)} floor. …`;
+  return { ok: !errors.reason && !errors.override, errors };
+}</script>
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Why pure functions</span><p>A pure function only uses its inputs and returns a result. No React, no side effects. That makes it trivial to test and safe to call from anywhere. In the real app, the <strong>backend</strong> must enforce the same rules, because a browser can always be bypassed.</p></div></div>
+</section>
+
+<!-- ================= state ================= -->
+<section class="chapter read" id="state">
+  <div class="chapter-num">06</div>
+  <h2>State: store, derive, keep</h2>
+  <p class="sub">Three kinds of state, each living in a different place on purpose.</p>
+  <table>
+    <thead><tr><th>Kind</th><th>Example</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>Shared data</td><td>The rules</td><td><code>hooks/useRulesStore.ts</code> (a zustand store)</td></tr>
+      <tr><td>View state</td><td>Status tab, search text, group, sort</td><td><code>hooks/useRuleView.ts</code></td></tr>
+      <tr><td>Page UI state</td><td>Selected rule, palette open, panels hidden</td><td><code>useState</code> in <code>RuleManagementPage.tsx</code></td></tr>
+      <tr><td>Component state</td><td>The group search text, the hold timer</td><td>Inside the component that uses it (<code>Sidebar</code>, <code>HoldButton</code>)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Keep state as low as it can go</span><p>The group search text lives in <code>Sidebar</code>, because nothing else needs it. The selected rule lives in the page, because the list, the tabs, the detail and ⌘K all need it. The rule: put state in the <strong>lowest component that every user of it sits inside</strong>.</p></div></div>
+
+  <h3>The store: copy, don't change</h3>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/useRulesStore.ts:18">apply: (id, action, reason, override) => {
+  const at = NOW.toISOString();
+  let updated!: Rule;
+  set({
+    rules: get().rules.map((r) => {
+      if (r.id !== id) return r; // untouched rules stay exactly the same object
+      // A new object, never an edit of the old one: that's how React notices the change.
+      updated = { ...r, status: NEXT_STATUS[action], updatedAt: at, audit: [...r.audit, { at, actor: CURRENT_USER, … }] };
+      return updated;
+    }),
+  });
+  return updated;
+},</script>
+
+  <h3>The view: derive, don't store</h3>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/useRuleView.ts:12">// Group and search first, so the tab counts describe what the search found.
+const scoped = useMemo(
+  () => rules.filter((r) => (view.groupId === 'all' || r.groupId === view.groupId) && matches(r, view.query)),
+  [rules, view.groupId, view.query],
+);
+const counts = useMemo(() => { /* count scoped by status */ }, [scoped]);
+// Then the status tab, then the sort.
+const visible = useMemo(() => sortRules(/* scoped, filtered by tab */), [scoped, view.status, view.sort, view.dir]);</script>
+  <p>Search (<code>matches()</code>, <code>model/browse.ts:38</code>) splits your query into words and requires <strong>every</strong> word to appear somewhere, which is why "reactor 0419" works.</p>
+
+  <h3>Keeping the selection valid</h3>
+  <script type="text/x-code" data-lang="ts" data-file="RuleManagementPage.tsx:56">useEffect(() => {
+  if (selectedId && workingSet.openIds.includes(selectedId)) return;   // an open tab stays selected
+  if (!visible.length) return setSelectedId(null);
+  if (!selectedId || !visible.some((r) => r.id === selectedId)) setSelectedId(visible[0].id);
+}, [visible, selectedId, workingSet.openIds]);</script>
+  <p>If a filter hides the selected rule, the first visible rule is selected instead, unless the rule is open as a tab. Tabs are your working set, and the list's filters don't get to take them away.</p>
+</section>
+
+<!-- ================= layout ================= -->
+<section class="chapter read" id="layout">
+  <div class="chapter-num">07</div>
+  <h2>Layout & pane modes</h2>
+  <p class="sub">Three columns, and a detail pane that rearranges itself based on its own width.</p>
+  <script type="text/x-code" data-lang="css" data-file="RuleManagementPage.css:5">.mn {
+  display: grid;
+  grid-template-columns: 240px 380px 1fr;   /* sidebar · list · detail */
+  height: 100vh;
+  overflow: hidden;                         /* each column scrolls on its own */
+}</script>
+  <p>The detail pane has three layouts. What picks one isn't the window size (a media query). It's the <strong>pane's own width</strong>, measured with a <code>ResizeObserver</code>:</p>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/usePaneMode.ts:8">export function usePaneMode() {
+  const ref = useRef<HTMLElement>(null);
+  const [mode, setMode] = useState<PaneMode>('narrow');
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const pick = (width: number) => setMode(width >= 1700 ? 'ultra' : width >= 1100 ? 'wide' : 'narrow');
+    const observer = new ResizeObserver(([entry]) => pick(entry.contentRect.width));
+    observer.observe(el);
+    pick(el.getBoundingClientRect().width); // measure once straight away
+    return () => observer.disconnect();
+  }, []);
+  return [ref, mode] as const;
+}</script>
+
+  <div class="demo">
+    <div class="demo-head">Live demo: drag to resize the "detail pane"</div>
+    <div class="demo-body">
+      <div class="pane-stage"><div class="pane" id="pane" data-mode="narrow"></div></div>
+      <div class="controls">
+        <label>Pane width <input type="range" id="paneWidth" min="600" max="2200" value="900" /> <output id="paneOut">900px</output></label>
+        <span class="mode-badge">mode: <b id="paneMode">narrow</b></span>
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Mode</th><th>Pane width</th><th>Arrangement (<code>RuleDetail.tsx</code>)</th></tr></thead>
+    <tbody>
+      <tr><td>narrow</td><td>&lt; 1100px</td><td>One column. Actions in a floating glass bar at the bottom.</td></tr>
+      <tr><td>wide</td><td>1100–1699px</td><td>Content + a 380px <strong>decision rail</strong>: decision, impact, history, "Also in…".</td></tr>
+      <tr><td>ultra</td><td>≥ 1700px</td><td>Stats, evidence and chart on the left; the <strong>full searchable incident list</strong> in the middle; the rail on the right.</td></tr>
+    </tbody>
+  </table>
+  <div class="two">
+    <figure><img src="img/narrow-dark.jpg" alt="Narrow layout with a floating action bar" /><figcaption>Narrow: one column, floating action bar.</figcaption></figure>
+    <figure><img src="img/wide-light.jpg" alt="Wide layout with the decision rail, light theme" /><figcaption>Wide (light theme): content + decision rail.</figcaption></figure>
+  </div>
+  <p>Inside <code>RuleDetail</code>, each section is a component (<code>Stats</code>, <code>Evidence</code>, <code>History</code>…) or is built once in a variable (<code>header</code>, <code>volume</code>, <code>incidents</code>). The mode only decides <strong>where they go</strong>.</p>
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Why measure the pane, not the window</span><p>The pane's width depends on the window <em>and</em> on whether the sidebar and list are showing. Hide both with <kbd>[</kbd> <kbd>]</kbd> and the same window gives the pane an extra 620px. A media query only knows the window; measuring the pane is always right.</p></div></div>
+</section>
+
+<!-- ================= tabs ================= -->
+<section class="chapter read" id="tabs">
+  <div class="chapter-num">08</div>
+  <h2>The working set (tabs)</h2>
+  <p class="sub">The list is for finding rules. The tabs are the rules you're working on, each with its status at a glance.</p>
+  <figure><img src="img/tabs-dark.jpg" alt="The tab bar showing waiting, active, decided and preview tabs, and a summary" /><figcaption>Left to right: two rules waiting for a decision (amber), an active rule (green dot), one you just decided (✓), and an italic <em>preview</em> tab for the rule you're glancing at. On the right, "3 waiting · 1 done".</figcaption></figure>
+
+  <h3>Preview, then pin</h3>
+  <p>Clicking a rule in the list shows it as an <em>italic preview tab</em>, which is replaced as you browse (like VS Code). It becomes a real tab when you <strong>pin</strong> it: press <kbd>↵</kbd>, double-click it, or start a decision on it.</p>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/useWorkingSet.ts:7">export function useWorkingSet() {
+  const [openIds, setOpenIds] = useState<string[]>(INITIAL_OPEN_TABS);
+  const [decidedIds, setDecidedIds] = useState<string[]>([]);
+
+  const pin = (id: string) => setOpenIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+
+  /** Close a tab. Returns its neighbour, so closing the tab you're on can move you there. */
+  const close = (id: string) => {
+    const rest = openIds.filter((x) => x !== id);
+    setOpenIds(rest);
+    return rest[Math.min(openIds.indexOf(id), rest.length - 1)] ?? null;
+  };
+  …
+}</script>
+
+  <h3>The status on each tab is derived, not stored</h3>
+  <script type="text/x-code" data-lang="ts" data-file="components/RuleTabs/RuleTabs.tsx:20">function tabState(rule: Rule, drafting: boolean, decided: boolean): TabState {
+  if (drafting) return 'drafting';        // the decision form is open on this rule
+  if (decided) return 'decided';          // you decided it this session
+  return rule.status === 'proposed' ? 'needs-input' : rule.status;
+}</script>
+  <p>Nothing tells a tab to change. After a decision, the rule's status changes in the store, <code>markDecided</code> records the id, and every tab recalculates its own state.</p>
+
+  <h3>Tucking away the sidebar and list</h3>
+  <script type="text/x-code" data-lang="css" data-file="RuleManagementPage.css:13">.mn { transition: grid-template-columns 240ms var(--ease-out); }   /* the columns animate */
+.mn[data-hide-side] { grid-template-columns: 0px 380px 1fr; }
+.mn[data-hide-list] { grid-template-columns: 240px 0px 1fr; }
+
+/* Hide the collapsed column once it has finished sliding shut. */
+.mn[data-hide-side] > .mn-side,
+.mn[data-hide-list] > .mn-list {
+  visibility: hidden;
+  transition: visibility 0s 240ms;     /* wait 240ms, then hide */
+}</script>
+  <p>The hidden column also gets the <code>inert</code> attribute, so Tab and screen readers skip it while it's hidden.</p>
+  <figure><img src="img/ultra-dark.jpg" alt="Sidebar and list hidden; the rule in the ultra layout" /><figcaption>Both tucked away: the same window now fits the ultra layout, with the full incident list in the middle.</figcaption></figure>
+</section>
+
+<!-- ================= components ================= -->
+<section class="chapter read" id="components">
+  <div class="chapter-num">09</div>
+  <h2>Component tour</h2>
+  <p class="sub">Who contains whom, and each one's job in a sentence.</p>
+<div class="tree"><b>RuleManagementPage</b>                    <em>owns the state, wires everything</em>
+├─ <b>Sidebar</b>                            <em>brand, ⌘K button, nav, group search + groups, user, theme</em>
+├─ <b>RuleList</b>                           <em>search, status tabs, rows, keyboard hints</em>
+│  └─ <b>SortMenu</b>                        <em>sort by / direction</em>
+├─ <b>RuleTabs</b>                           <em>the working set + panel toggles + summary</em>
+├─ <b>RuleDetail</b>                         <em>the selected rule, arranged by pane mode</em>
+│  ├─ <b>Stats</b>                           <em>confidence, purity, incidents, escalated</em>
+│  ├─ <b>Evidence</b>                        <em>summary, real-incident warning, conditions</em>
+│  ├─ <b>WeeklyBars</b>                      <em>matched incidents per week</em>
+│  ├─ <b>IncidentList</b> / <b>IncidentBrowser</b>  <em>sample, or the full list when ultra</em>
+│  ├─ <b>DecisionCard</b>                    <em>proposer, what it does now, the buttons</em>
+│  │  ├─ <b>Proposer</b>
+│  │  └─ <b>ActionButtons</b>
+│  ├─ <b>Composer</b>                        <em>the decision form (replaces the card)</em>
+│  │  └─ <b>HoldButton</b>
+│  ├─ <b>ImpactCard</b>                      <em>what it hides, or would</em>
+│  ├─ <b>History</b>                         <em>the audit timeline</em>
+│  └─ <b>AlsoInGroup</b>                     <em>other rules in the group</em>
+├─ <b>IncidentsPanel</b>                     <em>"View all": the browser, sliding over the pane</em>
+├─ <b>CommandPalette</b>                     <em>⌘K</em>
+└─ <b>DecisionToast</b>                      <em>shown by sonner after a decision</em></div>
+  <h3>Props down, callbacks up</h3>
+  <p>Children never reach up and change the page's state. <code>RuleList</code> doesn't know what selecting a rule does; it calls <code>onSelect(id)</code>. <code>DecisionCard</code> doesn't open the form; it calls <code>onAction('approve')</code>. The page decides what those mean. That's why <code>ActionButtons</code> works in three places: it only needs a rule and a callback.</p>
+  <script type="text/x-code" data-lang="tsx" data-file="components/common/ActionButtons.tsx:9">export function ActionButtons({ rule, onAction }: { rule: Rule; onAction: (action: RuleAction) => void }) {
+  return actionsFor(rule).map((action) => (
+    <button key={action} className="mn-btn" data-variant={turnsOn(action) ? 'primary' : 'danger'} onClick={() => onAction(action)}>
+      {ACTION_LABEL[action]}
+      <kbd>{ACTION_KEY[action]}</kbd>
+    </button>
+  ));
+}</script>
+</section>
+
+<!-- ================= keyboard ================= -->
+<section class="chapter read" id="keyboard">
+  <div class="chapter-num">10</div>
+  <h2>The keyboard system</h2>
+  <p class="sub">One listener for the whole page, with a clear order of who gets each key.</p>
+  <table class="kbd-table">
+    <thead><tr><th>Keys</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>⌘</kbd> <kbd>K</kbd></td><td>Open / close the palette (works everywhere)</td></tr>
+      <tr><td><kbd>J</kbd> <kbd>K</kbd> or <kbd>↓</kbd> <kbd>↑</kbd></td><td>Next / previous rule in the list</td></tr>
+      <tr><td><kbd>/</kbd></td><td>Focus search (the incidents search when that panel is open)</td></tr>
+      <tr><td><kbd>A</kbd> <kbd>X</kbd> <kbd>E</kbd> <kbd>D</kbd></td><td>Approve, reject, activate, deactivate (if allowed)</td></tr>
+      <tr><td><kbd>↵</kbd></td><td>Pin the selected rule as a tab</td></tr>
+      <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Hide / show the sidebar and the list</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Close the form → leave a field → close the incidents panel</td></tr>
+      <tr><td><kbd>⌘</kbd> <kbd>↵</kbd></td><td>Submit the decision</td></tr>
+    </tbody>
+  </table>
+  <h3>Who gets the key: the priority ladder</h3>
+  <ol class="ladder">
+    <li><strong>⌘K</strong> always wins. It toggles the palette.</li>
+    <li>If the <strong>palette is open</strong>, stop: cmdk handles its own keys.</li>
+    <li>If the <strong>decision form is open</strong>, only <kbd>Esc</kbd> and <kbd>⌘↵</kbd> do anything.</li>
+    <li>If you're <strong>typing in a field</strong>, letters are text. <kbd>Esc</kbd>, <kbd>↵</kbd> and <kbd>↓</kbd> leave the field.</li>
+    <li>Keys held with <kbd>⌘</kbd> / <kbd>Ctrl</kbd> / <kbd>Alt</kbd> are left for the browser.</li>
+    <li>Finally, look the key up in the page's <strong><code>keys</code> map</strong>.</li>
+  </ol>
+  <p>The ladder lives in <code>hooks/useKeyboardShortcuts.ts</code>. The page only says <strong>what each key does</strong>:</p>
+  <script type="text/x-code" data-lang="ts" data-file="RuleManagementPage.tsx:83">useKeyboardShortcuts({
+  paletteOpen,
+  onTogglePalette: () => setPaletteOpen((open) => !open),
+  decisionOpen: decision.target !== null,
+  onCancelDecision: decision.close,
+  onSubmitDecision: decision.submit,
+  keys: {
+    j: () => move(1),
+    k: () => move(-1),
+    '/': () => (incidentsOpen ? incidentSearchRef : searchRef).current?.focus(),
+    a: () => act('approve', 'key'),
+    Enter: () => selectedId && workingSet.pin(selectedId),
+    '[': () => setHideSide((hidden) => !hidden),
+    // …
+  },
+});</script>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/useKeyboardShortcuts.ts:21">export function useKeyboardShortcuts(shortcuts: Shortcuts) {
+  // The listener is added once, so it reads the latest values from this ref
+  // instead of the ones from the first render (a "stale closure").
+  const live = useRef(shortcuts);
+  live.current = shortcuts;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { const s = live.current; /* …the ladder… */ };
+    window.addEventListener('keydown', onKey, true);   // true = capture phase: hear it first
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
+}</script>
+  <div class="callout why"><span class="icon">?</span><div><span class="title">The <code>live</code> ref trick</span><p>A function created once keeps seeing the values from when it was created. That's a <em>stale closure</em>, and <kbd>J</kbd> would always move from the first rule. Writing the latest values into <code>live.current</code> on every render gives you one listener that always sees fresh state.</p></div></div>
+</section>
+
+<!-- ================= decision ================= -->
+<section class="chapter read" id="decision">
+  <div class="chapter-num">11</div>
+  <h2>Making a decision</h2>
+  <p class="sub">The core job of the page, from key press to toast.</p>
+  <figure><img src="img/composer-dark.jpg" alt="The decision form over the detail pane" /><figcaption>The Composer: reason with a counter, the backtest, the low-confidence override and submit.</figcaption></figure>
+  <ol class="ladder">
+    <li>You press <kbd>A</kbd> or click Approve → <code>act('approve', via)</code> (<code>RuleManagementPage.tsx:63</code>) checks it's allowed, closes the incidents panel, <strong>pins the rule's tab</strong>, and remembers <strong>how</strong> you opened it.</li>
+    <li><code>decision.open(rule, action)</code> resets the form. The rule's tab switches to the ✏️ pen.</li>
+    <li>The <strong>Composer</strong> appears: floating in narrow mode, in place of the decision card in wide. Keyboard-opened: instant. Click-opened: a short animation.</li>
+    <li>For approve/activate, the <strong>backtest</strong> runs (a 2.4s timer in <code>hooks/useBacktest.ts</code>).</li>
+    <li>Type a reason: the counter shows <code>7/12</code>, then a ✓.</li>
+    <li>Below 60% confidence, <strong>hold</strong> the override for 2 seconds.</li>
+    <li>Submit (<kbd>⌘↵</kbd> or the button) → <code>validate()</code> → <code>apply()</code> → the tab shows ✓, a toast confirms, history gets a new entry.</li>
+  </ol>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/useDecision.ts:10">export function useDecision(onDone?: (rule: Rule, action: RuleAction) => void) {
+  const apply = useRulesStore((s) => s.apply);
+  const [target, setTarget] = useState<{ rule: Rule; action: RuleAction } | null>(null);
+  const [reason, setReason] = useState('');
+  const [override, setOverride] = useState(false);
+  // Errors only show after the first submit attempt, not while someone is still typing.
+  const [attempted, setAttempted] = useState(false);
+  const check = target ? validate(target.rule, target.action, reason, override) : null;
+  return {
+    target, reason, setReason, override, setOverride, attempted, check,
+    open(rule, action) { … },
+    close() { setTarget(null); },
+    submit() {
+      if (!target || !check) return false;
+      setAttempted(true);
+      if (!check.ok) return false;
+      const updated = apply(target.rule.id, target.action, reason, override);
+      onDone?.(updated, target.action);   // the page marks the tab decided and shows the toast
+      setTarget(null);
+      return true;
+    },
+  };
+}</script>
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Logic hook + view component</span><p><code>useDecision</code> knows nothing about how the form looks; <code>Composer</code> knows nothing about saving. When you connect the real API, only the hook changes.</p></div></div>
+</section>
+
+<!-- ================= hold ================= -->
+<section class="chapter read" id="hold">
+  <div class="chapter-num">12</div>
+  <h2>Hold to override</h2>
+  <p class="sub">A slow, deliberate confirmation for a risky action. JavaScript decides; CSS shows it.</p>
+  <div class="demo">
+    <div class="demo-head">Live demo: press and hold (mouse, touch or Space/Enter)</div>
+    <div class="demo-body">
+      <div class="hold-row">
+        <div class="t"><strong>Low confidence override</strong>47% is below the 60% floor. This rule may hide real incidents.</div>
+        <button class="hold" id="holdBtn" type="button"><span class="lbl">Hold to override</span><span class="hold-fill" aria-hidden="true"><span>Hold to override</span></span></button>
+        <button class="ghost-btn" id="holdReset" type="button">Reset</button>
+      </div>
+    </div>
+  </div>
+  <ul>
+    <li><strong>The truth is a 2-second timer</strong> (<code>components/Composer/HoldButton.tsx:8</code>). Pressing starts it; letting go cancels it. Only when it finishes does <code>onDone()</code> run.</li>
+    <li><strong>The picture is a CSS transition of the same 2 seconds</strong> (<code>HoldButton.css</code>). A solid orange copy of the button sits on top, clipped away with <code>clip-path: inset(0 100% 0 0)</code>. Holding animates it to <code>inset(0)</code>, <strong>linearly</strong>, like a progress bar; releasing snaps it back in 200ms.</li>
+    <li>The copy has its own label, so the text changes colour <strong>exactly at the fill's edge</strong> as it sweeps.</li>
+  </ul>
+  <script type="text/x-code" data-lang="css" data-file="components/Composer/HoldButton.css">.mn-hold-fill {
+  clip-path: inset(0 100% 0 0);               /* hidden: clipped from the right */
+  transition: clip-path 200ms var(--ease-out); /* quick snap back on release */
+}
+.mn-hold[data-holding] .mn-hold-fill {
+  clip-path: inset(0 0 0 0);                  /* fully shown */
+  transition: clip-path 2s linear;            /* honest progress, like a timer */
+}</script>
+</section>
+
+<!-- ================= impact ================= -->
+<section class="chapter read" id="impact">
+  <div class="chapter-num">13</div>
+  <h2>Impact & incidents</h2>
+  <p class="sub">The evidence you need to decide, in reach before you press anything.</p>
+  <h3>The Impact card</h3>
+  <p>In the rail, <code>ImpactCard</code> shows how many incidents the rule hides (or would), how many were real (escalated), and time saved. The heading adapts: "If approved", "Impact so far", "If activated". The numbers come from <code>estimateImpact()</code> (<code>model/policy.ts:61</code>). The Composer's backtest uses the same function, so the two can't disagree.</p>
+  <script type="text/x-code" data-lang="tsx" data-file="components/RuleDetail/ImpactCard.tsx">const HEADING = { active: 'Impact so far', proposed: 'If approved', inactive: 'If activated' } as const;
+// …
+<h3>{HEADING[rule.status]} …</h3></script>
+
+  <h3>One incident browser, two places</h3>
+  <p><code>IncidentBrowser</code> (search, resolution filters, and a page of results at a time) is used by the "View all" <strong>panel</strong> (50 at a time) and <strong>inline</strong> in the ultra layout (15 at a time). Same code, different props.</p>
+  <script type="text/x-code" data-lang="tsx" data-file="components/Incidents/IncidentBrowser.tsx:36">// Search first, so the filter counts describe what the search found.
+const q = query.trim().toLowerCase();
+const found = incidents.filter((i) => `${i.id} ${i.title} ${i.ci}`.toLowerCase().includes(q));
+const matching = resolution === 'all' ? found : found.filter((i) => i.resolution === resolution);
+const countOf = (res: Resolution) => found.filter((i) => i.resolution === res).length;
+// …render matching.slice(0, shown); "Show more" adds another pageSize</script>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">The <code>key</code> trick: reset state for free</span><p>The browser is rendered with <code>key={rule.id}</code>. Move to another rule and the key changes, so React throws the old one away and starts fresh: empty search, "All" tab. The Composer does the same with <code>key={`${rule.id}-${action}`}</code>.</p></div></div>
+</section>
+
+<!-- ================= styling ================= -->
+<section class="chapter read" id="styling">
+  <div class="chapter-num">14</div>
+  <h2>The styling system</h2>
+  <p class="sub">Every colour is a variable. Components have their own CSS; shared pieces live in <code>src/styles/</code>.</p>
+  <h3>Where styles live</h3>
+  <table>
+    <thead><tr><th>File</th><th>Holds</th></tr></thead>
+    <tbody>
+      <tr><td><code>styles/base.css</code></td><td>Resets, easing curves</td></tr>
+      <tr><td><code>styles/theme.css</code></td><td>Every colour token, dark and light, plus the theme dissolve</td></tr>
+      <tr><td><code>styles/ui.css</code></td><td>Building blocks used everywhere: buttons, search box, tabs, status dots, keys, links, empty states</td></tr>
+      <tr><td><code>components/*/X.css</code></td><td>One component's styles, imported by that component: <code>import './Sidebar.css'</code></td></tr>
+      <tr><td><code>styles/accessibility.css</code></td><td>Reduced transparency and high contrast, loaded <strong>last</strong> so it wins</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><span class="icon">!</span><div><span class="title">Load order matters (sometimes)</span><p>When two rules are equally specific, the one loaded later wins. <code>main.tsx</code> imports <code>accessibility.css</code> <em>after</em> the app for that reason. Where a component needs to beat a shared style, it uses a more specific selector instead of relying on order: <code>.mn-search.mn-group-search</code> (two classes) beats <code>.mn-search</code> (one) whatever the order.</p></div></div>
+
+  <h3>Layers: material weight encodes hierarchy</h3>
+  <div class="swatches">
+    <div class="sw"><div style="background:#050505"></div><span>--l0<small>sidebar</small></span></div>
+    <div class="sw"><div style="background:#0b0b0b"></div><span>--l1<small>list pane</small></span></div>
+    <div class="sw"><div style="background:#101010"></div><span>--l2<small>detail pane</small></span></div>
+    <div class="sw"><div style="background:#161616"></div><span>--l3<small>cards</small></span></div>
+    <div class="sw"><div style="background:#1c1c1c"></div><span>--l4<small>raised controls</small></span></div>
+    <div class="sw"><div style="background:#242424"></div><span>--l5<small>hover / pressed</small></span></div>
+  </div>
+  <p>Text has three levels (<code>--fg</code>, <code>--fg-2</code>, <code>--fg-3</code>), lines have three strengths, and colour is reserved for meaning: green = active, amber = waiting, orange = low confidence, red = escalated or danger. White is the <strong>one accent</strong>.</p>
+
+  <h3>Why the tokens are declared on four selectors</h3>
+  <script type="text/x-code" data-lang="css" data-file="styles/theme.css:10">.mn,
+.mn-menu,
+.mn-palette,
+.mn-toast {
+  --l0: #050505;
+  --fg: #ededed;
+  /* … every token … */
+}</script>
+  <p>Menus, ⌘K and toasts are <strong>portalled</strong>: rendered at the end of <code>&lt;body&gt;</code>, outside <code>.mn</code>, so they can float above everything. CSS variables only pass down to children, so those classes need the tokens too. The light theme (<code>theme.css:85</code>) redefines the same names; no component has any theme logic.</p>
+
+  <h3>State lives in data attributes</h3>
+  <script type="text/x-code" data-lang="tsx" data-file="components/RuleList/RuleList.tsx"><div className="mn-row" data-selected={rule.id === selectedId || undefined}>
+  <span className="mn-dot" data-status={rule.status} /></script>
+  <script type="text/x-code" data-lang="css" data-file="styles/ui.css">.mn-dot[data-status='active']   { background: var(--green); }
+.mn-dot[data-status='proposed'] { background: var(--amber); }
+.mn-dot[data-status='inactive'] { box-shadow: inset 0 0 0 1.5px var(--fg-3); }  /* hollow ring */</script>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">The <code>|| undefined</code> trick</span><p><code>data-selected={false}</code> would render <code>data-selected="false"</code>, which still matches <code>[data-selected]</code>. <code>false || undefined</code> is <code>undefined</code>, and React leaves the attribute out.</p></div></div>
+  <ul>
+    <li><strong>Hover only where hover exists:</strong> inside <code>@media (hover: hover) and (pointer: fine)</code>, so taps on phones don't leave things highlighted.</li>
+    <li><strong>Tabular numbers</strong> (<code>font-variant-numeric: tabular-nums</code>) keep counts from wobbling.</li>
+    <li><strong>Scroll edges fade</strong> instead of hard dividers (<code>RuleList.css:50</code>, a <code>mask-image</code> gradient).</li>
+  </ul>
+</section>
+
+<!-- ================= glass ================= -->
+<section class="chapter read" id="glass">
+  <div class="chapter-num">15</div>
+  <h2>Glass & materials</h2>
+  <p class="sub">Floating UI (action bar, form, menu, ⌘K, toasts) is translucent glass, so you can sense the page underneath.</p>
+  <div class="demo">
+    <div class="demo-head">Live demo: the ⌘K glass recipe. Move the sliders.</div>
+    <div class="demo-body">
+      <div class="glass-stage">
+        <div class="behind">
+          <div>Superlaser pre-charge sequence warnings · 47%</div><div>Stormtrooper armour fitting ticket duplicates · 95%</div><div>Hyperdrive fault codes on impounded YT-1300 · 38%</div>
+          <div>Cell 2187 door sensor false-open · 58%</div><div>Deck 12 CO2 warnings during shift change · 84%</div><div>Thermal exhaust port proximity sensor · 41%</div>
+          <div>Comlink encryption key rotation retries · 79%</div><div>Trash compactor hydraulic pressure · 72%</div><div>Reactor coolant flow jitter · 89%</div>
+        </div>
+        <span class="blob" style="width:160px;height:160px;left:18%;top:30%;background:var(--amber)"></span>
+        <span class="blob" style="width:120px;height:120px;left:52%;top:18%;background:var(--green)"></span>
+        <span class="blob" style="width:140px;height:140px;left:60%;top:55%;background:var(--red)"></span>
+        <div class="glass" id="glassDemo">
+          <div class="search">⌕ Search rules or run a command…</div>
+          <div class="row"><span>Approve rule</span><kbd>A</kbd></div>
+          <div class="row"><span>Reject rule</span><kbd>X</kbd></div>
+          <div class="row"><span>View all 11 incidents</span></div>
+        </div>
+      </div>
+      <div class="controls">
+        <label>Tint opacity <input type="range" id="tint" min="0" max="100" value="60" /> <output id="tintOut">0.60</output></label>
+        <label>Blur <input type="range" id="blur" min="0" max="60" value="40" /> <output id="blurOut">40px</output></label>
+      </div>
+    </div>
+  </div>
+  <script type="text/x-code" data-lang="css" data-file="components/CommandPalette/CommandPalette.css:23">.mn-palette {
+  background: var(--glass-palette);                 /* rgba(22, 22, 22, 0.6): see-through tint */
+  backdrop-filter: blur(40px) saturate(1.8);        /* blur what's behind, keep its colour rich */
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),                /* bright top edge: light catching glass */
+    0 0 0 1px var(--line-2),                        /* hairline outline */
+    var(--shadow-palette);                          /* deep shadow: it floats high */
+}</script>
+  <ol class="steps">
+    <li><strong>A partly transparent background</strong>, or there's nothing to see through.</li>
+    <li><strong><code>backdrop-filter: blur()</code></strong> blurs what's behind, but only inside the element's box.</li>
+    <li><strong><code>saturate()</code></strong> stops the blurred colour going muddy.</li>
+    <li><strong>An edge and a shadow</strong> make it read as a sheet floating above the page.</li>
+  </ol>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Accessibility</span><p>With "reduce transparency" or "increase contrast" turned on in the operating system, every glass surface turns solid (<code>styles/accessibility.css</code>).</p></div></div>
+</section>
+
+<!-- ================= motion ================= -->
+<section class="chapter read" id="motion">
+  <div class="chapter-num">16</div>
+  <h2>Motion</h2>
+  <p class="sub">Animate the rare moments; keep the frequent ones instant.</p>
+  <table>
+    <thead><tr><th>What moves</th><th>How</th><th>Timing</th></tr></thead>
+    <tbody>
+      <tr><td>Theme switch</td><td>New theme dissolves over the old (View Transitions)</td><td>200ms ease-out</td></tr>
+      <tr><td>Decision form (clicked)</td><td>Fades up from 8px, un-blurs</td><td>220ms ease-out</td></tr>
+      <tr><td>Decision form (keyboard)</td><td><strong>No animation</strong></td><td>instant</td></tr>
+      <tr><td>⌘K palette</td><td><strong>No animation</strong>: used 100+ times a day</td><td>instant</td></tr>
+      <tr><td>Sidebar / list collapse</td><td>Grid columns slide shut</td><td>240ms ease-out</td></tr>
+      <tr><td>Incidents panel</td><td>Slides in 16px from the right</td><td>200ms ease-out</td></tr>
+      <tr><td>Hold fill</td><td>Sweeps left → right; snaps back on release</td><td>2s linear / 200ms</td></tr>
+      <tr><td>Sort menu</td><td>Scales in from its button</td><td>150ms ease-out</td></tr>
+    </tbody>
+  </table>
+  <h3>Enter animations with no JavaScript: <code>@starting-style</code></h3>
+  <div class="demo">
+    <div class="demo-head">Live demo: the decision form's entrance</div>
+    <div class="demo-body">
+      <div class="enter-stage" id="enterStage"></div>
+      <div class="controls">
+        <button class="theme-btn" id="enterPointer" type="button">Open with click (animates)</button>
+        <button class="theme-btn" id="enterKey" type="button">Open with keyboard (instant)</button>
+      </div>
+    </div>
+  </div>
+  <script type="text/x-code" data-lang="css" data-file="components/Composer/Composer.css:27">.mn-composer[data-animate] {                 /* only set when opened by pointer */
+  transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out), filter 220ms var(--ease-out);
+  @starting-style {                          /* "where it starts" the moment it appears */
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+  }
+}</script>
+  <h3>The theme dissolve</h3>
+  <p>Press the theme button in the sidebar: this page uses the same code.</p>
+  <script type="text/x-code" data-lang="ts" data-file="hooks/useTheme.ts:18">const toggle = () => {
+  // flushSync makes React update the page immediately, inside the transition's "after" snapshot.
+  const apply = () => flushSync(() => setTheme(theme === 'dark' ? 'light' : 'dark'));
+  if (!document.startViewTransition) return apply();   // older browsers: instant
+  document.startViewTransition(apply);
+};</script>
+  <script type="text/x-code" data-lang="css" data-file="styles/theme.css:142">::view-transition-old(root) { animation: none; }                 /* old theme holds still */
+::view-transition-new(root) { animation: mn-dissolve 200ms var(--ease-out); mix-blend-mode: normal; }
+@keyframes mn-dissolve { from { opacity: 0; } }                   /* new theme fades in on top */</script>
+</section>
+
+<!-- ================= palette ================= -->
+<section class="chapter read" id="palette">
+  <div class="chapter-num">17</div>
+  <h2>The ⌘K palette</h2>
+  <p class="sub">Search anything, do anything, without the mouse.</p>
+  <figure><img src="img/palette-dark.jpg" alt="The command palette open over the page" /><figcaption>The selected rule's actions come first, so ⌘K then ↵ is the fastest way to act.</figcaption></figure>
+  <script type="text/x-code" data-lang="tsx" data-file="components/CommandPalette/CommandPalette.tsx:43">const run = (fn: () => void) => () => { fn(); onOpenChange(false); };   // do it, then close
+
+<Command.Item value={`${rule.id} ${rule.name}`} onSelect={run(() => onSelect(rule.id))}>…</Command.Item></script>
+  <ul>
+    <li><strong><code>value</code> is what search matches</strong>, not what's displayed. That's how "RUL-0419" finds a rule by id and "group reactor" finds a group.</li>
+    <li><strong><code>run()</code></strong> wraps every command so the palette always closes afterwards. It's written once.</li>
+  </ul>
+</section>
+
+<!-- ================= small ================= -->
+<section class="chapter read" id="small">
+  <div class="chapter-num">18</div>
+  <h2>Small pieces worth stealing</h2>
+  <p class="sub">Patterns you'll reuse in other projects.</p>
+  <h3><code>WeeklyBars</code>: a chart with no chart library</h3>
+  <p>Twelve <code>&lt;div&gt;</code>s, each <code>(value / max) * 100</code>% tall (at least 2%). Every bar can take focus and has an <code>aria-label</code>. The tooltip flips inwards near the edges. (<code>components/common/WeeklyBars.tsx</code>)</p>
+  <h3>Meters use <code>scaleX</code>, not width</h3>
+  <script type="text/x-code" data-lang="tsx" data-file="components/RuleDetail/Stats.tsx"><div className="mn-meter"><span style={{ transform: `scaleX(${meter})` }} /></div></script>
+  <p>With <code>transform-origin: left</code>, <code>scaleX(0.93)</code> draws a 93% bar without making the browser recalculate layout.</p>
+  <h3>Search that picks on Enter</h3>
+  <script type="text/x-code" data-lang="tsx" data-file="components/Sidebar/Sidebar.tsx">const shownGroups = groupCounts(rules).filter(({ group }) => `${group.name} ${group.unit}`.toLowerCase().includes(q));
+// Enter picks the top match; Esc clears.
+onKeyDown={(e) => {
+  if (e.key === 'Enter' && shownGroups.length) onSelectGroup(shownGroups[0].group.id);
+  if (e.key === 'Escape') setGroupQuery('');
+}}</script>
+  <h3>Lookup tables instead of if/else</h3>
+  <script type="text/x-code" data-lang="ts" data-file="model/labels.ts:15">export const ACTION_KEY: Record<RuleAction, string> = { approve: 'A', reject: 'X', activate: 'E', deactivate: 'D' };</script>
+  <p><code>Record&lt;RuleAction, …&gt;</code> must have an entry for <strong>every</strong> action, so if you add a new action, TypeScript points at every table you forgot.</p>
+</section>
+
+<!-- ================= fake ================= -->
+<section class="chapter read" id="fake">
+  <div class="chapter-num">19</div>
+  <h2>What's mock, what's real</h2>
+  <p class="sub">Everything the UI does is real. The data behind it isn't. This is the list to swap when you connect Denoise.</p>
+  <table>
+    <thead><tr><th>Mock</th><th>Where</th><th>Becomes</th></tr></thead>
+    <tbody>
+      <tr><td>Rules, groups, <code>CURRENT_USER</code></td><td><code>data/mockData.ts</code></td><td>API queries; the signed-in user</td></tr>
+      <tr><td><code>allIncidents()</code></td><td><code>data/mockData.ts:798</code></td><td><code>GET /rules/:id/incidents?q=&amp;resolution=&amp;cursor=</code></td></tr>
+      <tr><td><code>INITIAL_OPEN_TABS</code></td><td><code>data/mockData.ts:10</code></td><td>Start empty, or remember the user's tabs</td></tr>
+      <tr><td><code>NOW</code> (a frozen date)</td><td><code>src/lib/clock.ts</code></td><td><code>new Date()</code>; server timestamps</td></tr>
+      <tr><td><code>apply()</code></td><td><code>hooks/useRulesStore.ts</code></td><td>An API call with loading and error states</td></tr>
+      <tr><td>Backtest timer, <code>estimateImpact()</code></td><td><code>hooks/useBacktest.ts</code>, <code>model/policy.ts</code></td><td>The backtest API, or hide the card</td></tr>
+      <tr><td>Brand, nav links, copy</td><td><code>components/Sidebar/Sidebar.tsx</code> and elsewhere</td><td>Real routes; Denoise wording</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================= issues ================= -->
+<section class="chapter read" id="issues">
+  <div class="chapter-num">20</div>
+  <h2>Known issues</h2>
+  <p class="sub">An honest list. Good practice: read each one and work out why it happens.</p>
+  <table>
+    <thead><tr><th>Issue</th><th>Why it happens</th></tr></thead>
+    <tbody>
+      <tr><td>⌘K → a rule in another group selects a different rule</td><td>The palette resets tab and search but not the group (<code>RuleManagementPage.tsx</code>, <code>onSelect</code>); then the "keep selection valid" effect replaces it.</td></tr>
+      <tr><td>Hold can confirm after a cancelled touch</td><td><code>HoldButton</code> has no <code>onPointerCancel</code>, so the timer keeps running if the browser cancels the touch (e.g. to scroll).</td></tr>
+      <tr><td>Rule list unreachable with Tab / screen readers</td><td>Rows are <code>div</code>s in a list that can't take focus.</td></tr>
+      <tr><td>No shortcut to switch tabs; tabs forgotten on reload</td><td>Not built yet: the working set is prototype-level.</td></tr>
+      <tr><td>Sidebar links can't be focused</td><td><code>&lt;a&gt;</code> with no <code>href</code>.</td></tr>
+      <tr><td>No URL state, no virtualisation, no small-screen layout</td><td>Out of scope for a prototype; needed for production.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================= exercises ================= -->
+<section class="chapter read" id="exercises">
+  <div class="chapter-num">21</div>
+  <h2>Exercises</h2>
+  <p class="sub">The fastest way to make this code yours: small changes where you already know what should happen.</p>
+  <ol class="ladder">
+    <li><strong>Change some wording.</strong> Make the empty list say "Nothing here" instead of "No rules match". <em>Hint: search the project for the text (⌘⇧F). It's in <code>RuleList.tsx</code>.</em></li>
+    <li><strong>Fix the ⌘K bug</strong> from <a href="#issues">Known issues</a>. <em>Hint: the palette's <code>onSelect</code> in <code>RuleManagementPage.tsx</code> calls <code>update({ status: 'all', query: '' })</code>. What else does it need to reset?</em></li>
+    <li><strong>Add a sort option</strong>, e.g. "Escalated". <em>Hint: add a key to <code>SortKey</code> and <code>SORT_LABEL</code> in <code>model/browse.ts</code>, and a case in <code>sortRules</code>. TypeScript will tell you if you miss one. The menu and ⌘K pick it up automatically. Why?</em></li>
+    <li><strong>Add a ⌘K command</strong>: "Show escalated incidents". <em>Hint: a new <code>Command.Item</code> in <code>CommandPalette.tsx</code>, calling <code>onViewIncidents</code>.</em></li>
+    <li><strong>Add a keyboard shortcut</strong>: <kbd>W</kbd> closes the current tab. <em>Hint: one line in the <code>keys</code> map, using <code>closeTab</code>.</em></li>
+    <li><strong>Your first <code>useState</code></strong>: a button that hides the weekly chart. <em>Hint: state in <code>RuleDetail.tsx</code>, and <code>{showChart &amp;&amp; volume}</code>.</em></li>
+    <li><strong>Fix the hold bug.</strong> <em>Hint: one more event on the button in <code>HoldButton.tsx</code>.</em></li>
+  </ol>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Stuck?</span><p>Point at the file and line and ask. The structure means every question has a small, specific place to look.</p></div></div>
+</section>
+
+<!-- ================= glossary ================= -->
+<section class="chapter read" id="glossary">
+  <div class="chapter-num">22</div>
+  <h2>Glossary</h2>
+  <p class="sub">The terms used in this guide, in plain words.</p>
+  <table>
+    <tbody>
+      <tr><td>Component</td><td>A function that returns what to draw. Its name starts with a capital letter.</td></tr>
+      <tr><td>Hook</td><td>A function starting with <code>use</code> that gives a component state or behaviour.</td></tr>
+      <tr><td>Props</td><td>A component's inputs, passed like HTML attributes.</td></tr>
+      <tr><td>Derived state</td><td>A value calculated from other state every render, instead of stored.</td></tr>
+      <tr><td><code>useMemo</code></td><td>Remembers a calculation until its inputs change.</td></tr>
+      <tr><td><code>useRef</code></td><td>A box that holds a value across renders <em>without</em> redrawing.</td></tr>
+      <tr><td><code>useLayoutEffect</code></td><td>Like <code>useEffect</code>, but runs before the browser paints, so measuring doesn't flash.</td></tr>
+      <tr><td>Stale closure</td><td>A function that keeps seeing old values because it was created during an earlier render.</td></tr>
+      <tr><td>Capture phase</td><td>Events travel down to the target, then bubble up. Capture listens on the way down, first.</td></tr>
+      <tr><td>Portal</td><td>Rendering something at the end of <code>&lt;body&gt;</code> so it floats above everything.</td></tr>
+      <tr><td><code>inert</code></td><td>An attribute that makes an area unclickable and skipped by Tab and screen readers.</td></tr>
+      <tr><td>zustand</td><td>A tiny library for state that many components share.</td></tr>
+      <tr><td>ResizeObserver</td><td>A browser API that tells you when an element's size changes.</td></tr>
+      <tr><td>View Transitions API</td><td><code>document.startViewTransition()</code>: snapshots before and after a change and animates between them.</td></tr>
+      <tr><td><code>flushSync</code></td><td>Makes React apply a state change to the page immediately.</td></tr>
+      <tr><td><code>@starting-style</code></td><td>CSS for "what this looked like before it existed", so elements can animate as they appear.</td></tr>
+      <tr><td><code>backdrop-filter</code></td><td>Applies blur or saturation to whatever is <em>behind</em> an element.</td></tr>
+      <tr><td>Specificity</td><td>How CSS decides between two rules: more specific selectors win; if equal, the later one wins.</td></tr>
+      <tr><td>Design token</td><td>A named value (<code>--fg-2</code>) used everywhere instead of raw colours.</td></tr>
+    </tbody>
+  </table>
+  <div class="end">
+    <h3 style="margin-top:0">Where to go next</h3>
+    <p>Open <code>RuleManagementPage.tsx</code> and read it top to bottom. It's the table of contents for the code: every component and hook it uses has its own short file. Then pick an exercise.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+/* ---------- code blocks: tiny highlighter ---------- */
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const RULES = {
+  ts: { re: /(\/\/.*|\/\*[\s\S]*?\*\/)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`)|\b(const|let|function|return|if|else|export|import|from|type|interface|new|true|false|null|undefined|as|typeof)\b|\b(\d+(?:\.\d+)?)\b/g, cls: ['c', 's', 'k', 'n'] },
+  css: { re: /(\/\*[\s\S]*?\*\/)|('[^'\n]*'|"[^"\n]*")|(--[\w-]+)|(@[\w-]+|!important)|(#[0-9a-fA-F]{3,8}\b|-?\b\d+(?:\.\d+)?(?:px|ms|s|%|vh|vw|fr|em|rem|deg)?\b)/g, cls: ['c', 's', 'v', 'k', 'n'] },
+};
+RULES.tsx = RULES.ts;
+function highlight(code, lang) {
+  const { re, cls } = RULES[lang] || RULES.ts;
+  let out = '', last = 0;
+  for (const m of code.matchAll(re)) {
+    const g = m.slice(1).findIndex((x) => x !== undefined);
+    out += esc(code.slice(last, m.index)) + `<span class="tk-${cls[g]}">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(code.slice(last));
+}
+document.querySelectorAll('script[type="text/x-code"]').forEach((el) => {
+  const lang = el.dataset.lang;
+  const code = el.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+  const box = document.createElement('div');
+  box.className = 'code';
+  box.innerHTML = `<div class="code-head"><span>${esc(el.dataset.file || '')}</span><span class="lang">${lang}</span></div><pre><code>${highlight(code, lang)}</code></pre>`;
+  el.replaceWith(box);
+});
+
+/* ---------- theme toggle: the same dissolve Midnight uses ---------- */
+const root = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+const setLabel = () => (themeBtn.querySelector('span').textContent = root.dataset.theme === 'dark' ? 'Light' : 'Dark');
+root.dataset.theme = localStorage.getItem('guide-theme') || 'dark';
+setLabel();
+themeBtn.addEventListener('click', () => {
+  const apply = () => {
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('guide-theme', root.dataset.theme);
+    setLabel();
+  };
+  if (!document.startViewTransition) return apply();
+  document.startViewTransition(apply);
+});
+
+/* ---------- table of contents: highlight the chapter you're reading ---------- */
+const links = new Map([...document.querySelectorAll('.toc a')].map((a) => [a.getAttribute('href').slice(1), a]));
+const spy = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    links.forEach((a) => a.removeAttribute('data-active'));
+    links.get(e.target.id)?.setAttribute('data-active', '');
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('section.chapter').forEach((s) => spy.observe(s));
+
+/* ---------- demo: pane modes (same thresholds as usePaneMode) ---------- */
+const pane = document.getElementById('pane');
+const paneWidth = document.getElementById('paneWidth');
+const pick = (w) => (w >= 1700 ? 'ultra' : w >= 1100 ? 'wide' : 'narrow');
+const LAYOUT = { narrow: ['content'], wide: ['content', 'rail'], ultra: ['content', 'content', 'rail'] };
+function renderPane() {
+  const w = Number(paneWidth.value);
+  const mode = pick(w);
+  const stageWidth = pane.parentElement.clientWidth - 24;
+  pane.style.width = Math.round((w / 2200) * stageWidth) + 'px';
+  if (pane.dataset.mode !== mode || !pane.children.length) {
+    pane.dataset.mode = mode;
+    pane.innerHTML = LAYOUT[mode].map((k) => `<div class="${k === 'rail' ? 'rail' : ''}">${k}</div>`).join('');
+  }
+  document.getElementById('paneOut').textContent = w + 'px';
+  document.getElementById('paneMode').textContent = mode;
+}
+paneWidth.addEventListener('input', renderPane);
+addEventListener('resize', renderPane);
+renderPane();
+
+/* ---------- demo: hold to override (same logic as HoldButton) ---------- */
+const hold = document.getElementById('holdBtn');
+let timer;
+const setHoldLabel = (text) => hold.querySelectorAll('.lbl, .hold-fill span').forEach((n) => (n.textContent = text));
+const start = () => {
+  if (hold.dataset.done !== undefined) return;
+  hold.dataset.holding = '';
+  timer = setTimeout(() => {
+    delete hold.dataset.holding;
+    hold.dataset.done = '';
+    setHoldLabel('✓ Override confirmed');
+  }, 2000);
+};
+const stop = () => { clearTimeout(timer); delete hold.dataset.holding; };
+hold.addEventListener('pointerdown', start);
+['pointerup', 'pointerleave', 'pointercancel'].forEach((t) => hold.addEventListener(t, stop));
+hold.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(); } });
+hold.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') stop(); });
+document.getElementById('holdReset').addEventListener('click', () => { stop(); delete hold.dataset.done; setHoldLabel('Hold to override'); });
+
+/* ---------- demo: glass sliders ---------- */
+const glass = document.getElementById('glassDemo');
+const tint = document.getElementById('tint');
+const blur = document.getElementById('blur');
+const renderGlass = () => {
+  glass.style.setProperty('--tint', (tint.value / 100).toFixed(2));
+  glass.style.setProperty('--blur', blur.value + 'px');
+  document.getElementById('tintOut').textContent = (tint.value / 100).toFixed(2);
+  document.getElementById('blurOut').textContent = blur.value + 'px';
+};
+tint.addEventListener('input', renderGlass);
+blur.addEventListener('input', renderGlass);
+
+/* ---------- demo: composer entrance (@starting-style) ---------- */
+const stage = document.getElementById('enterStage');
+const openCard = (animate) => {
+  stage.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'enter-card';
+  if (animate) card.dataset.animate = '';
+  card.innerHTML = '<b>Approve RUL-0435</b>Starts suppressing matching incidents for Reactor Core';
+  stage.appendChild(card);
+};
+document.getElementById('enterPointer').addEventListener('click', () => openCard(true));
+document.getElementById('enterKey').addEventListener('click', () => openCard(false));
+openCard(false);
+</script>
+</body>
+</html>
