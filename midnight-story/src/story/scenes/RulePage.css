@@ -1,0 +1,718 @@
+/* The rule page window, styled after the dashboard's detail pane and decision rail.
+ * Everything here is drawn in its end state (decided, composer closed, toast up);
+ * the story sets the starting state before it plays. */
+
+.win {
+  position: absolute;
+  top: 80px;
+  left: 500px;
+  width: 900px;
+  height: 740px;
+  border-radius: 16px;
+  background: var(--l2);
+  box-shadow: var(--shadow-window);
+  overflow: hidden;
+}
+
+.win-bar {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 14px 0 8px;
+  background: var(--l1);
+  border-bottom: 1px solid var(--line);
+}
+
+.win-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 300px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.win-tab .dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.win-tab .dot[data-s='rejected'] {
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.win-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.win-mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1.5px var(--fg-3),
+    inset 0 0 0 4.5px var(--l1),
+    inset 0 0 0 7px var(--fg-3);
+}
+
+.win-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  height: calc(100% - 42px);
+}
+
+.rp-main {
+  position: relative;
+  padding: 24px 28px;
+}
+
+.rp-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* End state: the decision has been made. */
+.rp-status-from {
+  opacity: 0;
+}
+
+.rp-title {
+  margin: 10px 0 6px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.rp-scope {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+
+.rp-scope svg {
+  color: var(--fg-3);
+}
+
+.rp-scope strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.rp-sep {
+  width: 1px;
+  height: 12px;
+  margin: 0 6px;
+  background: var(--line-2);
+}
+
+/* ---------- stat cards ---------- */
+
+.rp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.rp-stat {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.rp-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.rp-stat-value {
+  margin-top: 3px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.rp-stat[data-tone='warn'] .rp-stat-value {
+  color: var(--orange);
+}
+
+.rp-stat[data-tone='bad'] .rp-stat-value {
+  color: var(--red);
+}
+
+.rp-stat-foot {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+/* ---------- sections ---------- */
+
+.rp-sec {
+  margin-top: 22px;
+}
+
+.rp-sec h3,
+.rp-rail-sec h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.rp-sec h3 .subtle,
+.rp-rail-sec h3 .subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.rp-p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.rp-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.22);
+  font-size: 12.5px;
+  color: var(--red-text);
+}
+
+.rp-callout svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--red);
+}
+
+.rp-callout .mono {
+  white-space: nowrap;
+}
+
+.rp-callout strong {
+  font-weight: 600;
+  color: var(--red-strong);
+}
+
+.rp-incidents {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.rp-incidents li {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 88px 52px;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.rp-incidents .rp-incidents-head {
+  height: 28px;
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+
+.rp-incidents li[data-escalated] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.18);
+}
+
+.rp-incidents li[data-escalated] .truncate {
+  color: var(--red-soft);
+  font-weight: 500;
+}
+
+.rp-res {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+li[data-escalated] .rp-res {
+  color: var(--red);
+  font-weight: 500;
+}
+
+/* ---------- weekly bars ---------- */
+
+.rp-weekly-plot {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 66px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.rp-bar {
+  flex: 1;
+  max-width: 34px;
+  margin: 0 auto;
+  border-radius: 4px 4px 0 0;
+  background: var(--bar);
+  transform-origin: bottom;
+}
+
+.rp-bar[data-now] {
+  background: var(--fg);
+}
+
+.rp-weekly-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+/* ---------- decision rail ---------- */
+
+.rp-rail {
+  padding: 22px 18px;
+  border-left: 1px solid var(--line);
+  background: var(--l1);
+}
+
+.rp-decision {
+  padding: 14px;
+}
+
+.rp-proposer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.rp-proposer > span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.rp-proposer strong {
+  font-weight: 500;
+}
+
+.rp-proposer .subtle {
+  font-size: 11.5px;
+}
+
+.rp-proposer .pt-bot {
+  width: 28px;
+  height: 28px;
+}
+
+.rp-dec-h {
+  margin: 12px 0 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.rp-dec p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.rp-dec-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rp-dec-btns .btn {
+  padding: 0 10px;
+}
+
+.rp-dec-warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px !important;
+  color: var(--orange) !important;
+  font-size: 12px !important;
+}
+
+/* End state: the pending buttons are gone, the decision is recorded. */
+.rp-dec-pending {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.rp-dec-done p {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--fg);
+}
+
+.rp-dec-done svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--green);
+}
+
+.rp-dec-done[data-end='rejected'] svg {
+  color: var(--fg-3);
+}
+
+.rp-dec-done strong {
+  font-weight: 600;
+}
+
+.rp-dec-done blockquote {
+  margin: 10px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--line-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.rp-rail-sec {
+  margin-top: 22px;
+}
+
+.rp-rail-sec .well b {
+  font-size: 16px;
+}
+
+.rp-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-history li {
+  position: relative;
+  padding: 0 0 14px 20px;
+  font-size: 12.5px;
+}
+
+.rp-history li::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--l1);
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.rp-history li:first-child::before {
+  background: var(--fg);
+  box-shadow: none;
+}
+
+.rp-history strong {
+  font-weight: 500;
+}
+
+.rp-hist-action {
+  color: var(--fg-2);
+}
+
+li[data-action='approved'] .rp-hist-action {
+  color: var(--green);
+}
+
+li[data-action='rejected'] .rp-hist-action {
+  color: var(--red);
+}
+
+.rp-hist-time {
+  float: right;
+  font-size: 11.5px;
+}
+
+/* ---------- composer: the glass decision form, closed in the end state ---------- */
+
+.cmp {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.cmp-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.cmp-sub {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.cmp-bt .well > div {
+  padding: 8px 14px;
+}
+
+.cmp-bt-wait {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.cmp-bt-wait-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px !important;
+  color: var(--fg-2) !important;
+}
+
+.cmp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cmp-input {
+  position: relative;
+  min-height: 66px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow:
+    inset 0 0 0 1px var(--line-3),
+    0 0 0 3px rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cmp-placeholder {
+  position: absolute;
+  color: var(--fg-3);
+}
+
+.cmp-input[data-filled] .cmp-placeholder {
+  opacity: 0;
+}
+
+.cmp-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: -0.18em;
+  background: var(--fg);
+  opacity: 0;
+}
+
+.cmp-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.cmp-ok {
+  display: inline-flex;
+  color: var(--green);
+}
+
+.cmp-input:not([data-filled]) + .cmp-foot .cmp-ok {
+  opacity: 0;
+}
+
+.cmp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cmp-actions .btn:disabled {
+  opacity: 0.4;
+}
+
+.cmp-override {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 10px;
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.22);
+}
+
+.cmp-override > svg {
+  flex: none;
+  color: var(--orange);
+}
+
+.cmp-override-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.cmp-override-text strong {
+  font-weight: 600;
+  color: var(--orange-strong);
+}
+
+.cmp-override-text span {
+  color: var(--fg-2);
+}
+
+/* Hold to confirm: a solid copy of the button, clipped away from the right. */
+.cmp-hold {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: rgba(240, 138, 75, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.45);
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+}
+
+.cmp-hold-fill {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--orange);
+  color: var(--hold-fg);
+  clip-path: inset(0 100% 0 0);
+}
+
+/* ---------- toast ---------- */
+
+.toast {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 12px;
+  background: var(--glass-toast);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+  font-size: 13px;
+}
+
+.toast > span:last-child {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.toast strong {
+  font-weight: 600;
+}
+
+.toast .subtle {
+  font-size: 12px;
+}
+
+.toast-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(69, 196, 122, 0.14);
+  color: var(--green);
+}
+
+.toast[data-tone='neutral'] .toast-icon {
+  background: var(--tint);
+  color: var(--fg-2);
+}
+
+/* ---------- the cursor ---------- */
+
+.cursor,
+.cursor-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cursor {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.cursor-ring {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55);
+}
