@@ -1,0 +1,51 @@
+/* Other rules in the same assignment group. */
+
+.mn-siblings {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mn-sibling {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.mn-sibling .mn-truncate {
+  flex: 1;
+}
+
+.mn-sibling .mn-dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.mn-sibling .mn-row-conf {
+  font-size: 12px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-sibling:hover {
+    background: var(--l3);
+    color: var(--fg);
+  }
+}
+
+.mn-sibling:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}

@@ -1,0 +1,62 @@
+/* Hold to confirm. The fill is a solid copy of the button, clipped away from the right;
+ * holding reveals it over 2s (linear, like a timer), letting go snaps it back in 200ms. */
+
+.mn-hold {
+  position: relative;
+  flex: none;
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(240, 138, 75, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.45);
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 500;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overflow: hidden;
+  transition: transform 160ms var(--ease-out);
+}
+
+.mn-hold:active {
+  transform: scale(0.97);
+}
+
+.mn-hold:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.mn-hold-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mn-hold-fill {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--orange);
+  color: var(--hold-fg);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 200ms var(--ease-out);
+}
+
+.mn-hold[data-holding] .mn-hold-fill {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 2s linear;
+}
+
+.mn-hold[data-done] {
+  background: rgba(69, 196, 122, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(69, 196, 122, 0.4);
+  color: var(--green);
+}
+
+.mn-hold[data-done] .mn-hold-fill {
+  display: none;
+}

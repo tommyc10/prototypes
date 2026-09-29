@@ -1,0 +1,14 @@
+/* What the rule hides (or would) over 90 days: the metric well from ui.css, as three equal cells.
+ * Two classes (.mn-backtest.mn-impact) so these win over the well's own styles. */
+
+.mn-backtest.mn-impact > div {
+  flex: 1;
+  justify-content: flex-start;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.mn-backtest.mn-impact b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}

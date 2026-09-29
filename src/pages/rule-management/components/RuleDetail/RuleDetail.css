@@ -1,0 +1,203 @@
+/* The selected rule: header, sections, the narrow action bar, and the wide/ultra layouts with the decision rail. */
+
+.mn-detail-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mn-detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 40px 48px;
+}
+
+.mn-detail-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 24px;
+  padding: 0 10px 0 9px;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mn-badge .mn-dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.mn-badge[data-status='inactive'] .mn-dot {
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.mn-title {
+  max-width: 760px;
+  margin: 12px 0 8px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.mn-scope {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.mn-scope svg {
+  color: var(--fg-3);
+}
+
+.mn-scope strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mn-sep {
+  width: 1px;
+  height: 12px;
+  margin: 0 6px;
+  background: var(--line-2);
+}
+
+.mn-sec {
+  max-width: 960px;
+  margin-top: 32px;
+}
+
+.mn-sec h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.mn-sec h3 .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.mn-p {
+  max-width: 68ch;
+  margin: 0 0 14px;
+  color: var(--fg-2);
+  line-height: 1.6;
+}
+
+/* ---------- narrow: floating glass action bar ---------- */
+
+.mn-actionbar {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 80px;
+  border-radius: 14px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+}
+
+.mn-detail-scroll[data-floating] {
+  padding-bottom: 200px;
+}
+
+.mn-actionbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 960px;
+  padding: 10px 10px 10px 18px;
+}
+
+.mn-actionbar-note {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500; /* heavier on translucent material, for vibrancy */
+  color: var(--fg-2);
+}
+
+/* ---------- wide + ultra layouts: evidence | (signal) | decision rail ---------- */
+
+.mn-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 24px 48px;
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
+.mn-wide[data-mode='ultra'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 400px;
+  max-width: 2400px;
+}
+
+.mn-wide-head {
+  grid-column: 1 / -1;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mn-col {
+  min-width: 0;
+}
+
+.mn-col > :first-child,
+.mn-rail > :first-child {
+  margin-top: 0;
+}
+
+.mn-wide .mn-stats,
+.mn-wide .mn-sec {
+  max-width: none;
+}
+
+.mn-wide .mn-stats {
+  margin-top: 0;
+}
+
+/* The rail stays put while evidence scrolls: the decision is always in reach. */
+.mn-rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+  padding-bottom: 96px;
+  scrollbar-width: none;
+}
+
+.mn-rail .mn-sec {
+  margin-top: 28px;
+}
+
+.mn-rail-card {
+  border-radius: 14px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2);
+}

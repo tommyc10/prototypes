@@ -1,0 +1,81 @@
+/* The audit trail as a timeline, newest first. */
+
+.mn-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mn-timeline li {
+  position: relative;
+  padding: 0 0 18px 22px;
+}
+
+.mn-timeline li::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.mn-timeline li::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 18px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--line-2);
+}
+
+.mn-timeline li:last-child::after {
+  display: none;
+}
+
+.mn-timeline li:first-child::before {
+  background: var(--fg);
+  box-shadow: none;
+}
+
+.mn-tl-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.mn-tl-head strong {
+  font-weight: 500;
+}
+
+.mn-tl-action {
+  color: var(--fg-2);
+}
+
+.mn-tl-action[data-action='approved'],
+.mn-tl-action[data-action='activated'] {
+  color: var(--green);
+}
+
+.mn-tl-action[data-action='rejected'],
+.mn-tl-action[data-action='deactivated'] {
+  color: var(--red);
+}
+
+.mn-tl-time {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.mn-timeline p {
+  max-width: 68ch;
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}

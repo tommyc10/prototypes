@@ -1,0 +1,65 @@
+/* The incident table. Wide layouts add the CI and time-open columns. */
+
+.mn-incidents {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.mn-incidents li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) auto 52px;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.mn-incidents li + li {
+  margin-top: 1px;
+}
+
+.mn-incidents li[data-escalated] {
+  background: var(--red-wash);
+}
+
+.mn-incidents li[data-escalated] .mn-truncate {
+  color: var(--red-soft);
+  font-weight: 500;
+}
+
+.mn-res {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-res[data-res='escalated'] {
+  color: var(--red);
+  font-weight: 500;
+}
+
+.mn-res[data-res='worked'] {
+  color: var(--fg-2);
+}
+
+.mn-inc-date {
+  text-align: right;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Wider incident table: adds CI and time open. */
+.mn-incidents[data-wide] li {
+  grid-template-columns: 84px minmax(0, 1.4fr) minmax(0, 1fr) 124px 64px 52px;
+}
+
+.mn-incidents .mn-incidents-head {
+  height: 30px;
+  font-size: 12px;
+  color: var(--fg-3);
+}

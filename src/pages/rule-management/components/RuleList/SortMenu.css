@@ -1,0 +1,70 @@
+/* The sort menu: a glass popup that scales in from its button. */
+
+.mn-menu {
+  min-width: 180px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--glass-menu);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  outline: none;
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
+.mn-menu[data-starting-style],
+.mn-menu[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.mn-menu-label {
+  padding: 6px 10px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.mn-menu-item {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px 0 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-2);
+  cursor: default;
+  outline: none;
+}
+
+.mn-menu-item[data-highlighted] {
+  background: var(--tint-2);
+  color: var(--fg);
+}
+
+.mn-menu-item[data-checked] {
+  color: var(--fg);
+}
+
+.mn-menu-ind {
+  display: flex;
+  grid-column: 1;
+}
+
+.mn-menu-item > span:last-child {
+  grid-column: 2;
+}
+
+.mn-menu-sep {
+  height: 1px;
+  margin: 4px;
+  background: var(--line);
+}

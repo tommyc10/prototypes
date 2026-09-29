@@ -1,0 +1,50 @@
+/* The incident browser as a panel that slides in over the detail pane. */
+
+.mn-inc-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 40px 0;
+  background: var(--l2);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+.mn-inc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mn-inc-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mn-inc-title .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.mn-inc-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-inc-panel {
+    @starting-style {
+      transform: none;
+    }
+  }
+}

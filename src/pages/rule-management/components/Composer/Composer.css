@@ -1,0 +1,215 @@
+/* The decision form: floating in narrow layouts, docked in the rail in wide ones. */
+
+.mn-composer {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 80px;
+  border-radius: 14px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+}
+
+.mn-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 960px;
+  padding: 18px;
+}
+
+/* Pointer-opened: materialise in. Keyboard-opened: appear instantly. */
+.mn-composer[data-animate] {
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    filter 220ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-composer[data-animate] {
+    transition: opacity 150ms ease;
+    @starting-style {
+      opacity: 0;
+      transform: none;
+      filter: none;
+    }
+  }
+}
+
+.mn-composer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mn-composer-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mn-composer-head .mn-subtle {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.mn-composer-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mn-backtest-wait {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 10px;
+  font-size: 12px !important;
+  color: var(--fg-2) !important;
+}
+
+.mn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mn-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: box-shadow 150ms ease;
+}
+
+.mn-field textarea::placeholder {
+  color: var(--fg-3);
+}
+
+.mn-field textarea:focus {
+  box-shadow:
+    inset 0 0 0 1px var(--line-3),
+    0 0 0 3px var(--focus-glow);
+}
+
+.mn-field textarea[aria-invalid] {
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.6);
+}
+
+.mn-field-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.mn-counter {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-counter[data-ok] {
+  color: var(--green);
+}
+
+.mn-override {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 10px;
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.22);
+}
+
+.mn-override[data-invalid] {
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.6);
+}
+
+.mn-override-icon {
+  flex: none;
+  color: var(--orange);
+}
+
+.mn-override-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  font-size: 13px;
+}
+
+.mn-override-text strong {
+  font-weight: 600;
+  color: var(--orange-strong);
+}
+
+.mn-override-text span {
+  color: var(--fg-2);
+}
+
+.mn-composer-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Docked composer: same form, living in the rail instead of floating. */
+.mn-composer[data-docked] {
+  position: static;
+  max-width: none;
+  padding: 16px;
+  border-radius: 14px;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.mn-composer[data-docked] .mn-composer-head {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mn-composer[data-docked] .mn-backtest {
+  align-self: stretch;
+}
+
+.mn-composer[data-docked] .mn-backtest > div {
+  flex: 1;
+}
+
+.mn-composer[data-docked] .mn-override {
+  flex-wrap: wrap;
+}
+
+.mn-composer[data-docked] .mn-override-text {
+  flex-basis: calc(100% - 30px);
+}
+
+.mn-composer[data-docked] .mn-hold {
+  width: 100%;
+}
+
+.mn-composer[data-docked] .mn-composer-foot .mn-btn:last-child {
+  flex: 1;
+  justify-content: center;
+}

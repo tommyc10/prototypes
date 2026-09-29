@@ -1,0 +1,368 @@
+/* Small building blocks shared across the page: text helpers, keys, status dots,
+ * buttons, search boxes, tabs, links and empty states. */
+
+.mn-mono {
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.mn-subtle {
+  color: var(--fg-3);
+}
+
+.mn-bad {
+  color: var(--red);
+}
+
+.mn-truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mn kbd,
+.mn-palette kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.mn-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.mn-dot[data-status='active'] {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(69, 196, 122, 0.14);
+}
+
+.mn-dot[data-status='proposed'] {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px rgba(224, 169, 62, 0.14);
+}
+
+.mn-dot[data-status='inactive'] {
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+/* ---------- search box ---------- */
+
+.mn-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px 0 11px;
+  border-radius: 8px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-3);
+  transition: box-shadow 150ms ease;
+}
+
+.mn-search:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--line-3),
+    0 0 0 3px var(--focus-glow);
+}
+
+.mn-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.mn-search input::placeholder {
+  color: var(--fg-3);
+}
+
+:root[data-mn-theme='light'] .mn-search {
+  background: #ffffff;
+}
+
+/* ---------- tabs ---------- */
+
+.mn-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.mn-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.mn-tab span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-tab[data-active] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+.mn-tab[data-active] span {
+  color: var(--fg-2);
+}
+
+.mn-tab[data-bad] span {
+  color: var(--red);
+}
+
+:root[data-mn-theme='light'] .mn-tab[data-active] {
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ---------- icon button ---------- */
+
+.mn-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-2);
+  transition:
+    background-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.mn-icon-btn[data-popup-open] {
+  background: var(--l4);
+  color: var(--fg);
+}
+
+.mn-icon-btn[aria-pressed='false'] {
+  color: var(--fg-3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-tab:hover:not([data-active]) {
+    color: var(--fg-2);
+  }
+  .mn-icon-btn:hover {
+    background: var(--l3);
+  }
+}
+
+/* ---------- buttons ---------- */
+
+.mn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.mn-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.mn-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Primary is white-on-black: the one high-contrast element on screen. */
+.mn-btn[data-variant='primary'] {
+  background: var(--primary);
+  box-shadow: none;
+  color: var(--primary-fg);
+}
+
+.mn-btn[data-variant='primary'] kbd {
+  background: var(--primary-kbd);
+  box-shadow: inset 0 0 0 1px var(--primary-kbd-line);
+  color: var(--primary-kbd-fg);
+}
+
+.mn-btn[data-variant='danger'] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.35);
+  color: var(--danger-fg);
+}
+
+.mn-btn[data-variant='danger'] kbd {
+  background: rgba(240, 86, 92, 0.12);
+  box-shadow: none;
+  color: var(--danger-fg);
+}
+
+.mn-btn-ghost {
+  background: transparent;
+  box-shadow: none;
+  color: var(--fg-2);
+}
+
+.mn-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-btn:hover:not(:disabled):not([data-variant]) {
+    background: var(--l5);
+  }
+  .mn-btn[data-variant='primary']:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+  .mn-btn[data-variant='danger']:hover:not(:disabled) {
+    background: rgba(240, 86, 92, 0.14);
+  }
+}
+
+/* ---------- link ---------- */
+
+.mn-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-link:hover {
+    color: var(--fg);
+  }
+}
+
+.mn-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- confidence, chips, empty states ---------- */
+
+.mn-row-conf {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.mn-row-conf[data-low] {
+  color: var(--orange);
+}
+
+.mn-chip-warn {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.2);
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.mn-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--fg-3);
+}
+
+/* ---------- metric well: a row of numbers in a sunken box ---------- */
+
+.mn-backtest {
+  display: flex;
+  flex: none;
+  min-height: 40px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.mn-backtest > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 14px;
+}
+
+.mn-backtest > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.mn-backtest b {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.mn-backtest span {
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.mn-backtest > div[data-bad] b {
+  color: var(--red);
+}

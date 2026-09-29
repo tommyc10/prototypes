@@ -1,0 +1,105 @@
+/* ---------- ⌘K (no open/close animation: a 100+/day action) ----------
+ * Glass: a light scrim keeps the page visible, and the palette itself is a
+ * see-through tint. The heavy blur turns whatever sits behind it into soft
+ * colour, and the saturation boost keeps that colour from going muddy. */
+
+.mn-palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--scrim);
+}
+
+.mn-palette-content {
+  position: fixed;
+  top: 16vh;
+  left: 50%;
+  z-index: 51;
+  width: 620px;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
+}
+
+.mn-palette {
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--glass-palette);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  backdrop-filter: blur(40px) saturate(1.8);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-palette);
+}
+
+.mn-palette-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg-3);
+}
+
+.mn-palette-search input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 15px;
+}
+
+.mn-palette-search input::placeholder {
+  color: var(--fg-3);
+}
+
+.mn-palette-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.mn-palette [cmdk-group-heading] {
+  padding: 10px 12px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.mn-palette [cmdk-item] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg-2);
+  cursor: default;
+}
+
+.mn-palette [cmdk-item][data-selected='true'] {
+  background: var(--tint-2);
+  color: var(--fg);
+}
+
+.mn-palette [cmdk-item] kbd {
+  margin-left: auto;
+}
+
+.mn-palette-meta {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.mn-palette-empty {
+  padding: 28px;
+  text-align: center;
+  color: var(--fg-3);
+}

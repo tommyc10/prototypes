@@ -1,0 +1,38 @@
+/* Preferences people set in their operating system. Loaded last, so these win. */
+
+/* People who ask for less transparency get solid surfaces. */
+@media (prefers-reduced-transparency: reduce) {
+  .mn-actionbar,
+  .mn-composer,
+  .mn-menu,
+  .mn-palette,
+  .mn-toast {
+    background: var(--l4);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root:not([data-mn-theme='light']) :is(.mn, .mn-menu, .mn-palette, .mn-toast) {
+    --fg-2: #c4c4c4;
+    --fg-3: #9a9a9a;
+    --line: rgba(255, 255, 255, 0.2);
+    --line-2: rgba(255, 255, 255, 0.3);
+  }
+  .mn-actionbar,
+  .mn-composer,
+  .mn-menu,
+  .mn-palette,
+  .mn-toast {
+    background: var(--l4);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  :root[data-mn-theme='light'] :is(.mn, .mn-menu, .mn-palette, .mn-toast) {
+    --fg-2: #333333;
+    --fg-3: #555555;
+    --line: rgba(0, 0, 0, 0.2);
+    --line-2: rgba(0, 0, 0, 0.3);
+  }
+}

@@ -1,0 +1,155 @@
+/* Design tokens: every colour, surface and shadow is a variable here.
+ * The light theme redefines the same names, so components never change.
+ *
+ * Material weight encodes hierarchy: the sidebar is the darkest, heaviest layer;
+ * the detail pane sits lightest. Floating UI is translucent glass with a bright top edge.
+ *
+ * The tokens are declared on .mn-menu, .mn-palette and .mn-toast too, because those
+ * render outside the page (at the end of <body>) and wouldn't inherit them otherwise. */
+
+.mn,
+.mn-menu,
+.mn-palette,
+.mn-toast {
+  --l0: #050505; /* sidebar: heaviest material */
+  --l1: #0b0b0b; /* list pane */
+  --l2: #101010; /* detail pane */
+  --l3: #161616; /* cards */
+  --l4: #1c1c1c; /* raised controls */
+  --l5: #242424; /* hover / pressed */
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.11);
+  --line-3: rgba(255, 255, 255, 0.18);
+  --fg: #ededed;
+  --fg-2: #a3a3a3;
+  --fg-3: #737373;
+  --white: #fafafa;
+  --green: #45c47a;
+  --amber: #e0a93e;
+  --orange: #f08a4b;
+  --orange-wash: rgba(240, 138, 75, 0.08);
+  --red: #f0565c;
+  --red-wash: rgba(240, 86, 92, 0.08);
+  /* surfaces + materials */
+  --glass: rgba(24, 24, 24, 0.78);
+  --glass-menu: rgba(28, 28, 28, 0.86);
+  --glass-palette: rgba(22, 22, 22, 0.6);
+  --glass-toast: rgba(28, 28, 28, 0.88);
+  --glass-edge: rgba(255, 255, 255, 0.07);
+  --card-edge: rgba(255, 255, 255, 0.03);
+  --shadow-float: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-palette: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --scrim: rgba(0, 0, 0, 0.3);
+  --tint: rgba(255, 255, 255, 0.06);
+  --tint-2: rgba(255, 255, 255, 0.07);
+  --well: rgba(0, 0, 0, 0.35);
+  --well-2: rgba(0, 0, 0, 0.3);
+  --focus-glow: rgba(255, 255, 255, 0.05);
+  --focus-ring: rgba(255, 255, 255, 0.45);
+  --selection: rgba(255, 255, 255, 0.22);
+  /* accent: the one high-contrast element */
+  --primary: #fafafa;
+  --primary-fg: #0a0a0a;
+  --primary-hover: #e2e2e2;
+  --primary-kbd: rgba(0, 0, 0, 0.08);
+  --primary-kbd-line: rgba(0, 0, 0, 0.1);
+  --primary-kbd-fg: #404040;
+  --avatar: linear-gradient(145deg, #3a3a3a, #1a1a1a);
+  --row-name: #d6d6d6;
+  --code-val: #d9d9d9;
+  /* semantic text on washes */
+  --red-text: #f3b4b6;
+  --red-strong: #fbd5d6;
+  --red-soft: #f6c2c4;
+  --danger-fg: #f68a8e;
+  --orange-strong: #f7c3a2;
+  --hold-fg: #1a0d05;
+  --wb-bar-c: #2b2b2b;
+  font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--fg);
+  color-scheme: dark;
+}
+
+.mn ::selection {
+  background: var(--selection);
+}
+
+/* ---------- light theme ----------
+ * Same material hierarchy, inverted: the sidebar is the heaviest (darkest grey)
+ * layer, the detail pane is paper white. Near-black becomes the single accent. */
+
+:root[data-mn-theme='light'] :is(.mn, .mn-menu, .mn-palette, .mn-toast) {
+  --l0: #efefef;
+  --l1: #f7f7f7;
+  --l2: #ffffff;
+  --l3: #fafafa;
+  --l4: #ececec;
+  --l5: #e2e2e2;
+  --line: rgba(0, 0, 0, 0.07);
+  --line-2: rgba(0, 0, 0, 0.1);
+  --line-3: rgba(0, 0, 0, 0.2);
+  --fg: #171717;
+  --fg-2: #525252;
+  --fg-3: #737373;
+  --green: #1f9d55;
+  --amber: #d4940f;
+  --orange: #c2570c;
+  --orange-wash: rgba(194, 87, 12, 0.07);
+  --red: #d42a31;
+  --red-wash: rgba(212, 42, 49, 0.06);
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-menu: rgba(255, 255, 255, 0.88);
+  --glass-palette: rgba(255, 255, 255, 0.6);
+  --glass-toast: rgba(255, 255, 255, 0.9);
+  --glass-edge: rgba(255, 255, 255, 0.9);
+  --card-edge: rgba(255, 255, 255, 0.8);
+  --shadow-float: 0 16px 40px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-palette: 0 24px 64px rgba(0, 0, 0, 0.16);
+  --scrim: rgba(0, 0, 0, 0.08);
+  --tint: rgba(0, 0, 0, 0.04);
+  --tint-2: rgba(0, 0, 0, 0.05);
+  --well: rgba(255, 255, 255, 0.9);
+  --well-2: rgba(0, 0, 0, 0.025);
+  --focus-glow: rgba(0, 0, 0, 0.05);
+  --focus-ring: rgba(0, 0, 0, 0.4);
+  --selection: rgba(0, 0, 0, 0.12);
+  --primary: #171717;
+  --primary-fg: #ffffff;
+  --primary-hover: #333333;
+  --primary-kbd: rgba(255, 255, 255, 0.14);
+  --primary-kbd-line: rgba(255, 255, 255, 0.16);
+  --primary-kbd-fg: #d4d4d4;
+  --avatar: linear-gradient(145deg, #e8e8e8, #cfcfcf);
+  --row-name: #262626;
+  --code-val: #171717;
+  --red-text: #9f1d22;
+  --red-strong: #7f1116;
+  --red-soft: #a3181e;
+  --danger-fg: #c8232a;
+  --orange-strong: #9a3f07;
+  --hold-fg: #ffffff;
+  --wb-bar-c: #dedede;
+  color-scheme: light;
+}
+
+/* ---------- theme switch: dissolve the new theme in over the old ---------- */
+
+::view-transition-old(root) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation: mn-dissolve 200ms var(--ease-out);
+  mix-blend-mode: normal;
+}
+
+@keyframes mn-dissolve {
+  from {
+    opacity: 0;
+  }
+}

@@ -1,0 +1,142 @@
+/* The rule list: title, search, status tabs, rows and keyboard hints. */
+
+.mn-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--l1);
+  border-right: 1px solid var(--line);
+}
+
+.mn-list-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 16px 12px;
+}
+
+.mn-list-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.mn-list-title h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.mn-list-title .mn-subtle {
+  font-size: 13px;
+}
+
+.mn-list-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mn-rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 8px 12px;
+  scroll-padding: 8px;
+  /* Scroll edge: content fades under the header rather than hitting a hard line. */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+}
+
+.mn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 12px;
+  border-radius: 9px;
+  cursor: default;
+  transition: background-color 120ms ease;
+}
+
+.mn-row + .mn-row {
+  margin-top: 1px;
+}
+
+.mn-row[data-selected] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-row:hover:not([data-selected]) {
+    background: var(--l3);
+  }
+}
+
+.mn-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.mn-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mn-row:not([data-selected]) .mn-row-name {
+  color: var(--row-name);
+}
+
+.mn-row-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-row-meta .mn-mono {
+  font-size: 11.5px;
+}
+
+.mn-row-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-mn-theme='light'] .mn-row[data-selected] {
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.mn-hints {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-hints span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.mn-hints kbd {
+  margin-right: 3px;
+}

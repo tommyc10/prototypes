@@ -1,0 +1,96 @@
+/* The weekly bar chart. The latest week is highlighted; hover or focus a bar for its number. */
+
+.wb {
+  --wb-bar: var(--wb-bar-c);
+  --wb-now: var(--fg);
+  --wb-grid: var(--line-2);
+  --wb-tip-bg: var(--fg);
+  --wb-tip-fg: var(--l2);
+  --wb-axis: var(--fg-3);
+  width: 100%;
+}
+
+.wb-plot {
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--wb-grid);
+}
+
+.wb-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 1px; /* 2px surface gap between neighbours */
+  outline: none;
+}
+
+.wb-bar {
+  width: 100%;
+  max-width: 24px;
+  border-radius: 4px 4px 0 0;
+  background: var(--wb-bar);
+  transition: filter 120ms ease;
+}
+
+.wb-bar[data-now] {
+  background: var(--wb-now);
+}
+
+.wb-col[data-hover] .wb-bar {
+  filter: brightness(0.88);
+}
+
+.wb-col:focus-visible .wb-bar {
+  outline: 2px solid var(--wb-now);
+  outline-offset: 2px;
+}
+
+.wb-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--wb-tip-bg);
+  color: var(--wb-tip-fg);
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.wb-tip[data-edge='end'] {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.wb-tip[data-edge='start'] {
+  left: 0;
+  transform: none;
+}
+
+.wb-tip strong {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-tip span {
+  opacity: 0.7;
+}
+
+.wb-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--wb-axis);
+}

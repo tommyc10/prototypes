@@ -1,0 +1,66 @@
+/* The row of number cards: confidence, purity, incidents, escalated. Meters use scaleX, not width. */
+
+.mn-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 960px;
+  margin-top: 24px;
+}
+
+.mn-stat {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.mn-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.mn-stat-value {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.mn-stat[data-tone='warn'] .mn-stat-value {
+  color: var(--orange);
+}
+
+.mn-stat[data-tone='bad'] .mn-stat-value {
+  color: var(--red);
+}
+
+.mn-meter {
+  position: relative;
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 4px;
+  background: var(--tint-2);
+  overflow: hidden;
+}
+
+.mn-meter span {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: var(--fg);
+  transform-origin: left;
+}
+
+.mn-stat[data-tone='warn'] .mn-meter span {
+  background: var(--orange);
+}
+
+.mn-stat-foot {
+  margin-top: 8px;
+  font-size: 12px;
+}

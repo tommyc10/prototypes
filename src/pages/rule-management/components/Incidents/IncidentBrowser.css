@@ -1,0 +1,33 @@
+/* Search, resolution filters and the list, a page at a time. */
+
+.mn-inc-browser {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.mn-inc-panel > .mn-inc-browser {
+  flex: 1;
+}
+
+.mn-sec .mn-inc-scroll {
+  padding-bottom: 0;
+}
+
+.mn-inc-filters {
+  flex-wrap: wrap;
+}
+
+.mn-inc-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 40px;
+}
+
+.mn-inc-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+}

@@ -1,0 +1,48 @@
+/* The decision card at the top of the rail: who proposed it, what it does, and the buttons. */
+
+.mn-decide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.mn-decide-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mn-decide p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.mn-decide-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mn-decide-actions .mn-btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.mn-decide .mn-decide-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--orange);
+}
+
+.mn-decide-note svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.mn-decide .mn-decide-foot {
+  font-size: 12px;
+  color: var(--fg-3);
+}
