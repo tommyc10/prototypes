@@ -1,0 +1,96 @@
+/* The wall is a full-stage layer the camera zooms into, so it keeps a compositor layer. */
+
+.sc-wall {
+  will-change: transform;
+  -webkit-mask-image: radial-gradient(ellipse 70% 74% at 50% 50%, #000 38%, transparent 92%);
+  mask-image: radial-gradient(ellipse 70% 74% at 50% 50%, #000 38%, transparent 92%);
+}
+
+.wall {
+  position: absolute;
+  top: -63px;
+  left: -2px;
+  display: flex;
+  gap: 28px;
+}
+
+.wall-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 340px;
+}
+
+.wall-row {
+  display: grid;
+  grid-template-columns: 8px 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--l2);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.wall-id,
+.wall-time {
+  color: var(--fg-3);
+  font-size: 11.5px;
+}
+
+/* End state (the outro): alerts that match a rule are suppressed, the signal stays lit. */
+.wall-row[data-noise] {
+  opacity: 0.16;
+}
+
+.wall-row[data-noise] .dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.wall-row:not([data-noise]) {
+  color: var(--fg);
+}
+
+/* Start state (the hero): everything is firing. */
+.sc-wall[data-state='live'] .wall-row[data-noise] .dot {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px rgba(224, 169, 62, 0.14);
+}
+
+/* The one we follow gets a halo when it fires. */
+.wall-row[data-target] {
+  position: relative;
+}
+
+.wall-row[data-target]::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 11px;
+  box-shadow:
+    inset 0 0 0 1px rgba(224, 169, 62, 0.7),
+    0 0 0 4px rgba(224, 169, 62, 0.12),
+    0 0 40px rgba(224, 169, 62, 0.25);
+  opacity: var(--halo, 0);
+}
+
+/* Idle life on the hero: open alerts breathe. Opacity only, and never with reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .sc-wall[data-state='live'] .wall-row .dot,
+  .wall-row:not([data-noise]) .dot {
+    animation: wall-pulse 2.4s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.23s);
+  }
+}
+
+@keyframes wall-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

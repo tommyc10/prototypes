@@ -1,0 +1,64 @@
+.pt-head {
+  position: absolute;
+  top: 190px;
+  left: 598px;
+}
+
+.pt-eyebrow {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.pt-total {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.pt-count {
+  display: inline-block;
+  min-width: 3ch;
+  font-size: 72px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.pt-window {
+  font-size: 18px;
+  color: var(--fg-2);
+}
+
+.pt-chart {
+  position: absolute;
+  top: 360px;
+  left: 598px;
+  width: 744px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.pt-cell {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--bar);
+}
+
+.pt-cell[data-mine] {
+  background: var(--fg);
+  box-shadow: 0 0 0 3px rgba(237, 237, 237, 0.14);
+}
+
+.pt-axis {
+  position: absolute;
+  top: 572px;
+  left: 598px;
+  display: flex;
+  justify-content: space-between;
+  width: 744px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
