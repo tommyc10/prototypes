@@ -1,12 +1,14 @@
 /* The film: a pinned, fixed-size stage whose one timeline is scrubbed by the scroll bar. */
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap, ScrollTrigger, SplitText, useGSAP } from '../lib/gsap';
 import { STAGE_H, STAGE_W } from '../lib/geometry';
 import { Captions } from './Captions';
 import { CHAPTERS } from './data';
 import { Scenes } from './Scenes';
+import { Guide, type GuideView } from './Guide';
 import { buildStory } from './timeline';
+import { guideAt } from './timeline/guide';
 import type { Mark } from './timeline/kit';
 import { TopBar } from './TopBar';
 
@@ -21,6 +23,8 @@ export function Film() {
   const nav = useRef<{ st: ScrollTrigger; marks: Mark[]; duration: number } | null>(null);
   const [fontsReady, setFontsReady] = useState(false);
   const [active, setActive] = useState(-1);
+  const pip = useRef<HTMLCanvasElement>(null);
+  const [guide, setGuide] = useState<GuideView>({ mood: 'sleeping', side: 'right', line: null });
 
   // Fit the 1440 × 900 stage inside the window. Layout inside it never changes.
   useLayoutEffect(() => {
@@ -49,9 +53,19 @@ export function Film() {
       tl.to(rail, { autoAlpha: 0, duration: 0.4 }, marks[marks.length - 1].end);
 
       // Progress rail: fill each chapter's segment as the playhead crosses it.
+      // Pip: look up its mood, side and line for this moment; flip when passing a flip going forwards.
       let current = -1;
+      let said = '';
+      let last = 0;
       tl.eventCallback('onUpdate', () => {
         const time = tl.time();
+        const g = guideAt(s.guide, time);
+        const key = `${g.mood}|${g.side}|${g.line?.id ?? ''}`;
+        if (key !== said) setGuide(((said = key), g));
+        if (s.guide.flips.some((f) => last < f && time >= f)) {
+          pip.current?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+        last = time;
         let now = -1;
         marks.forEach((m, i) => {
           const p = gsap.utils.clamp(0, 1, (time - m.start) / (m.end - m.start));
@@ -72,6 +86,8 @@ export function Film() {
         invalidateOnRefresh: true,
       });
       nav.current = { st, marks, duration: tl.duration() };
+      // Everything is in its starting state now: safe to show the stage.
+      film.dataset.ready = '';
       // Dev only: lets a script (or you, in the console) seek the film. `__film.tl.duration()`.
       if (import.meta.env.DEV) Object.assign(window, { __film: { tl, st, marks } });
 
@@ -84,18 +100,20 @@ export function Film() {
           .from('.hero-eyebrow', { autoAlpha: 0, y: 10, duration: 0.8 }, 0.25)
           .from(words.words, { autoAlpha: 0, yPercent: 40, filter: 'blur(8px)', duration: 1.1, stagger: 0.07 }, 0.35)
           .from('.hero-sub', { autoAlpha: 0, y: 10, duration: 0.9 }, 0.9)
-          .from('.hero-cue > *', { autoAlpha: 0, y: 8, duration: 0.8, stagger: 0.1 }, 1.3);
+          .from('.hero-cue > *', { autoAlpha: 0, y: 8, duration: 0.8, stagger: 0.1 }, 1.3)
+          .from('.guide canvas', { autoAlpha: 0, y: 16, duration: 1 }, 1.1);
       }
     },
     { scope: root, dependencies: [fontsReady] },
   );
 
-  const scrollToTime = (time: number, duration: number) => {
+  const scrollToTime = useCallback((time: number, duration: number) => {
     const n = nav.current;
     if (!n) return;
     const y = n.st.start + (n.st.end - n.st.start) * (time / n.duration);
     gsap.to(window, { scrollTo: y, duration, ease: 'mn-in-out' });
-  };
+  }, []);
+  const replay = useCallback(() => scrollToTime(0, 2.6), [scrollToTime]);
 
   const goTo = (i: number) => {
     const m = nav.current?.marks[i];
@@ -106,8 +124,9 @@ export function Film() {
     <div className="film" ref={root}>
       <div className="film-pin">
         <div className="stage">
-          <Scenes onReplay={() => scrollToTime(0, 2.6)} />
+          <Scenes onReplay={replay} />
           <Captions />
+          <Guide ref={pip} {...guide} />
         </div>
         <TopBar active={active} fills={fills} onJump={goTo} chapters={CHAPTERS} />
       </div>

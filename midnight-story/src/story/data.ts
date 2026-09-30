@@ -260,3 +260,58 @@ export const OUTRO_STATS = [
   { value: 0, label: 'real incidents hidden' },
   { value: 32, suffix: 'h', label: 'handed back to the crew' },
 ];
+
+/* ---------- Pip, the guide ---------- */
+
+export const GUIDE = { name: 'Pip', type: 'dragon' as const };
+
+/** Where a line belongs: a chapter, or the opening and closing frames. */
+export type Scene = 'hero' | Chapter['id'] | 'outro';
+
+export interface Line {
+  scene: Scene;
+  /** Seconds after the scene starts that the bubble appears and goes. */
+  from: number;
+  to: number;
+  text: string;
+  /** The line Pip says beside this chapter in the storyboard. */
+  board?: boolean;
+}
+
+/** Pip's side of the story. Short: the captions carry the explanation, Pip carries the mood. */
+export const LINES: Line[] = [
+  { scene: 'hero', from: 0, to: 0.7, text: 'Zzz…' },
+  { scene: 'hero', from: 0.95, to: 1.6, text: 'Huh? Coupling 7. Again.' },
+
+  { scene: 'ticket', from: 1.0, to: 3.2, text: 'Watch the temperature…' },
+  { scene: 'ticket', from: 3.5, to: 4.7, text: '…and it fixed itself. At 6am.', board: true },
+
+  { scene: 'recurrence', from: 1.3, to: 2.8, text: 'That square’s the one we just saw.' },
+  { scene: 'recurrence', from: 3.0, to: 5.2, text: '214 times. Every shift change.', board: true },
+
+  { scene: 'pattern', from: 1.3, to: 2.7, text: 'Let me line them all up.' },
+  { scene: 'pattern', from: 2.8, to: 5.2, text: 'Same coupling. Same heat. Same 74 seconds.' },
+  { scene: 'pattern', from: 5.4, to: 6.7, text: 'That’s a pattern. Here’s a rule.', board: true },
+
+  { scene: 'rule', from: 1.9, to: 4.1, text: 'Only a proposal, though. A person decides.', board: true },
+
+  { scene: 'decision', from: 1.4, to: 3.2, text: 'Replaying 90 days… hold on.' },
+  { scene: 'decision', from: 3.4, to: 5.3, text: '210 hidden. Zero real ones.' },
+  { scene: 'decision', from: 5.8, to: 7.3, text: 'Signed and logged. Nice.', board: true },
+
+  { scene: 'suppression', from: 1.9, to: 3.8, text: 'Let’s see it work.' },
+  { scene: 'suppression', from: 4.0, to: 6.3, text: 'Noise. Noise. Noise.' },
+  { scene: 'suppression', from: 6.6, to: 8.8, text: '88 °C? That one pages a person.', board: true },
+  { scene: 'suppression', from: 9.6, to: 10.7, text: 'Ooh. A new proposal.' },
+
+  { scene: 'guardrail', from: 1.8, to: 4.0, text: 'Hmm. 41%. And that red row…' },
+  { scene: 'guardrail', from: 5.4, to: 6.7, text: 'Don’t… hold… that…' },
+  { scene: 'guardrail', from: 6.8, to: 8.4, text: 'Phew.' },
+  { scene: 'guardrail', from: 9.8, to: 12.4, text: 'Reject it. With a reason.' },
+  { scene: 'guardrail', from: 12.9, to: 14.3, text: 'Good call, Admiral.', board: true },
+
+  { scene: 'audit', from: 1.0, to: 4.3, text: 'Every decision, written down. Forever.', board: true },
+
+  { scene: 'outro', from: 1.1, to: 2.0, text: 'Quiet at last.' },
+  { scene: 'outro', from: 2.2, to: 99, text: 'Zzz…' },
+];

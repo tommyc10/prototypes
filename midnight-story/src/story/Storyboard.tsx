@@ -5,7 +5,8 @@ import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import type { Box } from '../lib/geometry';
 import { Caption } from './Captions';
-import { CHAPTERS, DASHBOARD_URL, OUTRO_STATS } from './data';
+import { BotAvatar } from '../vendor/bot-avatars';
+import { CHAPTERS, DASHBOARD_URL, GUIDE, LINES, OUTRO_STATS } from './data';
 import { Audit } from './scenes/Audit';
 import { Gate } from './scenes/Gate';
 import { Pattern } from './scenes/Pattern';
@@ -46,11 +47,21 @@ export function Storyboard() {
             const i = CHAPTERS.findIndex((c) => c.id === id);
             return <Caption chapter={CHAPTERS[i]} index={i} key={id} />;
           })}
+          {still.chapters.map((id) => LINES.find((l) => l.scene === id && l.board)).map(
+            (line) =>
+              line && (
+                <p className="board-pip" key={line.text}>
+                  <BotAvatar type={GUIDE.type} size={40} interactive={false} jumpEvery={0} aria-hidden />
+                  <span>{line.text}</span>
+                </p>
+              ),
+          )}
           <Frame crop={still.crop}>{still.scene}</Frame>
         </section>
       ))}
 
       <footer className="board-outro">
+        <BotAvatar type={GUIDE.type} size={56} state="sleeping" interactive={false} aria-label={`${GUIDE.name} the dragon, asleep`} />
         <h2 className="board-title">Quiet, on purpose.</h2>
         <dl className="outro-stats">
           {OUTRO_STATS.map((s) => (

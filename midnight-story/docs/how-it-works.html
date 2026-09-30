@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How the Midnight story is built</title>
+<style>
+  /* ============ guide tokens (borrowed from Midnight itself) ============ */
+  :root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --bg: #0b0b0b; --panel: #101010; --card: #161616; --raised: #1c1c1c; --hover: #242424;
+    --line: rgba(255,255,255,.07); --line-2: rgba(255,255,255,.11);
+    --fg: #ededed; --fg-2: #a3a3a3; --fg-3: #737373;
+    --green: #45c47a; --amber: #e0a93e; --orange: #f08a4b; --red: #f0565c; --blue: #7aa7ff; --violet: #b69cff;
+    --code-bg: #0e0e0e; --accent: #fafafa; --accent-fg: #0a0a0a;
+    --c-comment: #6b6b6b; --c-string: #a8d8a0; --c-keyword: #c9a7ff; --c-number: #f2b37a; --c-var: #8ec7ff;
+    color-scheme: dark;
+  }
+  html[data-theme='light'] {
+    --bg: #f7f7f7; --panel: #ffffff; --card: #fafafa; --raised: #ececec; --hover: #e2e2e2;
+    --line: rgba(0,0,0,.07); --line-2: rgba(0,0,0,.11);
+    --fg: #171717; --fg-2: #525252; --fg-3: #737373;
+    --green: #1f9d55; --amber: #b67c07; --orange: #c2570c; --red: #d42a31; --blue: #2f63d6; --violet: #6d45d8;
+    --code-bg: #f4f4f4; --accent: #171717; --accent-fg: #fafafa;
+    --c-comment: #8a8a8a; --c-string: #2f7d32; --c-keyword: #7b3fd1; --c-number: #b3530f; --c-var: #1f5fbf;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.65 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(127,127,127,.3); }
+  a { color: inherit; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--fg-3); }
+  code, kbd, pre { font-family: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+  :not(pre) > code {
+    padding: 1px 6px; border-radius: 5px; background: var(--raised);
+    box-shadow: inset 0 0 0 1px var(--line); font-size: .86em; white-space: nowrap;
+  }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+    border-radius: 6px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 0 var(--line-2);
+    font-size: 12px; color: var(--fg-2);
+  }
+
+  /* ============ layout ============ */
+  .shell { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100vh; }
+  .toc {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 28px 18px 40px; background: var(--panel); border-right: 1px solid var(--line);
+  }
+  .toc-brand { display: flex; align-items: center; gap: 10px; margin: 0 8px 24px; font-weight: 600; }
+  .toc-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--accent); color: var(--accent-fg); }
+  .toc ol { list-style: none; margin: 0; padding: 0; counter-reset: ch; }
+  .toc li a {
+    display: flex; gap: 10px; padding: 6px 8px; border-radius: 7px;
+    color: var(--fg-3); font-size: 13.5px; text-decoration: none; transition: color 120ms ease, background-color 120ms ease;
+  }
+  .toc li a::before { counter-increment: ch; content: counter(ch, decimal-leading-zero); font: 11px/2 ui-monospace, monospace; color: var(--fg-3); opacity: .6; }
+  .toc li a:hover { color: var(--fg); background: var(--card); }
+  .toc li a[data-active] { color: var(--fg); background: var(--raised); }
+  .toc-foot { margin: 28px 8px 0; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--fg-3); }
+  .theme-btn {
+    display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 0; border-radius: 8px;
+    background: var(--raised); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--fg-2); font: inherit; font-size: 12.5px; cursor: pointer;
+  }
+  .theme-btn:active { transform: scale(.97); }
+  main { padding: 56px clamp(24px, 6vw, 88px) 120px; }
+  .read { max-width: 780px; }
+  .wide { max-width: 1080px; }
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: 1fr; }
+    .toc { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+
+  /* ============ type ============ */
+  h1 { margin: 0 0 14px; font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -.03em; font-weight: 650; }
+  h2 { margin: 0 0 6px; font-size: 30px; line-height: 1.15; letter-spacing: -.02em; font-weight: 620; }
+  h3 { margin: 36px 0 10px; font-size: 18px; letter-spacing: -.01em; font-weight: 600; }
+  p { margin: 0 0 14px; color: var(--fg-2); }
+  p strong, li strong { color: var(--fg); font-weight: 600; }
+  ul, ol.steps { color: var(--fg-2); padding-left: 20px; margin: 0 0 16px; }
+  li { margin: 4px 0; }
+  .lede { font-size: 18px; line-height: 1.6; color: var(--fg-2); max-width: 680px; }
+  .eyebrow { font: 12px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 14px; }
+  section.chapter { padding-top: 72px; margin-top: 72px; border-top: 1px solid var(--line); }
+  .chapter-num { font: 12px ui-monospace, monospace; color: var(--fg-3); margin-bottom: 10px; }
+  .sub { color: var(--fg-3); font-size: 16px; margin-bottom: 26px; }
+
+  /* ============ components ============ */
+  .hero-img, figure img { display: block; width: 100%; border-radius: 14px; box-shadow: 0 0 0 1px var(--line-2), 0 30px 80px rgba(0,0,0,.35); }
+  figure { margin: 26px 0; }
+  figcaption { margin-top: 10px; font-size: 13px; color: var(--fg-3); }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 30px 0; }
+  .stat { padding: 16px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .stat b { display: block; font-size: 26px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12.5px; color: var(--fg-3); }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  .callout {
+    display: flex; gap: 12px; margin: 22px 0; padding: 14px 16px; border-radius: 12px;
+    background: var(--card); box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .icon { flex: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .callout.why .icon { background: color-mix(in srgb, var(--blue) 18%, transparent); color: var(--blue); }
+  .callout.tip .icon { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+  .callout.warn .icon { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+  .callout .title { display: block; margin-bottom: 2px; color: var(--fg); font-weight: 600; font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 18px 0 24px; font-size: 14px; }
+  th { text-align: left; font-weight: 500; color: var(--fg-3); font-size: 12.5px; padding: 8px 12px; border-bottom: 1px solid var(--line-2); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--fg-2); vertical-align: top; }
+  td:first-child { color: var(--fg); white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--fg-3); }
+
+  /* code blocks */
+  .code { margin: 18px 0 24px; border-radius: 12px; overflow: hidden; background: var(--code-bg); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); font: 12px ui-monospace, monospace; color: var(--fg-3); }
+  .code-head .lang { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+  .code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; color: var(--fg); tab-size: 2; }
+  .tk-c { color: var(--c-comment); font-style: italic; }
+  .tk-s { color: var(--c-string); }
+  .tk-k { color: var(--c-keyword); }
+  .tk-n { color: var(--c-number); }
+  .tk-v { color: var(--c-var); }
+
+  /* diagrams */
+  .flow { display: grid; gap: 10px; margin: 24px 0; }
+  .flow-row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .node {
+    flex: 1; min-width: 150px; padding: 12px 14px; border-radius: 12px; background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--line-2); font-size: 13px; color: var(--fg-2);
+  }
+  .node b { display: block; color: var(--fg); font-size: 13.5px; margin-bottom: 2px; }
+  .node code { font-size: 11.5px; }
+  .node[data-tone='data'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 45%, transparent); }
+  .node[data-tone='state'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--violet) 45%, transparent); }
+  .node[data-tone='ui'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 45%, transparent); }
+  .node[data-tone='act'] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 50%, transparent); }
+  .arrow { display: grid; place-items: center; color: var(--fg-3); font-size: 18px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--fg-3); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  .tree { margin: 20px 0; padding: 18px 20px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font: 13px/1.9 ui-monospace, monospace; color: var(--fg-3); white-space: pre; overflow-x: auto; }
+  .tree b { color: var(--fg); font-weight: 600; }
+  .tree em { color: var(--fg-2); font-style: normal; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12.5px; }
+
+  .ladder { counter-reset: step; list-style: none; padding: 0; margin: 20px 0; }
+  .ladder li { position: relative; padding: 12px 14px 12px 52px; margin: 8px 0; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg-2); font-size: 14px; }
+  .ladder li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 11px; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: var(--raised); color: var(--fg); font: 600 12px ui-monospace, monospace; }
+  .ladder li strong { color: var(--fg); }
+
+  .states { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 20px 0; font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--fg); }
+  .dot { width: 8px; height: 8px; border-radius: 99px; }
+  .dot.proposed { background: var(--amber); box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 16%, transparent); }
+  .dot.active { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 16%, transparent); }
+  .dot.inactive { box-shadow: inset 0 0 0 1.5px var(--fg-3); }
+  .edge { color: var(--fg-3); font: 12px ui-monospace, monospace; }
+
+  .swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 18px 0; }
+  .sw { border-radius: 10px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line-2); font-size: 11.5px; }
+  .sw div { height: 64px; }
+  .sw span { display: block; padding: 7px 9px; background: var(--card); color: var(--fg); font-weight: 500; }
+  .sw span small { display: block; color: var(--fg-3); font-family: ui-sans-serif, system-ui; font-size: 11px; }
+  @media (max-width: 700px) { .swatches { grid-template-columns: repeat(3, 1fr); } }
+
+  
+  /* ============ story guide additions ============ */
+  .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; margin: 26px 0; }
+  .shots figure, .two-up figure { margin: 0; }
+  .shots img, .two-up img { display: block; width: 100%; border-radius: 12px; box-shadow: 0 0 0 1px var(--line-2); }
+  .shots figcaption b { color: var(--fg); font-weight: 600; }
+  .two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; align-items: start; }
+  .two-up.tall { grid-template-columns: 240px 1fr; gap: 28px; }
+  @media (max-width: 760px) { .shots, .two-up, .two-up.tall { grid-template-columns: 1fr; } }
+
+  .demo { margin: 22px 0 28px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line-2); overflow: hidden; }
+  .demo-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--fg-3); }
+  .demo-head::before { content: ''; width: 7px; height: 7px; border-radius: 99px; background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 20%, transparent); }
+  .demo-body { padding: 22px; }
+  .controls { display: flex; gap: 22px; flex-wrap: wrap; align-items: center; margin-top: 16px; font-size: 13px; color: var(--fg-2); }
+  .controls label { display: flex; align-items: center; gap: 10px; }
+  .controls output { font: 12px ui-monospace, monospace; color: var(--fg); min-width: 56px; }
+  input[type='range'] { accent-color: var(--fg); width: 220px; }
+
+  /* demo: mini film */
+  .mini { position: relative; height: 260px; border-radius: 10px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+  .mini-cam { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px; transform-origin: 0 0; }
+  .mini-row { height: 22px; border-radius: 6px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; gap: 6px; padding: 0 8px; font: 10px ui-monospace, monospace; color: var(--fg-3); white-space: nowrap; overflow: hidden; }
+  .mini-row::before { content: ''; flex: none; width: 5px; height: 5px; border-radius: 9px; background: var(--amber); }
+  .mini-row[data-target] { color: var(--fg); }
+  .mini-card { position: absolute; left: 50%; top: 50%; width: 280px; margin: -58px 0 0 -140px; padding: 14px 16px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2), 0 20px 50px rgba(0,0,0,.4); font-size: 13px; opacity: 0; }
+  .mini-card b { display: block; margin: 6px 0 12px; font-size: 15px; }
+  .mini-card-top { display: flex; justify-content: space-between; align-items: center; font: 11px ui-monospace, monospace; color: var(--fg-3); }
+  .mini-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 99px; background: var(--raised); font: 500 11px ui-sans-serif, system-ui; color: var(--fg); }
+  .mini-badge i { width: 6px; height: 6px; border-radius: 9px; background: var(--amber); }
+  .mini-badge em { font-style: normal; }
+  .mini-badge[data-done] i { background: var(--green); }
+  .mini-bar { height: 4px; border-radius: 4px; background: var(--raised); overflow: hidden; }
+  .mini-bar span { display: block; height: 100%; background: var(--fg); transform-origin: left; transform: scaleX(0); }
+  .mini-track { position: relative; height: 26px; margin-top: 12px; border-radius: 8px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .mini-track span { position: absolute; top: 0; bottom: 0; display: grid; place-items: center; font-size: 11px; color: var(--fg-3); border-right: 1px solid var(--line); }
+  .mini-track i { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--fg); }
+
+  /* demo: camera */
+  .cam-stage { position: relative; height: 240px; border-radius: 10px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+  .cam-world { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px; padding: 16px; transform-origin: 0 0; transition: transform 700ms var(--ease-in-out); }
+  .cam-tile { border: 0; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--fg-2); font: 500 12px ui-sans-serif, system-ui; cursor: pointer; }
+  .cam-tile:hover { color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2), 0 0 0 1px var(--fg-3); }
+  .cam-tile[data-on] { color: var(--fg); box-shadow: inset 0 0 0 1px var(--amber); }
+  @media (prefers-reduced-motion: reduce) { .cam-world { transition-duration: 1ms; } }
+
+  /* the decision chapter as a timeline */
+  .gantt { position: relative; margin: 22px 0 14px; padding: 12px 16px 30px 150px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .g-row { position: relative; height: 30px; }
+  .g-row > label { position: absolute; left: -138px; top: 0; width: 128px; line-height: 30px; font-size: 12.5px; color: var(--fg-2); }
+  .g-row::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed var(--line); }
+  .g-bar { position: absolute; top: 7px; height: 16px; border-radius: 5px; background: var(--c); opacity: .85; cursor: default; }
+  .g-bar:hover { opacity: 1; }
+  .g-dot { position: absolute; top: 9px; width: 12px; height: 12px; margin-left: -6px; border-radius: 99px; background: var(--bg); box-shadow: inset 0 0 0 2.5px var(--c); }
+  .g-axis { position: absolute; left: 150px; right: 16px; bottom: 8px; height: 14px; }
+  .g-axis span { position: absolute; transform: translateX(-50%); font: 11px ui-monospace, monospace; color: var(--fg-3); }
+  .legend { margin-bottom: 24px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="toc" aria-label="Contents">
+  <div class="toc-brand"><span class="toc-mark">◐</span> How the story is built</div>
+  <ol>
+    <li><a href="#story">The story, chapter by chapter</a></li>
+    <li><a href="#playhead">The big idea: scroll is the playhead</a></li>
+    <li><a href="#stage">One fixed stage</a></li>
+    <li><a href="#camera">The camera: scrolling into things</a></li>
+    <li><a href="#endstate">Draw the end, set the start</a></li>
+    <li><a href="#anatomy">Anatomy of a chapter</a></li>
+    <li><a href="#pip">Pip, the guide</a></li>
+    <li><a href="#toolkit">The toolkit</a></li>
+    <li><a href="#motion">Motion rules</a></li>
+    <li><a href="#fallback">Phones & reduced motion</a></li>
+    <li><a href="#map">Project map</a></li>
+    <li><a href="#change">How to change things</a></li>
+    <li><a href="#checked">How we checked it</a></li>
+    <li><a href="#gotchas">Gotchas we hit</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+  <div class="toc-foot">
+    <span>Theme</span>
+    <button class="theme-btn" id="themeBtn" type="button">◐ <span>Light</span></button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================= intro ================= -->
+<header class="wide">
+  <div class="eyebrow">Midnight · the story · how it's built</div>
+  <h1>How the Midnight story is built</h1>
+  <p class="lede">The story is a scroll-driven demo site. It follows one alert from the moment it fires to the rule that retires it, and the person who signs for it. This page explains how it works in plain terms: the one idea everything hangs on, the handful of techniques on top of it, and how to change it without breaking it.</p>
+  <div class="stats">
+    <div class="stat"><b>1</b><span>timeline drives the whole film</span></div>
+    <div class="stat"><b>10</b><span>scenes · 8 captioned chapters</span></div>
+    <div class="stat"><b>~15</b><span>screens of scrolling, start to end</span></div>
+    <div class="stat"><b>0</b><span>videos: it's all live HTML</span></div>
+  </div>
+  <figure>
+    <img class="hero-img" src="img/hero.jpg" alt="The opening frame: 'Silence the noise. Never the signal.' over a wall of live alerts" />
+    <figcaption>The opening frame. Everything behind the headline is real HTML (76 alert rows), not an image, so the camera can later fly into one of them.</figcaption>
+  </figure>
+  <div class="callout tip"><span class="icon">i</span><div><span class="title">The 30-second version</span><p>The page is a <strong>film whose play button is the scroll bar</strong>. We wrote the whole film as one animation timeline with <strong>GSAP</strong>. <strong>ScrollTrigger</strong> pins the screen in place and moves the timeline forwards and backwards as you scroll. Every "scene" is a real piece of UI drawn on a fixed-size canvas, so we can point a virtual camera at any part of it.</p></div></div>
+  <p>Run it with <code>cd midnight-story && npm install && npm run dev</code>, then open <code>localhost:5189</code>. Paths on this page, like <code>timeline/kit.ts</code>, are inside <code>midnight-story/src/story/</code> unless they start with <code>src/</code>.</p>
+</header>
+
+<!-- ================= 1. story ================= -->
+<section class="chapter wide" id="story">
+  <div class="chapter-num">01</div>
+  <h2>The story, chapter by chapter</h2>
+  <p class="sub">What the viewer sees, and what the scroll does in each part.</p>
+
+  <div class="shots">
+    <figure><img src="img/fire.jpg" alt="" /><figcaption><b>Opening.</b> A wall of live alerts. One fires (amber halo) and the camera dives into it.</figcaption></figure>
+    <figure><img src="img/ticket.jpg" alt="" /><figcaption><b>1 · The ticket.</b> Temperature crosses 70 °C, a timer runs to 74 s, and it clears itself. Nobody touched it.</figcaption></figure>
+    <figure><img src="img/recurrence.jpg" alt="" /><figcaption><b>2 · Recurrence.</b> The ticket shrinks into one square; 213 more rain in and stack into weeks.</figcaption></figure>
+    <figure><img src="img/chip.jpg" alt="" /><figcaption><b>3 · Pattern.</b> Values lift off the ticket, fly into a query, and scramble into general conditions.</figcaption></figure>
+    <figure><img src="img/rule.jpg" alt="" /><figcaption><b>4 · The rule.</b> The query flies into the real rule page, which builds around it. Numbers count up.</figcaption></figure>
+    <figure><img src="img/composer.jpg" alt="" /><figcaption><b>5 · Decision.</b> A pointer approves. The camera leans in while the 90-day backtest runs and the reason types itself.</figcaption></figure>
+    <figure><img src="img/gate.jpg" alt="" /><figcaption><b>6 · Suppression.</b> The page folds into a gate. Matches drop into the pile; everything else pages a person.</figcaption></figure>
+    <figure><img src="img/hold.jpg" alt="" /><figcaption><b>7 · Guardrails.</b> A 41%-confidence rule with a real attack in its evidence. The override hold is started, abandoned, then the rule is rejected.</figcaption></figure>
+    <figure><img src="img/audit.jpg" alt="" /><figcaption><b>8 · Audit.</b> The log fills in the order it happened, with each person's reason in their own words.</figcaption></figure>
+    <figure><img src="img/outro.jpg" alt="" /><figcaption><b>Ending.</b> The same wall from the start, quiet now. The alert we followed is the last to go dark.</figcaption></figure>
+  </div>
+
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Why a story, not a feature list</span><p>Rule governance is abstract: "patterns become proposals that people approve". Following <strong>one concrete alert</strong> makes each step feel like a consequence of the one before. That's why every transition physically carries something into the next scene: the ticket becomes a square, the squares pour into the stack, the query flies into the page, and the page folds into the gate.</p></div></div>
+</section>
+
+<!-- ================= 2. playhead ================= -->
+<section class="chapter read" id="playhead">
+  <div class="chapter-num">02</div>
+  <h2>The big idea: scroll is the playhead</h2>
+  <p class="sub">Everything else on this page builds on this one idea.</p>
+
+  <p>Think of a video editor. There's a <strong>timeline</strong> with clips on it, and a <strong>playhead</strong> that says "we're at 12.4 seconds". Our film works the same way, except nothing plays on its own: <strong>the scroll bar is the playhead</strong>.</p>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node" data-tone="act"><b>You scroll</b>the page is ~15 screens tall</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="state"><b>ScrollTrigger</b>pins the screen and turns scroll distance into "time"</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="data"><b>The timeline</b>63.7 s of choreography, one GSAP timeline</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="ui"><b>The scenes</b>real HTML, moved with transform + opacity</div>
+    </div>
+  </div>
+
+  <ul>
+    <li><strong>Pinned:</strong> the screen doesn't scroll away. It stays put while the story plays inside it.</li>
+    <li><strong>Scrubbed:</strong> scroll forward and the film moves forward. Scroll back and it rewinds, exactly.</li>
+    <li><strong>Smoothed:</strong> <code>scrub: 1</code> means the playhead takes about a second to catch up with the scroll bar. That turns jerky mouse-wheel steps into glide.</li>
+  </ul>
+
+  <div class="demo">
+    <div class="demo-head">Live demo · a tiny version of the film. The slider is your scroll bar.</div>
+    <div class="demo-body">
+      <div class="mini" id="mini">
+        <div class="mini-cam" id="miniCam"></div>
+        <div class="mini-card" id="miniCard">
+          <div class="mini-card-top"><span>INC-40231</span><span class="mini-badge" id="miniBadge"><i></i><em>Open</em></span></div>
+          <b>Coupling 7 temperature warning</b>
+          <div class="mini-bar"><span id="miniFill"></span></div>
+        </div>
+      </div>
+      <div class="mini-track" id="miniTrack">
+        <span style="left:0;width:25%">alert fires</span>
+        <span style="left:25%;width:35%">camera dives</span>
+        <span style="left:55%;width:30%">ticket arrives</span>
+        <span style="left:85%;width:15%">clears</span>
+        <i id="miniHead"></i>
+      </div>
+      <div class="controls">
+        <label>Scroll <input id="miniScroll" type="range" min="0" max="1000" value="0" /></label>
+        <label><input id="miniSmooth" type="checkbox" checked /> Smoothing (<code>scrub: 1</code>)</label>
+        <output id="miniOut">0.00 s</output>
+      </div>
+    </div>
+  </div>
+  <p>Try dragging fast with smoothing on, then off. Off feels mechanical; on feels like a camera operator. That's the whole difference <code>scrub: 1</code> makes in the real film.</p>
+
+  <script type="text/x-code" data-lang="ts" data-file="Film.tsx">ScrollTrigger.create({
+  trigger: film.querySelector('.film-pin'),   // the full-screen box that gets pinned
+  start: 'top top',
+  end: () => `+=${tl.duration() * innerHeight * SCROLL_PER_SECOND}`, // 1 s of film = 0.24 screens of scroll
+  pin: true,                                   // hold the screen still while the film plays
+  scrub: 1,                                    // follow the scroll bar, ~1 s behind for smoothness
+  animation: tl,                               // the one timeline
+});</script>
+</section>
+
+<!-- ================= 3. stage ================= -->
+<section class="chapter read" id="stage">
+  <div class="chapter-num">03</div>
+  <h2>One fixed stage</h2>
+  <p class="sub">Design once at 1440 × 900, then scale the whole thing to fit any window.</p>
+
+  <p>Every scene is laid out on a <strong>fixed 1440 × 900 canvas</strong>, the "stage". The stage is scaled up or down as one piece to fit the window, like a slide in a presentation. A big monitor gets a bigger slide; nothing inside it moves around.</p>
+
+  <script type="text/x-code" data-lang="css" data-file="src/styles/app.css">.stage {
+  position: absolute; top: 50%; left: 50%;
+  width: 1440px; height: 900px;                          /* always this size inside */
+  transform: translate(-50%, -50%) scale(var(--stage-scale, 1));  /* centred, scaled to fit */
+}</script>
+  <script type="text/x-code" data-lang="ts" data-file="Film.tsx">const fit = () => root.style.setProperty('--stage-scale',
+  String(Math.min(innerWidth / 1440, innerHeight / 900)));   // the largest scale that still fits</script>
+
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Why this matters so much</span><p>The film is full of "fly this thing to exactly where that thing is" moments. If the layout reflowed with the window, every one of those targets would move on every resize, and we'd have to recalculate them all. On a fixed stage, <strong>positions never change</strong>. We measure them once and they stay right. It also means a designer can reason in plain pixels: "the ticket card sits at x 670, y 178".</p></div></div>
+</section>
+
+<!-- ================= 4. camera ================= -->
+<section class="chapter read" id="camera">
+  <div class="chapter-num">04</div>
+  <h2>The camera: scrolling into things</h2>
+  <p class="sub">How "you scroll into the ticket" actually works.</p>
+
+  <p>There's no real camera. To "fly into" something, we <strong>scale up the whole scene</strong> and <strong>shift it</strong> so the thing we care about lands in the middle of the screen. Do that gradually and it looks exactly like a camera pushing in. The new scene then grows up to meet you from behind, so it feels like you went <em>through</em> the old one.</p>
+
+  <div class="two-up">
+    <figure><img src="img/fire.jpg" alt="" /><figcaption>Before: one alert glows in the wall.</figcaption></figure>
+    <figure><img src="img/dive.jpg" alt="" /><figcaption>Mid-dive: the wall is scaled ~5× around that alert.</figcaption></figure>
+  </div>
+
+  <p>The maths is one line. To put point <code>c</code> of the scene at screen point <code>to</code> while scaling by <code>s</code>, move the scene by <code>to − c × s</code>:</p>
+  <script type="text/x-code" data-lang="ts" data-file="src/lib/geometry.ts">export function focus(target: Box, scale: number, toX = 720, toY = 450) {
+  const c = centerOf(target);
+  return { x: toX - c.x * scale, y: toY - c.y * scale, scale, transformOrigin: '0 0' };
+}
+// used like: tl.to(wall, { ...focus(box(s, alertRow), 9), duration: 1.8 })</script>
+
+  <div class="demo">
+    <div class="demo-head">Live demo · click any tile to point the camera at it. Click again to pull back.</div>
+    <div class="demo-body">
+      <div class="cam-stage" id="camStage"><div class="cam-world" id="camWorld"></div></div>
+      <div class="controls"><output id="camOut" style="min-width:0">x 0 · y 0 · scale 1</output></div>
+    </div>
+  </div>
+
+  <p>The same trick is used four times: diving into the alert (×9), leaning in on the approval form (×1.08, subtle), diving into the new proposal (×3.4), and in reverse at the end, where the wall starts slightly zoomed and settles back to 1.</p>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Its cousin: morph</span><p><code>morph(from, to)</code> in the same file works out the move and scale that lands one box exactly on top of another. It powers the "carry something into the next scene" moments: the ticket shrinking into a single square, and the rule page folding down into the gate.</p></div></div>
+</section>
+
+<!-- ================= 5. end state ================= -->
+<section class="chapter read" id="endstate">
+  <div class="chapter-num">05</div>
+  <h2>Draw the end, set the start</h2>
+  <p class="sub">The one rule that makes scrolling backwards reliable.</p>
+
+  <p>Every scene is written in React in its <strong>finished</strong> state: the ticket already says "Auto-cleared", the counter already says 214, the reason is already typed, the rule is already Active. The timeline then does two things:</p>
+  <ol class="ladder">
+    <li><strong>At build time, set the start.</strong> <code>gsap.set()</code> puts everything back to how it looks before the story reaches it: counter to 0, reason empty, badge on "Proposed".</li>
+    <li><strong>On scroll, only ever tween forward.</strong> <code>tl.to()</code> animates from wherever things are towards the finished state.</li>
+  </ol>
+
+  <table>
+    <tr><th>What you get</th><th>Why</th></tr>
+    <tr><td>Exact rewinding</td><td>GSAP records the start values, so scrolling up replays everything backwards perfectly: counters count down, pills slide back into the lane, the query un-writes itself.</td></tr>
+    <tr><td>Free still images</td><td>The phone and reduced-motion version just renders the scenes <em>without</em> the timeline, and they're already in their finished state. See <a href="#fallback">Phones & reduced motion</a>.</td></tr>
+    <tr><td>Clean teardown</td><td>Everything set by GSAP lives in one <code>useGSAP</code> context. Unmount, and it all reverts to the markup.</td></tr>
+  </table>
+
+  <script type="text/x-code" data-lang="ts" data-file="timeline/kit.ts">export function count(s: Story, el: HTMLElement, at: number, duration = 0.8, from = 0) {
+  const to = Number(el.textContent);                  // the markup holds the END value, e.g. "214"
+  gsap.set(el, { textContent: from });                // set the START
+  s.tl.to(el, { textContent: to, snap: { textContent: 1 }, duration }, at);  // tween forward
+}</script>
+</section>
+
+<!-- ================= 6. anatomy ================= -->
+<section class="chapter wide" id="anatomy">
+  <div class="chapter-num">06</div>
+  <h2>Anatomy of a chapter</h2>
+  <p class="sub">Chapter 5, "A person signs for it", beat by beat.</p>
+
+  <p>Each chapter is a function that places tweens on the timeline at exact times. <code>t</code> is when the chapter starts; everything else is <code>t + seconds</code>. Here is the decision chapter drawn as a timeline (hover a bar for details):</p>
+
+  <div class="gantt" id="gantt"></div>
+  <div class="legend">
+    <span><i style="background:var(--fg-3)"></i>caption</span>
+    <span><i style="background:var(--blue)"></i>pointer</span>
+    <span><i style="background:var(--violet)"></i>camera</span>
+    <span><i style="background:var(--amber)"></i>form &amp; typing</span>
+    <span><i style="background:var(--green)"></i>decision recorded</span>
+  </div>
+
+  <div class="read">
+    <script type="text/x-code" data-lang="ts" data-file="timeline/middle.ts: decision()">captionOut(s, 'rule', t);
+captionIn(s, 'decision', t + 0.5);
+
+// Approve.
+hand.show(t + 0.2, { x: 1330, y: 800 });
+hand.move(t + 0.3, box(s, approve), 0.9);
+hand.click(t + 1.25, box(s, approve), approve);
+openComposer(s, composer, t + 1.35);
+
+// The camera leans in while the engine replays 90 days and the reason gets written.
+s.tl.to(scene, { ...focus(box(s, composer), 1.08, 940, 500), duration: 1 }, t + 1.5);
+swap(s, backtestWaiting, backtestDone, t + 3.3);
+writeReason(s, '.sc-rule .rp-cmp', RULE_0412.reason, t + 2.4, 2);
+s.tl.to(scene, { x: 0, y: 0, scale: 1, duration: 0.9 }, t + 4.5);
+
+// Sign it.
+hand.move(t + 4.7, box(s, submit), 0.7);
+hand.click(t + 5.45, box(s, submit), submit);
+closeComposer(s, composer, t + 5.6);
+recordDecision(s, '.sc-rule', t + 5.7, 'active');   // badge, rail, history, toast</script>
+    <div class="callout tip"><span class="icon">✓</span><div><span class="title">Reading it like a script</span><p>You can read that code aloud: <em>"the pointer appears, moves to Approve, clicks, the form opens, the camera leans in…"</em>. That was the goal of the helpers. The choreography reads like a screenplay, and the fiddly GSAP details live in <code>timeline/kit.ts</code>.</p></div></div>
+  </div>
+</section>
+
+<!-- ================= pip ================= -->
+<section class="chapter read" id="pip">
+  <div class="chapter-num">07</div>
+  <h2>Pip, the guide</h2>
+  <p class="sub">A small dragon who walks you through the story, and why he's built the way he is.</p>
+
+  <div class="two-up">
+    <figure><img src="img/pip-asleep.jpg" alt="Pip asleep under the headline" /><figcaption>The opening: Pip is asleep. The alert that fires wakes him with a startled flip.</figcaption></figure>
+    <figure><img src="img/pip-outro.jpg" alt="Pip asleep above 'Quiet, on purpose.'" /><figcaption>The ending: the wall is quiet, so he goes back to sleep.</figcaption></figure>
+  </div>
+
+  <p>Pip is the <strong>dragon from our bot-avatars library</strong> (<code>code-library/components/bot-avatars</code>), copied into <code>src/vendor/bot-avatars/</code> so the repo builds on its own. He does three jobs:</p>
+  <ul>
+    <li><strong>Leads the eye.</strong> Each chapter he hops to a perch beside the thing that matters: on the ticket's edge, on top of this week's square, on the rule gate, on the audit log. When the product fills the screen, he waits beside the caption.</li>
+    <li><strong>Sets the mood.</strong> The captions explain; Pip reacts, in short asides ("88 °C? That one pages a person."). All of them live in <code>LINES</code> in <code>data.ts</code>.</li>
+    <li><strong>Shows what the system is doing.</strong> He's <code>working</code> (hopping) while the engine mines patterns, during the 90-day replay and while alerts stream through the gate; <code>sleeping</code> at the start and end. He flips when the rule is signed and when the attack-run rule is rejected.</li>
+  </ul>
+
+  <figure><img src="img/pip-gate.jpg" alt="Pip perched on the rule gate commenting on the 88 °C alert" /><figcaption>Gatekeeper: Pip on the rule chip while the stream runs.</figcaption></figure>
+
+  <h3>Two kinds of motion, on purpose</h3>
+  <table>
+    <tr><th>What</th><th>How</th><th>Why</th></tr>
+    <tr><td>Where Pip is</td><td>Tweens on the master timeline (<code>timeline/guide.ts</code>)</td><td>Position is part of the film, so it scrubs and rewinds with everything else.</td></tr>
+    <tr><td>What he says, his mood, which way the bubble points</td><td>Looked up from the playhead's time on every update (<code>guideAt()</code>)</td><td>Scroll back and he un-says the line exactly. Mood changes are cross-animated by the avatar itself.</td></tr>
+    <tr><td>His flips</td><td>Fired only when the playhead passes the moment <em>going forwards</em></td><td>A celebration shouldn't replay when you scroll back past it.</td></tr>
+    <tr><td>His idle life</td><td>The avatar's own loop: blinking, looking at your cursor, a hop when you click him</td><td>He feels alive even when you stop scrolling.</td></tr>
+  </table>
+
+  <script type="text/x-code" data-lang="ts" data-file="timeline/guide.ts">// A hop: across on a travelling curve, up quickly, down under gravity.
+hop('recurrence', 0.2, PERCH.week);        // follows the ticket into its square
+hop('pattern', 0.3, PERCH.stack);
+mood('pattern', 1.3, 'working');           // busy while the values fly
+mood('pattern', 5.3, 'default');
+flip('decision', 5.8);                     // the rule is signed</script>
+
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Changing Pip</span><p>His words: <code>LINES</code> in <code>data.ts</code> (each line says which scene it belongs to and when it shows, in seconds after that scene starts). His name and avatar type: <code>GUIDE</code> in the same file. Where he sits and when he's busy: <code>timeline/guide.ts</code>. Perches are stage pixels, so a new one is just an <code>{ x, y, side }</code>.</p></div></div>
+  <div class="callout why"><span class="icon">?</span><div><span class="title">Why he's hidden from screen readers</span><p>The captions already tell the story. Pip's asides would repeat it, and his bubble changes many times a minute while scrolling. So his layer is <code>aria-hidden</code>. In the phone and reduced-motion storyboard he appears as one still line beside each chapter.</p></div></div>
+</section>
+
+<!-- ================= 7. toolkit ================= -->
+<section class="chapter read" id="toolkit">
+  <div class="chapter-num">08</div>
+  <h2>The toolkit</h2>
+  <p class="sub">Eleven small helpers in <code>timeline/kit.ts</code> that every chapter is written with.</p>
+  <table>
+    <tr><th>Helper</th><th>What it does</th></tr>
+    <tr><td><code>enter</code> / <code>leave</code></td><td>Fade and lift something into place, or fade, drift and soften it away. Exits are quicker than entrances.</td></tr>
+    <tr><td><code>swap</code></td><td>Two things in the same spot (e.g. "Proposed" and "Active" badges): dissolve one into the other with a little blur to hide the seam.</td></tr>
+    <tr><td><code>count</code></td><td>Count a number up to the value in the markup.</td></tr>
+    <tr><td><code>type</code></td><td>Type text at a steady pace (GSAP's TextPlugin).</td></tr>
+    <tr><td><code>press</code></td><td>The tiny scale-down a button gives when clicked.</td></tr>
+    <tr><td><code>pointer</code></td><td>A fake cursor with <code>show</code>, <code>move</code>, <code>click</code> (with a ring) and <code>hide</code>. It lives inside the scene, so camera moves carry it too.</td></tr>
+    <tr><td><code>captionIn</code> / <code>captionOut</code></td><td>The chapter text on the left. Titles rise line by line from behind a mask (GSAP's SplitText).</td></tr>
+    <tr><td><code>box</code> / <code>one</code> / <code>all</code></td><td>Find elements on the stage and measure where they sit.</td></tr>
+    <tr><td><code>mark</code></td><td>Record where a chapter starts and ends, for the progress rail at the top.</td></tr>
+  </table>
+  <p>Beyond core GSAP, the film uses five plugins, all free in the public <code>gsap</code> package: <strong>ScrollTrigger</strong> (pin and scrub), <strong>SplitText</strong> (caption lines), <strong>ScrambleText</strong> (<code>tb-coupling-07</code> → <code>tb-coupling-*</code>), <strong>TextPlugin</strong> (typing), <strong>DrawSVG</strong> (the temperature line drawing itself), plus <strong>CustomEase</strong> for our curves.</p>
+</section>
+
+<!-- ================= 8. motion ================= -->
+<section class="chapter read" id="motion">
+  <div class="chapter-num">09</div>
+  <h2>Motion rules</h2>
+  <p class="sub">The same three curves as the dashboard, so the demo feels like the product.</p>
+  <table>
+    <tr><th>Movement</th><th>Curve</th><th>Used for</th></tr>
+    <tr><td>Arriving or leaving</td><td><code>mn-out</code> · fast start, soft landing</td><td>Cards, captions, toasts, anything entering</td></tr>
+    <tr><td>Travelling on screen</td><td><code>mn-in-out</code> · eases in and out</td><td>Camera moves, fly-tos, the pointer</td></tr>
+    <tr><td>Clocks and machines</td><td><code>none</code> · constant speed</td><td>The 74-second timer, typing, alerts riding the lane, the hold-to-override fill</td></tr>
+  </table>
+  <ul>
+    <li><strong>Only <code>transform</code> and <code>opacity</code> move.</strong> They're cheap for the browser, so it stays smooth even while scaling a whole scene 9×. Blur is used sparingly, only to hide crossfade seams.</li>
+    <li><strong>Deliberate things are slow, responses are fast.</strong> Holding to override fills over 1.3 s in a straight line; letting go snaps back in 0.2 s. Opening the form takes 0.45 s; closing takes 0.25 s.</li>
+    <li><strong>Nothing starts from nothing.</strong> Things enter from 0.72–0.97 scale, never from zero.</li>
+    <li><strong>Idle life is tiny.</strong> Only status dots breathe and the spinner turns, and only when motion is allowed.</li>
+  </ul>
+</section>
+
+<!-- ================= 9. fallback ================= -->
+<section class="chapter read" id="fallback">
+  <div class="chapter-num">10</div>
+  <h2>Phones & reduced motion</h2>
+  <p class="sub">Same story, no scroll-linked motion.</p>
+  <div class="two-up tall">
+    <figure><img src="img/storyboard-mobile.jpg" alt="The storyboard version on a phone" /><figcaption>The storyboard on a 390px phone.</figcaption></figure>
+    <div>
+      <p>If the window is narrower than 900px, shorter than 560px, or the person has asked their system for <strong>reduced motion</strong>, <code>src/App.tsx</code> renders the <strong>storyboard</strong> instead of the film:</p>
+      <ul>
+        <li>Each chapter's caption, then a <strong>still frame</strong> of its scene.</li>
+        <li>The stills are the same scene components, cropped and scaled. Because they're drawn in their end state (<a href="#endstate">see 05</a>), no extra work was needed.</li>
+        <li>Nothing moves when you scroll. It's a normal page.</li>
+      </ul>
+      <div class="callout why"><span class="icon">?</span><div><span class="title">Why not just shrink the film?</span><p>Big camera moves tied to scrolling can make some people feel sick, which is exactly what reduced motion asks us to avoid. And on a phone the 1440 × 900 stage would be too small to read. A calm, readable page beats a tiny film.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 10. map ================= -->
+<section class="chapter read" id="map">
+  <div class="chapter-num">11</div>
+  <h2>Project map</h2>
+  <p class="sub">Where things are in <code>midnight-story/src/</code>.</p>
+<div class="tree"><b>App.tsx</b>                    <em>film where there's room and motion is welcome, storyboard otherwise</em>
+<b>lib/</b>
+├── gsap.ts                <em>GSAP + plugins registered once · the three curves</em>
+├── geometry.ts            <em>stage size · focus() (camera) · morph() (fly-to)</em>
+└── path.ts                <em>smooth line for the temperature chart</em>
+<b>story/</b>
+├── data.ts                <em>every word and number in the story ← start here to edit copy</em>
+├── Film.tsx               <em>pin, scale-to-fit, progress rail, first-load intro</em>
+├── Storyboard.tsx         <em>the static version</em>
+├── Captions.tsx · TopBar.tsx
+├── Guide.tsx              <em>Pip: the dragon and his speech bubble</em>
+├── <b>scenes/</b>                <em>one component per scene, drawn in its END state</em>
+│   ├── Wall · Hero · Outro
+│   ├── Ticket · Recurrence · Pattern
+│   ├── RulePage           <em>RUL-0412 (approved) and RUL-0419 (rejected) share it</em>
+│   └── Gate · Audit · Cursor
+└── <b>timeline/</b>              <em>the choreography: one master timeline</em>
+    ├── kit.ts             <em>the helpers</em>
+    ├── opening.ts         <em>hero → ticket → recurrence</em>
+    ├── middle.ts          <em>pattern → rule → decision</em>
+    ├── closing.ts         <em>suppression → guardrail → audit → outro</em>
+    ├── guide.ts           <em>Pip's perches, moods and flips</em>
+    └── index.ts           <em>runs the chapters in order</em></div>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="node" data-tone="data"><b>data.ts</b>words and numbers</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="ui"><b>scenes/</b>what things look like when finished</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="state"><b>timeline/</b>how and when they get there</div>
+      <div class="arrow">→</div>
+      <div class="node" data-tone="act"><b>Film.tsx</b>ties it to the scroll bar</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 11. change ================= -->
+<section class="chapter read" id="change">
+  <div class="chapter-num">12</div>
+  <h2>How to change things</h2>
+  <p class="sub">Common edits, from easiest to hardest.</p>
+  <table>
+    <tr><th>I want to…</th><th>Do this</th></tr>
+    <tr><td>Change any wording</td><td>Edit <code>story/data.ts</code>. Captions, alert names, the reasons people type, the audit log and the ending numbers all live there.</td></tr>
+    <tr><td>Make the whole film longer or shorter</td><td>Change <code>SCROLL_PER_SECOND</code> in <code>Film.tsx</code> (now 0.24 screens per second). Bigger = more scrolling = slower.</td></tr>
+    <tr><td>Give one beat more time</td><td>In that chapter's function, raise the numbers after it (<code>t + 2.4</code> → <code>t + 2.8</code>…) and the chapter's final <code>s.t = t + …</code>. Later chapters shift automatically.</td></tr>
+    <tr><td>Restyle a scene</td><td>Edit its CSS next to it in <code>scenes/</code>. Style the <strong>finished</strong> look; the timeline handles the rest.</td></tr>
+    <tr><td>Move something on the stage</td><td>Change its position in CSS. Fly-tos and camera moves measure the DOM, so they follow automatically.</td></tr>
+    <tr><td>Add a chapter</td><td>Add its caption to <code>CHAPTERS</code> in <code>data.ts</code>, a scene component (end state), a chapter function that follows the two rules in <a href="#endstate">05</a>, and call it in <code>timeline/index.ts</code>.</td></tr>
+  </table>
+  <div class="callout tip"><span class="icon">✓</span><div><span class="title">Seek straight to any moment</span><p>In dev, open the browser console: <code>__film.marks</code> lists every chapter's start and end time, and <code>__film.tl.duration()</code> the total. Handy for checking one beat without scrolling through the whole film.</p></div></div>
+</section>
+
+<!-- ================= 12. checked ================= -->
+<section class="chapter read" id="checked">
+  <div class="chapter-num">13</div>
+  <h2>How we checked it</h2>
+  <p class="sub">Scroll films break in the middle of transitions and on the way back up. We tested both.</p>
+  <ol class="ladder">
+    <li><strong>Seek and screenshot.</strong> A Playwright script opened the page, jumped the scroll to 40+ exact timeline times (including mid-transition), and saved a screenshot of each. That's how every image on this page was made.</li>
+    <li><strong>Rewind test.</strong> Jump to the very end, then scroll back to earlier chapters. Counters, alert positions, typed text and the scrambled query must all be back where they started.</li>
+    <li><strong>Fallbacks.</strong> Loaded at 390px and with reduced motion on, and checked the storyboard renders.</li>
+    <li><strong>Console and build.</strong> No errors or warnings anywhere in the run, and <code>npm run build</code> type-checks and builds cleanly.</li>
+  </ol>
+  <div class="callout warn"><span class="icon">!</span><div><span class="title">What screenshots can't tell you</span><p>Pacing and feel. Whether a transition is too fast or a pause too long can only be judged by scrolling it yourself, ideally on a trackpad <em>and</em> a mouse wheel, and again the next day with fresh eyes.</p></div></div>
+</section>
+
+<!-- ================= 13. gotchas ================= -->
+<section class="chapter read" id="gotchas">
+  <div class="chapter-num">14</div>
+  <h2>Gotchas we hit</h2>
+  <p class="sub">Worth knowing before you add to it.</p>
+  <table>
+    <tr><th>Gotcha</th><th>What happens · the fix</th></tr>
+    <tr><td>Measuring before fonts load</td><td>Every position is a few pixels off, so fly-tos miss. · The timeline is built only after <code>document.fonts.ready</code>.</td></tr>
+    <tr><td><code>fromTo</code> late in the film</td><td>GSAP applies a <code>fromTo</code>'s start values <em>immediately</em>, so the ending's wall would appear during the opening. · Pass <code>immediateRender: false</code>, or stick to <code>gsap.set</code> + <code>tl.to</code>.</td></tr>
+    <tr><td>Changing React's DOM by hand</td><td>Adding or removing elements React owns can break re-renders. · Put the needed wrappers in the JSX (e.g. <code>&lt;span class="cmp-n"&gt;</code> around a number) and only animate them.</td></tr>
+    <tr><td>Scheduling vs setting</td><td>A helper like <code>swap(…, 0)</code> <em>plays</em> at time 0; it doesn't just set a starting state. · Use <code>gsap.set</code> for starting states.</td></tr>
+    <tr><td>Fading a parent fades its children</td><td>To fade a card but keep the query inside it, fade the card's <em>background</em>, not the card. · See the pattern → rule transition.</td></tr>
+    <tr><td>Zoomed layers look soft</td><td><code>will-change: transform</code> keeps the wall smooth at 9× but blurs its text while zoomed. · Fine here, because it's fading out as it zooms. Don't use it on anything that should rest zoomed in.</td></tr>
+  </table>
+</section>
+
+<!-- ================= 14. glossary ================= -->
+<section class="chapter read" id="glossary">
+  <div class="chapter-num">15</div>
+  <h2>Glossary</h2>
+  <table>
+    <tr><td>GSAP</td><td>The animation library everything is built with.</td></tr>
+    <tr><td>Tween</td><td>One animation: "move this from here to there over 0.6 s".</td></tr>
+    <tr><td>Timeline</td><td>Many tweens placed at set times, played as one. Ours is 63.7 s long.</td></tr>
+    <tr><td>Playhead</td><td>The current time on the timeline. Here it's controlled by scrolling.</td></tr>
+    <tr><td>ScrollTrigger</td><td>The GSAP plugin that links a timeline to scrolling.</td></tr>
+    <tr><td>Pin</td><td>Hold an element still on screen while the page scrolls past.</td></tr>
+    <tr><td>Scrub</td><td>Move an animation forwards and backwards with the scroll bar, rather than just starting it.</td></tr>
+    <tr><td>Ease / curve</td><td>How speed changes during a movement: fast then slow, slow-fast-slow, or constant.</td></tr>
+    <tr><td>Stage</td><td>Our fixed 1440 × 900 canvas, scaled to fit the window.</td></tr>
+    <tr><td>Focus / camera</td><td>Scaling and shifting a scene so one element fills the screen.</td></tr>
+    <tr><td>Morph / fly-to</td><td>Moving one element exactly onto another's position and size.</td></tr>
+    <tr><td>autoAlpha</td><td>GSAP's opacity that also hides the element fully at 0, so hidden things can't be clicked or tabbed to.</td></tr>
+    <tr><td>Pip</td><td>The dragon who guides you through the film. Bot-avatars’ <code>dragon</code> type.</td></tr>
+    <tr><td>Storyboard</td><td>The static fallback for phones and reduced motion.</td></tr>
+  </table>
+</section>
+
+</main>
+</div>
+
+<script>
+/* ---------- code blocks: tiny highlighter ---------- */
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const RULES = {
+  ts: { re: /(\/\/.*|\/\*[\s\S]*?\*\/)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`)|\b(const|let|function|return|if|else|export|import|from|type|interface|new|true|false|null|undefined|as|typeof)\b|\b(\d+(?:\.\d+)?)\b/g, cls: ['c', 's', 'k', 'n'] },
+  css: { re: /(\/\*[\s\S]*?\*\/)|('[^'\n]*'|"[^"\n]*")|(--[\w-]+)|(@[\w-]+|!important)|(#[0-9a-fA-F]{3,8}\b|-?\b\d+(?:\.\d+)?(?:px|ms|s|%|vh|vw|fr|em|rem|deg)?\b)/g, cls: ['c', 's', 'v', 'k', 'n'] },
+};
+RULES.tsx = RULES.ts;
+function highlight(code, lang) {
+  const { re, cls } = RULES[lang] || RULES.ts;
+  let out = '', last = 0;
+  for (const m of code.matchAll(re)) {
+    const g = m.slice(1).findIndex((x) => x !== undefined);
+    out += esc(code.slice(last, m.index)) + `<span class="tk-${cls[g]}">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(code.slice(last));
+}
+document.querySelectorAll('script[type="text/x-code"]').forEach((el) => {
+  const lang = el.dataset.lang;
+  const code = el.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+  const box = document.createElement('div');
+  box.className = 'code';
+  box.innerHTML = `<div class="code-head"><span>${esc(el.dataset.file || '')}</span><span class="lang">${lang}</span></div><pre><code>${highlight(code, lang)}</code></pre>`;
+  el.replaceWith(box);
+});
+
+/* ---------- theme toggle: the same dissolve Midnight uses ---------- */
+const root = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+const setLabel = () => (themeBtn.querySelector('span').textContent = root.dataset.theme === 'dark' ? 'Light' : 'Dark');
+root.dataset.theme = localStorage.getItem('guide-theme') || 'dark';
+setLabel();
+themeBtn.addEventListener('click', () => {
+  const apply = () => {
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('guide-theme', root.dataset.theme);
+    setLabel();
+  };
+  if (!document.startViewTransition) return apply();
+  document.startViewTransition(apply);
+});
+
+/* ---------- table of contents: highlight the chapter you're reading ---------- */
+const links = new Map([...document.querySelectorAll('.toc a')].map((a) => [a.getAttribute('href').slice(1), a]));
+const spy = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    links.forEach((a) => a.removeAttribute('data-active'));
+    links.get(e.target.id)?.setAttribute('data-active', '');
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('section.chapter').forEach((s) => spy.observe(s));
+
+
+/* ---------- demo: the mini film (scroll = playhead, scrub smoothing) ---------- */
+(() => {
+  const cam = document.getElementById('miniCam');
+  const card = document.getElementById('miniCard');
+  const fill = document.getElementById('miniFill');
+  const badge = document.getElementById('miniBadge');
+  const head = document.getElementById('miniHead');
+  const out = document.getElementById('miniOut');
+  const slider = document.getElementById('miniScroll');
+  const smooth = document.getElementById('miniSmooth');
+  const DURATION = 6; // seconds of "film"
+  const names = ['Turbolift 3 door', 'Deck 12 CO2', 'Hyperdrive fault', 'TIE pre-flight', 'Comlink retry', 'Compactor pressure', 'Cell 2187 sensor', 'Coolant jitter', 'Mouse droid', 'Probe droid', 'E-11 count', 'Armour fitting', 'Superlaser warn', 'Coupling 3 temp', 'AA-23 alarm', 'Bay door cycle', 'Coupling 7 temp', 'Holonet key', 'Reactor flow', 'Hangar 327', 'Tractor ops', 'Life support', 'Droid sweep', 'Probe relay'];
+  const TARGET = 9;
+  cam.innerHTML = names.map((n, i) => `<div class="mini-row"${i === TARGET ? ' data-target' : ''}>${i === TARGET ? 'INC-40231 · Coupling 7' : n}</div>`).join('');
+  const rows = [...cam.children];
+  const target = rows[TARGET];
+
+  const clamp = (v) => Math.min(1, Math.max(0, v));
+  const seg = (p, a, b) => clamp((p - a) / (b - a));           // progress within a beat
+  const out4 = (x) => 1 - Math.pow(1 - x, 4);                    // ≈ mn-out
+  const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2); // ≈ mn-in-out
+
+  function render(p) {
+    // beat 1: the alert fires, everything else steps back
+    const fire = out4(seg(p, 0.02, 0.22));
+    rows.forEach((r) => { if (r !== target) r.style.opacity = String(1 - 0.7 * fire); });
+    target.style.boxShadow = `inset 0 0 0 1px rgba(224,169,62,${0.8 * fire}), 0 0 0 ${3 * fire}px rgba(224,169,62,.15)`;
+    // beat 2: camera dives (the same focus() maths as the film)
+    const dive = inOut(seg(p, 0.25, 0.6));
+    const s = 1 + dive * 7;
+    const W = cam.clientWidth, H = cam.clientHeight;
+    const cx = target.offsetLeft + target.offsetWidth / 2, cy = target.offsetTop + target.offsetHeight / 2;
+    const x = (W / 2 - cx * s) * dive, y = (H / 2 - cy * s) * dive;
+    cam.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+    cam.style.opacity = String(1 - seg(p, 0.45, 0.62));
+    // beat 3: the ticket grows up to meet you
+    const arrive = out4(seg(p, 0.5, 0.8));
+    card.style.opacity = String(arrive);
+    card.style.transform = `scale(${0.72 + 0.28 * arrive})`;
+    // beat 4: the timer runs, then it clears
+    fill.style.transform = `scaleX(${seg(p, 0.78, 0.95)})`;
+    const done = p >= 0.95;
+    badge.toggleAttribute('data-done', done);
+    badge.querySelector('em').textContent = done ? 'Auto-cleared' : 'Open';
+    head.style.left = p * 100 + '%';
+    out.textContent = (p * DURATION).toFixed(2) + ' s';
+  }
+
+  let shown = 0, last = performance.now();
+  function tick(now) {
+    const want = slider.value / 1000;
+    const dt = (now - last) / 1000; last = now;
+    // scrub: 1 ≈ "catch up over about a second"
+    shown = smooth.checked ? shown + (want - shown) * (1 - Math.exp(-dt / 0.28)) : want;
+    if (Math.abs(want - shown) < 0.0005) shown = want;
+    render(shown);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* ---------- demo: the camera (same maths as focus() in lib/geometry.ts) ---------- */
+(() => {
+  const stage = document.getElementById('camStage');
+  const world = document.getElementById('camWorld');
+  const out = document.getElementById('camOut');
+  const labels = ['Ticket', 'Chart', 'Query', 'Rule page', 'Composer', 'Backtest', 'Gate', 'Queue', 'Guardrail', 'Override', 'Audit', 'Outro'];
+  world.innerHTML = labels.map((l) => `<button class="cam-tile" type="button">${l}</button>`).join('');
+  let on = null;
+  world.addEventListener('click', (e) => {
+    const tile = e.target.closest('.cam-tile');
+    if (!tile) return;
+    world.querySelectorAll('.cam-tile').forEach((t) => t.removeAttribute('data-on'));
+    if (on === tile) {
+      on = null;
+      world.style.transform = 'translate(0px, 0px) scale(1)';
+      out.textContent = 'x 0 · y 0 · scale 1';
+      return;
+    }
+    on = tile;
+    tile.setAttribute('data-on', '');
+    const s = 2.8;
+    const cx = tile.offsetLeft + tile.offsetWidth / 2, cy = tile.offsetTop + tile.offsetHeight / 2;
+    const x = stage.clientWidth / 2 - cx * s, y = stage.clientHeight / 2 - cy * s;
+    world.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+    out.textContent = `focus(${tile.textContent}) → x ${Math.round(x)} · y ${Math.round(y)} · scale ${s}   (x = centreX − ${Math.round(cx)} × ${s})`;
+  });
+})();
+
+/* ---------- the decision chapter as a timeline (times from timeline/middle.ts) ---------- */
+(() => {
+  const T = 7.4;
+  const C = { cap: 'var(--fg-3)', ptr: 'var(--blue)', cam: 'var(--violet)', form: 'var(--amber)', done: 'var(--green)' };
+  const rows = [
+    ['Caption', 'cap', [[0, 0.45, 'old caption out'], [0.5, 1.4, 'new caption rises in']]],
+    ['Pointer', 'ptr', [[0.2, 1.2, 'appears, glides to Approve'], [1.6, 2.2, 'moves into the reason box'], [4.6, 5.4, 'glides to "Approve rule"']], [1.25, 2.25, 5.45]],
+    ['Camera', 'cam', [[1.5, 2.5, 'leans in on the form (×1.08)'], [4.5, 5.4, 'pulls back to normal']]],
+    ['Form', 'form', [[1.35, 1.8, 'opens'], [5.6, 5.85, 'closes (faster than it opened)']]],
+    ['Backtest', 'form', [[1.35, 3.3, '"Replaying the last 90 days…"'], [3.3, 4.15, 'results swap in, numbers count up']]],
+    ['Reason', 'form', [[2.4, 4.4, 'typed at a steady pace (ease: none)']]],
+    ['Recorded', 'done', [[5.7, 6.4, 'Proposed → Active · rail · history · toast']]],
+  ];
+  const pct = (t) => (t / T) * 100 + '%';
+  const g = document.getElementById('gantt');
+  g.innerHTML =
+    rows.map(([label, tone, bars, clicks = []]) =>
+      `<div class="g-row" style="--c:${C[tone]}"><label>${label}</label>` +
+      bars.map(([a, b, tip]) => `<span class="g-bar" style="left:${pct(a)};width:${pct(b - a)}" title="t + ${a}s → t + ${b}s · ${tip}"></span>`).join('') +
+      clicks.map((c) => `<span class="g-dot" style="left:${pct(c)}" title="click at t + ${c}s"></span>`).join('') +
+      '</div>').join('') +
+    '<div class="g-axis">' + [0, 1, 2, 3, 4, 5, 6, 7].map((s) => `<span style="left:${pct(s)}">t+${s}s</span>`).join('') + '</div>';
+})();
+</script>
+</body>
+</html>

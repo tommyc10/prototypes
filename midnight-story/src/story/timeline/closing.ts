@@ -241,7 +241,7 @@ export function outro(s: Story) {
   enter(s, one(s, '.outro-actions'), t + 2, { y: 8 });
 
   s.t = t + 3.4;
-  s.tl.addLabel('outro', t + 1);
+  s.tl.addLabel('outro', t);
   // Make sure the timeline runs all the way to the end of the hold.
   s.tl.set({}, {}, s.t);
 }

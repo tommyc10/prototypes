@@ -27,6 +27,13 @@
   inset: 0;
 }
 
+/* The scenes are drawn in their END state and the story sets their starting state once
+ * it's built (after the fonts load). Until then, keep the stage hidden, or every scene
+ * shows at once for a moment on load: the hero and outro text on top of each other. */
+.film:not([data-ready]) .stage {
+  visibility: hidden;
+}
+
 /* ---------- chapter captions ---------- */
 
 .caps {
@@ -292,4 +299,22 @@
   flex-wrap: wrap;
   gap: 32px;
   margin: 32px 0;
+}
+
+/* Pip's line beside each chapter, in the storyboard. */
+.board-pip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: -12px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.board-pip span {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line-2);
 }

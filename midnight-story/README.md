@@ -8,6 +8,9 @@ npm install
 npm run dev      # http://localhost:5189
 ```
 
+**New to it? Open [`docs/how-it-works.html`](docs/how-it-works.html)** in a browser: a plain-language
+explainer of how the film is built, with screenshots and live demos. It's written to walk a team through it.
+
 The "Open the dashboard" links point at the real app (the repo root, port 5188).
 Change `DASHBOARD_URL` in `src/story/data.ts` if it lives somewhere else.
 
@@ -26,6 +29,20 @@ Change `DASHBOARD_URL` in `src/story/data.ts` if it lives somewhere else.
 | 8 | Audit | The log fills in the order it happened |
 | – | Outro | The same wall, quiet now |
 
+## Pip, the guide
+
+A little dragon walks you through the film. He's the `dragon` from our bot-avatars library,
+vendored in `src/vendor/bot-avatars/` (MIT). He sleeps through the opening until the alert
+wakes him, hops to a perch beside whatever matters in each chapter, reacts in short speech
+bubbles, gets busy while the engine works, and falls back asleep when the wall goes quiet.
+
+- Words and name: `LINES` and `GUIDE` in `src/story/data.ts`
+- Perches, moods, flips: `src/story/timeline/guide.ts`
+- The dragon and bubble: `src/story/Guide.tsx`
+
+His position is tweened on the master timeline (so it rewinds); his line, mood and bubble
+side are looked up from the playhead's time; his celebratory flips only fire going forwards.
+
 ## How it works
 
 ```
@@ -39,12 +56,14 @@ src/
     ├── data.ts             Every word and number in the story
     ├── Film.tsx            The pinned stage, ScrollTrigger, progress rail, first-load intro
     ├── Storyboard.tsx      Static fallback: captions over stills of each scene
+    ├── Guide.tsx           Pip: the dragon and his speech bubble
     ├── scenes/             One component per scene, drawn in its END state
     └── timeline/           The choreography, one master timeline
         ├── kit.ts          Helpers: captions, enter/leave, swap, count, type, pointer
         ├── opening.ts      Hero, ticket, recurrence
         ├── middle.ts       Pattern, rule, decision
-        └── closing.ts      Suppression, guardrail, audit, outro
+        ├── closing.ts      Suppression, guardrail, audit, outro
+        └── guide.ts        Pip's perches, moods and flips
 ```
 
 - **One fixed stage.** Everything is laid out on a 1440 × 900 canvas that is scaled to fit the

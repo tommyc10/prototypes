@@ -4,6 +4,7 @@ import { gsap } from '../../lib/gsap';
 import { CHAPTERS } from '../data';
 import { createStory, prepareCaption } from './kit';
 import { audit, guardrail, outro, suppression } from './closing';
+import { guide } from './guide';
 import { decision, pattern, rule } from './middle';
 import { hero, recurrence, ticket } from './opening';
 
@@ -25,5 +26,5 @@ export function buildStory(stage: HTMLElement) {
   audit(s);
   outro(s);
 
-  return s;
+  return { ...s, guide: guide(s) };
 }

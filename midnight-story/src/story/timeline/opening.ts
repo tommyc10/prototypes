@@ -19,6 +19,8 @@ export function hero(s: Story) {
   gsap.set(rows, { opacity: 1 });
   gsap.set(target, { '--halo': 0 });
 
+  s.tl.addLabel('hero', 0);
+
   // Scroll starts: the headline clears away and the wall steps back, all but one alert.
   s.tl.to(one(s, '.hero'), { autoAlpha: 0, y: -48, filter: 'blur(6px)', duration: 1 }, 0);
   s.tl.to(one(s, '.hero-cue'), { autoAlpha: 0, duration: 0.4 }, 0);
