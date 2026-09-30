@@ -1,0 +1,163 @@
+/* Hero and outro: centred type over the wall, with a soft pool of darkness behind it. */
+
+.m-hero,
+.m-outro {
+  display: grid;
+  place-items: center;
+}
+
+.m-hero::before,
+.m-outro::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 46% at 50% 50%, rgba(5, 5, 5, 0.97) 40%, rgba(5, 5, 5, 0.78) 66%, transparent 100%);
+}
+
+.hero,
+.outro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 14px 0 12px;
+  border-radius: 999px;
+  background: rgba(22, 22, 22, 0.8);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--line-2);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.hero-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.hero-title,
+.outro-title {
+  margin: 28px 0 0;
+  font-size: 84px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.hero-title-2 {
+  color: var(--fg-3);
+}
+
+.hero-sub,
+.outro-sub {
+  max-width: 34em;
+  margin: 26px 0 0;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  text-wrap: balance;
+}
+
+.hero-cue {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  translate: -50% 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.hero-cue-line {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 44px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-cue-line > span {
+    animation: cue 1.8s var(--ease-in-out) infinite;
+  }
+}
+
+@keyframes cue {
+  0%,
+  100% {
+    transform: translateY(-5px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 1;
+  }
+}
+
+.outro-title {
+  margin-top: 0;
+  font-size: 76px;
+}
+
+.outro-stats {
+  display: flex;
+  gap: 56px;
+  margin: 44px 0 0;
+}
+
+.outro-stat dt {
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.outro-stat dd {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+.outro-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 44px;
+}
+
+.outro-actions .btn {
+  height: 40px;
+  padding: 0 16px 0 18px;
+  font-size: 14px;
+}
+
+.hero-line {
+  display: block;
+}
+
+/* The letter the Snap direction dives through: the window marks its counter. */
+.m-o {
+  position: relative;
+  display: inline-block;
+}
+
+.m-o-window {
+  position: absolute;
+  top: 41%;
+  left: 31.5%;
+  width: 45%;
+  height: 33%;
+}

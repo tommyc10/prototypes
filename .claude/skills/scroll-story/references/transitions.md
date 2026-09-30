@@ -6,7 +6,8 @@ start, `one/all/box` find and measure, and `enter/leave/swap/count/type/press/po
 helpers. Eases: `story-out` (arrive/leave), `story-in-out` (travel), `none` (machines).
 
 ## Contents
-- Between chapters: camera dive · grow to meet · collapse into a unit · pour into a stack ·
+- Between chapters: portal zoom · slats into a chart · iris · slide with parallax · bands ·
+  3D orbit · camera dive · grow to meet · collapse into a unit · pour into a stack ·
   FLIP into place · fold into a chip · step back · bookend return
 - Within a chapter: rain / stack · lift and fly (with scramble) · camera lean-in · pointer
   click · form open/close · typing · counters · badge swap · decision recorded · hold to
@@ -14,6 +15,48 @@ helpers. Eases: `story-out` (arrive/leave), `story-in-out` (travel), `none` (mac
   oldest-first · flare a row · caption lines rise
 
 ---
+
+## Portal zoom
+*"Go into this."* The strongest way to scroll *into* the next scene, repeatable in and out.
+Draw the next scene as a miniature (same component, `scale(w/1440)`) on the current one, then:
+```ts
+portal(s, { outer: L1, inner: L2, target: ME_CARD, at: t + 0.1, duration: 1.9, fade: [0.3, 0.55] });
+// later, back out into the same spot:
+portal(s, { outer: L1, inner: L2, target: ME_CARD, at: t2, duration: 1.6, direction: 'out' });
+```
+Log-scale, locked layers, exact rewind. Options (`backdrop`, `beyond`, `prime`, `onZoom`) and
+the rules are in `references/directions.md` §7; the code is `src/lib/camera.ts`.
+
+## Slats into a chart
+*"This colour is made of those weeks."* Build a full-bleed field from N slats (one per bar),
+then gather them into the chart: each slat scales to its bar and moves to its column.
+```ts
+slats.forEach((slat, i) => s.tl.to(slat, {
+  x: BAR.x + i * BAR.step - i * SLAT_W, y: BAR.base - h(i), scaleX: BAR.w / SLAT_W, scaleY: h(i) / 900,
+  transformOrigin: '0 0', duration: 1.5, ease: 'story-in-out' }, t + 0.1 + i * 0.04));
+```
+Put a contrasting colour behind the slats so the field "opens" as they gather.
+
+## Iris
+*"Pressing this opens the next thing."* The next scene grows out of the button you clicked.
+```ts
+const c = centerOf(box(s, approve));
+gsap.set(next, { clipPath: `circle(0px at ${c.x}px ${c.y}px)` });
+s.tl.set(next, { visibility: 'visible' }, at);
+s.tl.to(next, { clipPath: `circle(1700px at ${c.x}px ${c.y}px)`, duration: 1.2, ease: 'story-in-out' }, at);
+```
+
+## Slide with parallax
+Next page slides in over the old, which drifts slower: `next x: 1440 → 0` and
+`old x: 0 → −520`, same duration and ease.
+
+## Bands
+Horizontal bands of the next colour wipe in, staggered: `scaleX: 0 → 1`, origin left,
+stagger 0.06.
+
+## 3D orbit
+*"Step back and look at it from here."* See `references/directions.md` §5: a camera object
+(target, distance, tilt, turn) tweened as one, redrawing the world's inverse transform.
 
 ## Camera dive
 *"Let's go into this one."* Scale a whole scene around one element until it fills the screen,

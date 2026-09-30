@@ -2,11 +2,13 @@
 
 The build this skill comes from. Read it to see a whole story put together, beat by beat.
 
-- **Code**: `midnight-story/` at the root of the tommyc10/prototypes repo
-  (https://github.com/tommyc10/prototypes/tree/midnight-story/midnight-story; on `main` once merged).
+- **Code**: the local `midnight-story/` source directory, when available.
   `npm install && npm run dev`, then open http://localhost:5189.
 - **Team explainer**: `midnight-story/docs/how-it-works.html`, a plain-language walkthrough with
   live demos. A good model if the user wants to explain their story to a team.
+- **Three more ways to move** through a shorter version of the same story, in the same look:
+  `story-directions/` at the repo root (`npm run dev`, port 5191, `?d=zoom | snap | fly`). See
+  `references/directions.md`.
 - **The product**: Midnight, a rule-governance dashboard for incident management (the repo
   root app, Star Wars-themed mock data: "Imperial Ops"). An engine proposes suppression rules
   from recurring incident patterns; a person approves each with a written reason; everything

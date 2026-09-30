@@ -1,6 +1,6 @@
 ---
 name: scroll-story
-description: Build a scroll-driven product story ("scrollytelling") site, a pinned, cinematic page where scrolling plays a film of a product's workflow, with camera moves that "scroll into" each step, choreographed with GSAP ScrollTrigger in React. Modelled on the Midnight story (one alert followed from noise to an approved rule), with a working starter, a transitions catalogue, an optional guide character, and verification scripts. Use this whenever someone wants a scroll-animated product demo, launch or marketing page, an Apple-style scroll page, a "walk through our flow as you scroll" site, a feature story, an interactive product film, or asks to turn a product, dashboard or workflow into a scroll experience, even if they don't say "GSAP" or "scrollytelling".
+description: Build scroll-driven product stories in React with GSAP ScrollTrigger. Choose Fly (a 3D camera through floating product UI) or Midnight (the original screen-based walkthrough), with working reference builds, a starter, transition recipes, and verification scripts. Use for cinematic product demos, launch pages, scroll-animated workflows, and scrollytelling; works with Claude Code and Codex.
 ---
 
 # Scroll story
@@ -10,9 +10,10 @@ Build a page where **the scroll bar is the play button**: the screen pins, and s
 by physically carrying something across: a ticket shrinks into one square of a chart, a query
 flies into the rule page, the page folds down into a gate.
 
-The reference build is **Midnight: the story** (`midnight-story/` in the tommyc10/prototypes
-repo). It follows one alert through a rule-governance dashboard in 10 scenes and ~64 s of
-timeline. Everything here was learned building it; see `references/midnight-case-study.md`.
+The two primary reference builds are **Fly** (`story-directions/`, default direction) and
+**Midnight** (`midnight-story/`). These are local source directories when available.
+Use the same skill in Claude Code or Codex. Read `references/builds.md` to locate the source
+and scaffold the chosen version; `references/midnight-case-study.md` documents the original.
 
 ## What good looks like
 
@@ -32,7 +33,7 @@ A viewer should feel they're *inside* the product, not watching slides. Concrete
 
 ## Workflow
 
-Work through these in order. Steps 1–2 decide whether the result is memorable; steps 3–7 are
+Work through these in order. Steps 1–3 decide whether the result is memorable; steps 4–8 are
 mostly craft on a proven base.
 
 ### 1. Understand the product and mine the repo
@@ -43,22 +44,42 @@ mock data and its domain language. The story should reuse these, not reinvent th
 unclear who the story is for or which flow matters, ask one short question. Otherwise pick the
 flow that best shows the product's value and say so.
 
-### 2. Storyboard before you build
+### 2. Pick a direction
+
+Choose between the two primary versions, preserving the product's own colours, type and components:
+
+- **Fly**: a 3D camera dollies, orbits and cranes through floating UI. Use for cinematic stories
+  about scale and systems. This is the selected default for the current Midnight prototype.
+- **Midnight**: the original screen-based product walkthrough, with a camera dive, fly-tos,
+  approval, guardrails, audit and optional Pip. Use for a detailed demonstration of a workflow.
+
+Honour an explicit choice. Otherwise infer the fit from the brief and state your choice; ask
+only if the distinction materially affects an unclear request. Call the original **Midnight**,
+not Console. Zoom remains a liked alternative for repeated dives into individual records;
+Snap is an optional experiment. Do not combine directions unless requested.
+Read `references/builds.md` for the chosen source and `references/directions.md` for motion details.
+
+### 3. Storyboard before you build
 
 Read `references/storyboarding.md`. Produce a chapter table: for each chapter, the caption
 title, what the viewer sees, what the scroll does, and **what carries into the next chapter**.
 Typically 5–9 chapters plus an opening and an ending that bookend each other. Show the table to
 the user before building when they're around; it's the cheapest point to change direction.
 
-### 3. Scaffold from the starter
+### 4. Scaffold from the chosen build
 
-Copy `assets/starter/` to the target folder (skip `node_modules`/`dist`), then `npm install`
+For **Fly**, start from `story-directions/` as described in `references/builds.md`; its 3D
+world and orbit camera are not in the generic starter. For the full **Midnight** version,
+start from `midnight-story/`. Keep the chosen engine, then adapt the product and chapters.
+
+For a minimal **Midnight-style** story instead of the full reference, copy `assets/starter/` to the target folder (skip `node_modules`/`dist`), then `npm install`
 and `npm run dev` (port 5199). It's a working mini story with the whole engine already in it:
 
 | File | What it gives you |
 | --- | --- |
 | `src/lib/gsap.ts` | GSAP and plugins registered once; three easing curves |
 | `src/lib/geometry.ts` | The 1440 × 900 stage, `focus()` (camera) and `morph()` (fly-to) |
+| `src/lib/camera.ts` | `portal()`: the zoom *into* a scene drawn as a miniature inside the current one |
 | `src/story/timeline/kit.ts` | Captions, `enter`/`leave`, `swap`, `count`, `type`, `press`, `pointer` |
 | `src/story/Film.tsx` | Pin + scrub, stage scaling, progress rail, first-load intro, the ready gate, `window.__film` in dev |
 | `src/story/Storyboard.tsx` | The static fallback |
@@ -68,32 +89,35 @@ Replace the example's tokens (`styles/tokens.css`) with the product's, its copy
 (`story/data.ts`), its scenes and its chapters. If the project already has a stack, port the
 engine files into it instead; they depend only on React, GSAP and `@gsap/react`.
 
-### 4. Build scenes in their END state
+### 5. Build scenes in their END state
 
-Read `references/architecture.md` before writing scenes. Each scene is a full-stage component
+Read `references/architecture.md` before writing scenes. In Midnight, each scene is a full-stage component
 (`.scene`, absolutely positioned on the 1440 × 900 stage), laid out in plain pixels, and drawn
 **as it looks when its chapter is finished**: the badge already says "Approved", the counter
 already reads 214, the reason is already typed. Keep captions clear of the canvas: they live at
-x 96–476, so scene content goes roughly in x 520–1400.
+x 96–476, so scene content goes roughly in x 520–1400. For Fly, keep the shared
+fixed screen stage but place world objects in 3D using `space.ts`; preserve the transform
+chain described in `references/directions.md` §5 instead of flattening them into 2D scenes.
 
-### 5. Choreograph the chapters
+### 6. Choreograph the chapters
 
 One chapter = one function in `timeline/` that sets its starting state with `gsap.set`, then
 places `s.tl.to(...)` tweens at `t + seconds`, and finishes by moving `s.t` on and calling
-`mark()`. Reach for the recipes in `references/transitions.md` (camera dive, collapse into a
-unit, lift-and-fly with scramble, FLIP into place, fold into a chip, conveyor through a gate,
-pointer clicks, hold-to-confirm, the bookend) and check `references/gsap.md` for the API and
+`mark()`. Reach for the recipes in `references/transitions.md` (portal zoom, camera dive,
+collapse into a unit, lift-and-fly with scramble, FLIP into place, fold into a chip, slats,
+iris, conveyor through a gate, pointer clicks, hold-to-confirm, the bookend) and check `references/gsap.md` for the API and
 its traps. Motion values come from `references/motion.md`.
 
-### 6. Optional: a guide character
+### 7. Optional: a guide character
 
 A small mascot who hops between perches, reacts in speech bubbles and changes mood with the
 story makes it memorable. Midnight's is Pip, a dragon from the bot-avatars library.
 `references/guide-character.md` has the full recipe. Offer it; don't force it.
 
-### 7. Fallback, verify, hand off
+### 8. Fallback, verify, hand off
 
-- Fill in `Storyboard.tsx` stills for each chapter (crop boxes on the stage).
+- Keep the chosen fallback complete: Midnight uses `Storyboard.tsx` stills; Fly uses the
+  readable chapter text in `shared/Board.tsx`.
 - Verify with the scripts (`references/verification.md`): screenshots at settled and
   mid-transition times, a rewind pass, the reload check, the phone/reduced-motion pass,
   `npm run build`. Look at the screenshots; don't just check that they exist.
@@ -124,7 +148,8 @@ more than the rules, so each has its why.
 7. **`transform` and `opacity` for motion.** Blur only to hide a crossfade seam, and keep it
    ≤ 8px. `will-change: transform` only on layers the camera zooms and then leaves.
 8. **Scenes stay hidden when off-stage** (`autoAlpha: 0`, which sets `visibility: hidden`), so
-   the browser doesn't paint them and nothing hidden can be tabbed to.
+   the browser doesn't paint them and nothing hidden can be tabbed to. In Fly, use visibility
+   on 3D ancestors and opacity only on leaf panels so hiding never flattens the world.
 
 ## References
 
@@ -132,13 +157,15 @@ Read what the current step needs; you don't need all of them up front.
 
 | File | Read it when |
 | --- | --- |
-| `references/storyboarding.md` | Planning chapters, captions, pacing (step 2) |
-| `references/architecture.md` | Before writing scenes or touching `Film.tsx` (steps 3–4) |
-| `references/transitions.md` | Choreographing chapters: the recipe catalogue with code (step 5) |
+| `references/builds.md` | Choosing and scaffolding Fly or Midnight in either agent (steps 2–4) |
+| `references/directions.md` | Fly / Midnight motion, plus optional Zoom and Snap recipes (step 2) |
+| `references/storyboarding.md` | Planning chapters, captions, pacing (step 3) |
+| `references/architecture.md` | Before writing scenes or touching `Film.tsx` (steps 4–5) |
+| `references/transitions.md` | Choreographing chapters: the recipe catalogue with code (step 6) |
 | `references/gsap.md` | Any GSAP API question: ScrollTrigger, timelines, plugins, traps |
 | `references/motion.md` | Choosing eases and durations; performance; accessibility; the polish checklist |
-| `references/guide-character.md` | Adding a mascot guide (step 6) |
-| `references/verification.md` | Checking the build (step 7) |
+| `references/guide-character.md` | Adding a mascot guide (step 7) |
+| `references/verification.md` | Checking the build (step 8) |
 | `references/midnight-case-study.md` | Seeing how a full story was put together, beat by beat |
 
 If the official GSAP skills (`gsap-core`, `gsap-scrolltrigger`, `gsap-timeline`, `gsap-react`,

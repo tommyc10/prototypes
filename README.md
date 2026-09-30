@@ -8,6 +8,12 @@ npm install
 npm run dev      # http://localhost:5188
 ```
 
+## Product stories
+
+- **[Fly](story-directions/)** — the selected 3D scroll story; `cd story-directions && npm install && npm run dev`, then http://localhost:5191. Fly opens by default; Zoom and Snap remain in the picker.
+- **[Midnight](midnight-story/)** — the original detailed walkthrough; `cd midnight-story && npm install && npm run dev`, then http://localhost:5189.
+- **[scroll-story skill](.claude/skills/scroll-story/)** — reuse either direction in Claude Code or Codex. The `.agents/skills/scroll-story` link points to the same skill.
+
 ## Where things are
 
 ```
