@@ -10,8 +10,8 @@ Build a page where **the scroll bar is the play button**: the screen pins, and s
 by physically carrying something across: a ticket shrinks into one square of a chart, a query
 flies into the rule page, the page folds down into a gate.
 
-The two primary reference builds are **Fly** (`story-directions/`, default direction) and
-**Midnight** (`midnight-story/`). These are local source directories when available.
+The two primary reference builds are **Fly** (`assets/fly/`, default direction) and
+**Midnight** (`assets/midnight/`). Both complete source builds are bundled with this skill; paths are relative to the skill directory.
 Use the same skill in Claude Code or Codex. Read `references/builds.md` to locate the source
 and scaffold the chosen version; `references/midnight-case-study.md` documents the original.
 
@@ -68,9 +68,9 @@ the user before building when they're around; it's the cheapest point to change 
 
 ### 4. Scaffold from the chosen build
 
-For **Fly**, start from `story-directions/` as described in `references/builds.md`; its 3D
+For **Fly**, start from `assets/fly/` as described in `references/builds.md`; its 3D
 world and orbit camera are not in the generic starter. For the full **Midnight** version,
-start from `midnight-story/`. Keep the chosen engine, then adapt the product and chapters.
+start from `assets/midnight/`. Keep the chosen engine, then adapt the product and chapters.
 
 For a minimal **Midnight-style** story instead of the full reference, copy `assets/starter/` to the target folder (skip `node_modules`/`dist`), then `npm install`
 and start it using the project's dev command.
@@ -130,7 +130,7 @@ story makes it memorable. Midnight's is Pip, a dragon from the bot-avatars libra
   mid-transition times, a rewind pass, the reload check, the phone/reduced-motion pass,
   `npm run build`. Look at the screenshots; don't just check that they exist.
 - Write a README (chapters table, file map, how to change copy and pacing). For a team, offer
-  an explainer page like Midnight's `docs/how-it-works.html`.
+  a plain-language explainer of the story architecture.
 
 ## The rules that keep it working
 

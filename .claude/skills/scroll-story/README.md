@@ -2,8 +2,8 @@
 
 Builds scroll-driven product stories: a pinned, cinematic page where scrolling plays (and
 rewinds) a film of a product's workflow, with camera moves that "scroll into" each step. It's
-based on two primary versions: **Fly** (`story-directions/`, the default 3D film) and
-**Midnight** (`midnight-story/`, the original detailed walkthrough).
+based on two primary versions: **Fly** (`assets/fly/`, the default 3D film) and
+**Midnight** (`assets/midnight/`, the original detailed walkthrough).
 
 ## Use it
 
@@ -35,9 +35,9 @@ verification. Zoom remains an optional alternative when specifically wanted.
 - **For another project's team**: copy the folder into `.claude/skills/scroll-story` and add
   `.agents/skills/scroll-story` as a relative symlink to `../../.claude/skills/scroll-story`.
 
-The full reference applications are local project directories, not bundled in the installed
-skill folder. `references/builds.md` explains source discovery and how to proceed with the
-bundled starter when the full applications are unavailable.
+The full Fly and Midnight reference applications are bundled in `assets/fly/` and
+`assets/midnight/`. Copying this skill folder includes everything needed except installed
+package dependencies. See `references/builds.md` for setup.
 
 ## What's inside
 
@@ -55,6 +55,8 @@ scroll-story/
 │   ├── guide-character.md       Pip: a mascot that walks viewers through (bot-avatars)
 │   ├── verification.md          how to check it: settled, mid-transition, rewind, load, fallback
 │   └── midnight-case-study.md   the reference build, beat by beat, and what went wrong
+├── assets/fly/                  complete Fly build, with optional Zoom / Snap
+├── assets/midnight/             complete Midnight build, including Pip and its license
 ├── assets/starter/              a working mini story (Vite + React + TS + GSAP) to copy
 └── scripts/
     ├── shoot.mjs                seek-and-screenshot at timeline times (Playwright)

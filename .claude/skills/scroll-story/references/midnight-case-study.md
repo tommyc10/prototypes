@@ -2,12 +2,10 @@
 
 The build this skill comes from. Read it to see a whole story put together, beat by beat.
 
-- **Code**: the local `midnight-story/` source directory, when available.
+- **Code**: the bundled `assets/midnight/` source directory (relative to the skill).
   `npm install && npm run dev`, then open the URL printed by the dev server.
-- **Team explainer**: `midnight-story/docs/how-it-works.html`, a plain-language walkthrough with
-  live demos. A good model if the user wants to explain their story to a team.
 - **Three more ways to move** through a shorter version of the same story, in the same look:
-  `story-directions/` in the local project (the project dev-server URL, `?d=zoom | snap | fly`). See
+  `assets/fly/` in this skill (the project dev-server URL, `?d=zoom | snap | fly`). See
   `references/directions.md`.
 - **The product**: Midnight, a rule-governance dashboard for incident management (the repo
   root app, Star Wars-themed mock data: "Imperial Ops"). An engine proposes suppression rules
@@ -37,7 +35,7 @@ Total ≈ 63.7 s of timeline at 0.24 screens per second ≈ 15 screens of scroll
 ## File map
 
 ```
-midnight-story/src/
+assets/midnight/src/
 ├── App.tsx                  film vs storyboard
 ├── lib/{gsap,geometry,path}.ts
 ├── vendor/bot-avatars/      the dragon (MIT)

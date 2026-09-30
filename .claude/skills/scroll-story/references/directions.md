@@ -5,9 +5,9 @@ scene hands over to the next. It is **not** a new visual style. Keep the product
 (its tokens, type, cards, badges, buttons): the story sells the real UI. What makes two
 stories feel different is how you travel through them.
 
-The primary choices are **Fly** (`story-directions/`, Fly opens by default) and **Midnight**
-(`midnight-story/`, the original walkthrough). See `builds.md` for source locations.
-Zoom and Snap remain optional variations in `story-directions/` (`?d=zoom | snap | fly`).
+The primary choices are **Fly** (`assets/fly/`, Fly opens by default) and **Midnight**
+(`assets/midnight/`, the original walkthrough). See `builds.md` for source locations.
+Zoom and Snap remain optional variations in `assets/fly/` (`?d=zoom | snap | fly`).
 
 ## Contents
 1. What changes and what doesn't · 2. Choosing · 3. Zoom · 4. Snap · 5. Fly · 6. Midnight ·
@@ -86,7 +86,7 @@ explicit choice and name it in the storyboard table. Zoom and Snap are optional 
 
 ## 6. Midnight
 
-The starter and `midnight-story/`: a fixed stage of product screens, fly-tos between them,
+The starter and `assets/midnight/`: a fixed stage of product screens, fly-tos between them,
 one camera dive at the start, a pointer acting out clicks. Calm and product-first.
 
 ## 7. The portal zoom

@@ -21,9 +21,9 @@ eyes that follow the cursor, and a hop-and-flip on click.
 
 - The npm package `bot-avatars` has the library's standard shapes (`clover`, `star`, `ghost`,
   `mech`…).
-- Our fork adds `dragon` and `trooper` types: `code-library/components/bot-avatars` in the
-  ui-ux-inspiration workspace, vendored into `midnight-story/src/vendor/bot-avatars/` in the
-  prototypes repo. To use the dragon, copy that folder (with its LICENSE) into the new project.
+- The bundled fork adds `dragon` and `trooper` types. Its complete source lives at
+  `assets/midnight/src/vendor/bot-avatars/`, relative to this skill. To use Pip, copy that
+  folder with its `LICENSE` into the target project; no other workspace is needed.
 - Any character works if it can: sit in a small box, show an idle/busy/asleep mood, and do a
   one-off celebratory move. A Lottie file or a simple SVG with CSS states would do.
 

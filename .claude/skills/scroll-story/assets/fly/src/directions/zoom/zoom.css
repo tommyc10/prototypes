@@ -1,0 +1,606 @@
+/* Zoom: Midnight's dark UI laid out as a board you keep scrolling into. Everything uses the
+ * shared Midnight tokens; this file is layout and the few states the zooms need. */
+
+.z-canvas {
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.4px) 0 0 / 24px 24px,
+    radial-gradient(ellipse 70% 60% at 60% 45%, rgba(255, 255, 255, 0.025), transparent 70%),
+    var(--bg);
+}
+
+/* ---------- L0: group cards and their alerts ---------- */
+
+.z-group {
+  position: absolute;
+  border-radius: 12px;
+  background: var(--l2);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+/* End state: groups with a rule are outlined green. */
+.z-group[data-id='tractor'],
+.z-group[data-ruled] {
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px rgba(69, 196, 122, 0.55);
+}
+
+.z-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.z-group-head b {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.z-group-rule {
+  position: absolute;
+  top: -11px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px 0 8px;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px rgba(69, 196, 122, 0.4);
+  font: 500 11px var(--mono);
+  color: var(--green);
+}
+
+.z-group-rule .dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+/* An alert. End state: quiet (hollow) where a rule now covers it, live (amber) elsewhere. */
+.z-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 99px;
+  background: var(--amber);
+  box-shadow: inset 0 0 0 1px var(--amber);
+}
+
+.z-dot[data-quiet],
+.z-new {
+  background: rgba(224, 169, 62, 0);
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+
+.z-dot[data-signal],
+.z-hot {
+  background: var(--red);
+  box-shadow: inset 0 0 0 1px var(--red), 0 0 0 3px rgba(240, 86, 92, 0.18);
+}
+
+.z-me {
+  z-index: 2;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: rgba(224, 169, 62, 0);
+  box-shadow:
+    inset 0 0 0 1px var(--fg-3),
+    0 0 0 calc(var(--ring, 0) * 4px) rgba(224, 169, 62, 0.25),
+    0 0 calc(var(--ring, 0) * 22px) rgba(224, 169, 62, calc(var(--ring, 0) * 0.5));
+}
+
+.z-hot {
+  z-index: 2;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+}
+
+.z-tip {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 5px 10px 5px 8px;
+  border-radius: 8px;
+  background: var(--glass-toast);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+  font: 500 11px var(--mono);
+  white-space: nowrap;
+  color: var(--fg);
+}
+
+.z-tip .dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* ---------- miniature pages ---------- */
+
+.z-mini {
+  position: absolute;
+  width: 1440px;
+  height: 900px;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.z-phase {
+  position: absolute;
+  inset: 0;
+}
+
+/* End state: our alert has become one square of the chart. */
+.z-me-card {
+  opacity: 0;
+}
+
+/* ---------- L1: the group up close ---------- */
+
+.z-pan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2880px;
+  height: 900px;
+}
+
+.z-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.4px) 0 0 / 24px 24px,
+    var(--l2);
+}
+
+.z-group-view {
+  position: absolute;
+  top: 92px;
+  left: 84px;
+}
+
+.z-group-view h3 {
+  margin: 8px 0 0;
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+/* A page: drawn in the chart (end state) as Midnight's grey squares; the story starts them as
+ * amber dots scattered through the group. */
+.z-pt {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--bar);
+}
+
+.z-pt-me {
+  z-index: 2;
+  background: var(--fg);
+  box-shadow: 0 0 0 3px rgba(237, 237, 237, 0.14);
+}
+
+.z-count {
+  position: absolute;
+  top: 330px;
+  left: 600px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 18px;
+  color: var(--fg-2);
+}
+
+.z-count-n {
+  display: inline-block;
+  min-width: 2.6ch;
+  font-size: 88px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: var(--fg);
+}
+
+.z-axis {
+  position: absolute;
+  top: 734px;
+  left: 600px;
+  display: flex;
+  justify-content: space-between;
+  width: 728px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.z-annos {
+  position: absolute;
+  top: 460px;
+  left: 600px;
+  display: flex;
+  gap: 10px;
+}
+
+.z-anno {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.z-leaders {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.z-leaders path {
+  fill: none;
+  stroke: var(--line-3);
+  stroke-width: 1.5;
+}
+
+/* ---------- pages ---------- */
+
+.z-sheet {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2),
+    0 30px 80px rgba(0, 0, 0, 0.5);
+  color: var(--fg);
+}
+
+.z-L2,
+.z-L3 {
+  background: var(--bg);
+}
+
+.z-head {
+  position: absolute;
+  top: 110px;
+  left: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 820px;
+}
+
+.z-head .mono {
+  font-size: 13px;
+}
+
+.z-at {
+  margin-left: auto;
+}
+
+.z-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.z-title {
+  position: absolute;
+  top: 148px;
+  left: 560px;
+  width: 820px;
+  margin: 0;
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.z-sub {
+  position: absolute;
+  top: 262px;
+  left: 560px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--fg-2);
+}
+
+.z-rule .z-sub {
+  top: 210px;
+}
+
+.z-sub strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.z-chart {
+  position: absolute;
+  top: 330px;
+  left: 560px;
+  overflow: visible;
+}
+
+.z-threshold {
+  stroke: var(--amber);
+  stroke-opacity: 0.55;
+  stroke-dasharray: 3 4;
+}
+
+.z-threshold-label {
+  fill: var(--amber);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.z-line {
+  fill: none;
+  stroke: var(--fg-2);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.z-line-over {
+  stroke: var(--amber);
+  stroke-width: 2.5;
+}
+
+.z-peak circle {
+  fill: var(--amber);
+  stroke: var(--l3);
+  stroke-width: 3;
+}
+
+.z-peak text {
+  fill: var(--fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+text.z-ax {
+  fill: var(--fg-3);
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.z-fields {
+  position: absolute;
+  top: 590px;
+  left: 560px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  width: 820px;
+  margin: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.z-fields dt {
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+
+.z-fields dd {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.z-fields dd.mono {
+  font-size: 18px;
+}
+
+.z-clock {
+  display: inline-block;
+  min-width: 1.2em;
+}
+
+.z-foot {
+  position: absolute;
+  top: 700px;
+  left: 560px;
+  width: 820px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--green-wash);
+  box-shadow: inset 0 0 0 1px rgba(69, 196, 122, 0.2);
+  font-size: 15px;
+  font-weight: 500;
+  color: #9fdcb8;
+}
+
+.z-stats {
+  position: absolute;
+  top: 260px;
+  left: 560px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 820px;
+}
+
+.z-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.z-stat span {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.z-stat b {
+  margin-top: 4px;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.z-code {
+  position: absolute;
+  top: 400px;
+  left: 560px;
+  width: 820px;
+  padding: 16px 20px;
+  font-size: 17px;
+  line-height: 1.9;
+}
+
+.z-code-line {
+  display: grid;
+  grid-template-columns: 72px 190px 110px auto;
+  white-space: pre;
+}
+
+.z-replay {
+  position: absolute;
+  top: 548px;
+  left: 560px;
+  width: 820px;
+}
+
+.z-replay > div {
+  padding: 10px 16px;
+}
+
+.z-replay b {
+  font-size: 22px;
+}
+
+.z-replay span {
+  font-size: 12.5px;
+}
+
+.z-approve {
+  position: absolute;
+  top: 650px;
+  left: 560px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 820px;
+}
+
+.z-input {
+  flex: 1;
+  min-height: 48px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+  font-size: 16px;
+}
+
+.z-approve-btn {
+  height: 48px;
+  padding: 0 16px 0 20px;
+  font-size: 15px;
+}
+
+.z-decided {
+  position: absolute;
+  top: 730px;
+  left: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--fg-2);
+}
+
+.z-decided strong {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.z-check {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 99px;
+  background: rgba(69, 196, 122, 0.14);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- captions: a glass panel ---------- */
+
+.z-panel {
+  position: absolute;
+  bottom: 52px;
+  left: 52px;
+  width: 440px;
+  padding: 22px 26px 24px;
+  border-radius: 16px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+}
+
+.z-caps {
+  display: grid;
+}
+
+.z-caps .cap {
+  grid-area: 1 / 1;
+}
+
+.z-caps .cap-title {
+  margin-top: 14px;
+  font-size: 34px;
+}
+
+.z-caps .cap-body {
+  margin-top: 14px;
+  font-size: 15px;
+}

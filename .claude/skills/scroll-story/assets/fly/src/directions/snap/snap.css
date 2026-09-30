@@ -1,0 +1,509 @@
+/* Snap: Midnight's UI on full-stage pages. Layout only; every colour is a Midnight token.
+ * Content sits right of x 540: the captions own the left column. */
+
+/* ---------- 01 + 02: the slatted page ---------- */
+
+.s-12 {
+  background: var(--bg);
+}
+
+.s-slat {
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 900px;
+  background: var(--l2);
+  /* A hairline of overlap, so the page shows no seams. */
+  box-shadow: 1px 0 0 var(--l2);
+}
+
+.s-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 40% 45% at 68% 45%, rgba(224, 169, 62, 0.07), transparent 70%);
+  pointer-events: none;
+}
+
+.s-ticket {
+  position: absolute;
+  top: 190px;
+  left: 660px;
+  width: 620px;
+  padding: 22px 24px 20px;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2),
+    0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.s-ticket header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.s-at {
+  margin-left: auto;
+}
+
+/* End state: cleared. */
+.s-open {
+  opacity: 0;
+}
+
+.s-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.s-ticket h3 {
+  margin: 14px 0 6px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.s-sub {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.s-sub strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.s-ticket svg {
+  display: block;
+  overflow: visible;
+}
+
+.s-thresh {
+  stroke: var(--amber);
+  stroke-opacity: 0.5;
+  stroke-dasharray: 3 4;
+}
+
+.s-line {
+  fill: none;
+  stroke: var(--fg-2);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+
+.s-line-over {
+  stroke: var(--amber);
+  stroke-width: 2.25;
+}
+
+.s-fields {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.s-fields dt {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.s-fields dd {
+  margin: 3px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.s-clock {
+  display: inline-block;
+  min-width: 1.2em;
+}
+
+.s-foot {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--green-wash);
+  box-shadow: inset 0 0 0 1px rgba(69, 196, 122, 0.2);
+  font-size: 13px;
+  font-weight: 500;
+  color: #9fdcb8;
+}
+
+.s-count {
+  position: absolute;
+  top: 190px;
+  left: 600px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  font-size: 20px;
+  color: var(--fg-2);
+}
+
+.s-count-n {
+  display: inline-block;
+  min-width: 2.6ch;
+  font-size: 150px;
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  color: var(--fg);
+}
+
+.s-cap-cell {
+  position: absolute;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--fg);
+  box-shadow: 0 0 0 3px rgba(237, 237, 237, 0.14);
+}
+
+.s-weeks span {
+  position: absolute;
+  top: 814px;
+  font-size: 11.5px;
+  text-align: center;
+  color: var(--fg-3);
+}
+
+/* ---------- pages ---------- */
+
+.s-page {
+  background: var(--l1);
+}
+
+.s-3 {
+  box-shadow: -40px 0 90px rgba(0, 0, 0, 0.7);
+}
+
+.s-conds {
+  position: absolute;
+  top: 150px;
+  left: 560px;
+  width: 820px;
+  padding: 26px 30px;
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.s-cond {
+  display: grid;
+  grid-template-columns: 80px 330px 1fr;
+  align-items: baseline;
+  height: 76px;
+}
+
+.s-cond-kw {
+  font-size: 16px;
+  color: var(--fg-3);
+}
+
+.s-cond-label {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.s-cond-val {
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.s-rulecard {
+  position: absolute;
+  top: 470px;
+  left: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 820px;
+  padding: 24px 26px;
+  border-radius: 16px;
+}
+
+.s-rulecard-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.s-rulecard-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.s-rulecard strong {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.s-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.s-actions .btn {
+  height: 40px;
+  padding: 0 12px 0 16px;
+  font-size: 14px;
+}
+
+.s-cursor,
+.s-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.s-cursor {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.s-ring {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- 04 ---------- */
+
+.s-4 {
+  background:
+    radial-gradient(ellipse 50% 45% at 70% 40%, rgba(69, 196, 122, 0.06), transparent 70%),
+    var(--l2);
+}
+
+.s-reason {
+  position: absolute;
+  top: 150px;
+  left: 560px;
+  width: 820px;
+  margin: 0;
+  font-size: 50px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.s-decided {
+  position: absolute;
+  top: 370px;
+  left: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--fg-2);
+}
+
+.s-decided strong {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.s-check {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 99px;
+  background: rgba(69, 196, 122, 0.14);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.s-active {
+  margin-left: 6px;
+}
+
+.s-stats {
+  position: absolute;
+  top: 520px;
+  left: 560px;
+  display: flex;
+  gap: 72px;
+  margin: 0;
+  padding-top: 26px;
+  width: 820px;
+  border-top: 1px solid var(--line-2);
+}
+
+.s-stats dt {
+  font-size: 112px;
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.s-stats dd {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+/* ---------- 05 ---------- */
+
+.s-band {
+  position: absolute;
+  left: 0;
+  width: 1440px;
+  height: 113px;
+  background: var(--bg);
+  transform-origin: left;
+}
+
+.s-lane {
+  position: absolute;
+  top: 450px;
+  left: 560px;
+  width: 820px;
+  height: 1px;
+  background: var(--line-2);
+}
+
+.s-gate {
+  position: absolute;
+  top: 290px;
+  left: 1000px;
+  width: 2px;
+  height: 320px;
+  background: linear-gradient(180deg, rgba(69, 196, 122, 0.8), rgba(69, 196, 122, 0.15));
+  box-shadow: 0 0 18px rgba(69, 196, 122, 0.35);
+  transform-origin: top;
+}
+
+.s-gate-label {
+  position: absolute;
+  top: 250px;
+  left: 1001px;
+  translate: -50% 0;
+  color: var(--green);
+}
+
+.s-pill {
+  position: absolute;
+  top: 429px;
+  left: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 16px 0 14px;
+  border-radius: 12px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px var(--line-2),
+    0 10px 24px rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.s-pill .dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.s-strike {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  left: 10px;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.s-paged {
+  position: absolute;
+  top: 490px;
+  left: 1140px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red);
+}
+
+.s-tally {
+  position: absolute;
+  right: 60px;
+  bottom: 110px;
+  margin: 0;
+  color: var(--fg-3);
+}
+
+.s-tally b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* ---------- ending ---------- */
+
+.s-end {
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+.s-end-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.s-end-b {
+  color: var(--fg-3);
+}
+
+.s-struck {
+  position: relative;
+  display: inline-block;
+}
+
+.s-strikeout {
+  position: absolute;
+  top: 40%;
+  left: -4%;
+  width: 108%;
+  height: 36%;
+  overflow: visible;
+}
+
+.s-strikeout path {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 6;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
