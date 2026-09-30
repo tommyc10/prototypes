@@ -5,8 +5,8 @@ project directories when available, not to the skill directory.
 
 | Version | Source | Preview | Choose it for |
 | --- | --- | --- | --- |
-| **Fly** | `story-directions/` | `npm run dev`, port 5191; no query or `?d=fly` | 3D travel, scale, orbiting a wall of alerts, a gate seen from above |
-| **Midnight** | `midnight-story/` | `npm run dev`, port 5189 | Detailed product workflow, approval, guardrails, audit, optional Pip |
+| **Fly** | `story-directions/` | Project dev-server URL; no query or `?d=fly` | 3D travel, scale, orbiting a wall of alerts, a gate seen from above |
+| **Midnight** | `midnight-story/` | Project dev-server URL | Detailed product workflow, approval, guardrails, audit, optional Pip |
 
 ## Find the source
 
@@ -17,7 +17,8 @@ explicitly; the starter alone is a minimal Midnight-style story. If an exact rep
 is requested, ask for the source location instead of assuming a remote repository.
 
 Copy the selected app into the requested target, excluding `node_modules`, `dist`, `.git`,
-logs and `*.tsbuildinfo`. Run `npm install` and `npm run build` in the copy.
+logs and `*.tsbuildinfo`. Run `npm install` and `npm run build` in the copy. Preserve the target project's dev-server
+configuration; do not carry over a reference app's port. Use the URL printed at startup.
 
 ## Fly
 

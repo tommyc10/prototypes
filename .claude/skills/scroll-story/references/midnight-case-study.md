@@ -3,11 +3,11 @@
 The build this skill comes from. Read it to see a whole story put together, beat by beat.
 
 - **Code**: the local `midnight-story/` source directory, when available.
-  `npm install && npm run dev`, then open http://localhost:5189.
+  `npm install && npm run dev`, then open the URL printed by the dev server.
 - **Team explainer**: `midnight-story/docs/how-it-works.html`, a plain-language walkthrough with
   live demos. A good model if the user wants to explain their story to a team.
 - **Three more ways to move** through a shorter version of the same story, in the same look:
-  `story-directions/` at the repo root (`npm run dev`, port 5191, `?d=zoom | snap | fly`). See
+  `story-directions/` in the local project (the project dev-server URL, `?d=zoom | snap | fly`). See
   `references/directions.md`.
 - **The product**: Midnight, a rule-governance dashboard for incident management (the repo
   root app, Star Wars-themed mock data: "Imperial Ops"). An engine proposes suppression rules

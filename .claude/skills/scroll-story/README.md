@@ -62,4 +62,4 @@ scroll-story/
 ```
 
 Try the starter on its own: `cp -R assets/starter /tmp/story && cd /tmp/story && npm install && npm run dev`
-(http://localhost:5199).
+Open the URL printed by the dev server. In an existing project, use its configured dev command and port.

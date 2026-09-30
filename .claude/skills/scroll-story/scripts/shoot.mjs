@@ -5,12 +5,12 @@
  *
  * Needs Playwright:  npm i -D playwright   (Chromium downloads on first run: npx playwright install chromium)
  *
- *   node shoot.mjs --url http://localhost:5199 --out ./shots                 # start, each chapter settled, end
- *   node shoot.mjs --times 0.5,2.2,6 --out ./shots                             # exact times
- *   node shoot.mjs --every 1 --out ./shots                                     # a frame every second of film
- *   node shoot.mjs --rewind --times 5,1 --out ./shots                          # jump to the end first, then back
- *   node shoot.mjs --mobile --out ./shots                                      # 390px storyboard, full page
- *   node shoot.mjs --reduced --out ./shots                                     # reduced motion, full page
+ *   node shoot.mjs --url "$STORY_URL" --out ./shots                 # start, each chapter settled, end
+ *   node shoot.mjs --url "$STORY_URL" --times 0.5,2.2,6 --out ./shots                             # exact times
+ *   node shoot.mjs --url "$STORY_URL" --every 1 --out ./shots                                     # a frame every second of film
+ *   node shoot.mjs --url "$STORY_URL" --rewind --times 5,1 --out ./shots                          # jump to the end first, then back
+ *   node shoot.mjs --url "$STORY_URL" --mobile --out ./shots                                      # 390px storyboard, full page
+ *   node shoot.mjs --url "$STORY_URL" --reduced --out ./shots                                     # reduced motion, full page
  */
 
 import { mkdirSync } from 'node:fs';
@@ -23,7 +23,11 @@ const opt = (name, fallback) => {
   return i >= 0 ? args[i + 1] : fallback;
 };
 
-const url = opt('url', 'http://localhost:5199');
+const url = opt('url', process.env.STORY_URL);
+if (!url || url.startsWith('--')) {
+  console.error('Pass --url <running-project-url> or set STORY_URL to the URL printed by the project dev server.');
+  process.exit(1);
+}
 const out = opt('out', './shots');
 const settle = Number(opt('settle', 1700)); // ms: scrub: 1 needs ~1s to catch up
 mkdirSync(out, { recursive: true });

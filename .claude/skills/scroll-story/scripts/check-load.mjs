@@ -5,14 +5,18 @@
  * it can go wrong), samples the screen every 40ms, and fails if the stage is ever visible
  * before the film has marked itself ready (data-ready on .film).
  *
- *   node check-load.mjs --url http://localhost:5199 [--reloads 5]
+ *   node check-load.mjs --url "$STORY_URL" [--reloads 5]
  */
 
 import { chromium } from 'playwright';
 
 const args = process.argv.slice(2);
 const opt = (n, d) => (args.includes(`--${n}`) ? args[args.indexOf(`--${n}`) + 1] : d);
-const url = opt('url', 'http://localhost:5199');
+const url = opt('url', process.env.STORY_URL);
+if (!url || url.startsWith('--')) {
+  console.error('Pass --url <running-project-url> or set STORY_URL to the URL printed by the project dev server.');
+  process.exit(1);
+}
 const reloads = Number(opt('reloads', 5));
 
 const browser = await chromium.launch();

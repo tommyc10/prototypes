@@ -73,7 +73,15 @@ world and orbit camera are not in the generic starter. For the full **Midnight**
 start from `midnight-story/`. Keep the chosen engine, then adapt the product and chapters.
 
 For a minimal **Midnight-style** story instead of the full reference, copy `assets/starter/` to the target folder (skip `node_modules`/`dist`), then `npm install`
-and `npm run dev` (port 5199). It's a working mini story with the whole engine already in it:
+and start it using the project's dev command.
+
+Use the target project's existing package scripts, environment and dev-server configuration
+for the host and port. Reuse its running server when available. When adapting a reference,
+keep the target's server configuration rather than copying the reference's port. For a new
+standalone project, let the framework select its default available port. Read the actual URL
+from the server output and use that URL for previews and verification; do not assume a port.
+
+The starter is a working mini story with the whole engine already in it:
 
 | File | What it gives you |
 | --- | --- |
