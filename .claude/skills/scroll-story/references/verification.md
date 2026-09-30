@@ -10,6 +10,9 @@ npx playwright install chromium      # first time only
 cp <skill>/scripts/*.mjs .
 ```
 
+Keep the Playwright scratch folder outside both repos, as above, so neither the skill nor the
+target gets extra dependencies. Run `npm run build` in the target repo.
+
 They rely on `window.__film` (set by `Film.tsx` in dev). Start or reuse the target project's
 dev server using its existing scripts and configuration. Set `STORY_URL` to the actual URL
 printed by that server, including any app path or direction query. Both scripts accept

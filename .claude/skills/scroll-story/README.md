@@ -21,12 +21,29 @@ $scroll-story use Fly for our onboarding flow
 $scroll-story use Midnight for our approval flow
 ```
 
+Point it at the product repo when the skill lives somewhere else:
+
+```text
+/scroll-story use Fly for the checkout flow in ~/code/acme-web
+```
+
+The skill never writes into its own folder. It reads the product from the **target repo** and
+creates, installs and verifies the story there. It picks the target from, in order: a path in
+your request, the one other folder open in the session (VS Code workspace root, `/add-dir`,
+`--add-dir`, or the working directory), or it asks you.
+
 Both agents can also select the skill for a relevant product-story request. The skill routes
 from the chosen version to its working source, then covers storyboarding, adaptation and
 verification. Zoom remains an optional alternative when specifically wanted.
 
 ## Install
 
+- **In its own repo (recommended for sharing)**: keep the skill at
+  `.claude/skills/scroll-story/` in a dedicated repo, with `.agents/skills/scroll-story` as a
+  relative symlink to it. Open that repo in VS Code and add the product repo to the workspace
+  (File → Add Folder to Workspace), then start the agent in the skill repo and give it access
+  to the product: `/add-dir ../product` in Claude Code, `codex --add-dir ../product` in Codex.
+  Or install the skill globally (below) and start the agent in the product repo.
 - **In this repo**: Claude Code reads `.claude/skills/scroll-story/`; Codex reads the
   `.agents/skills/scroll-story` symlink to that same folder.
 - **Everywhere, for you**: copy the skill to `~/.claude/skills/scroll-story`, then link

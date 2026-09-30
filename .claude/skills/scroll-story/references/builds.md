@@ -2,7 +2,9 @@
 
 Both agents use the sources bundled with this skill. All `assets/` paths below are relative
 to the directory containing `SKILL.md`, regardless of the current working directory.
-No separate checkout or reference repository is required.
+No separate checkout or reference repository is required. Copy *from* the skill directory
+*into* the target repo (see "Two repos" in `SKILL.md`); never install, build or run inside
+the skill directory.
 
 | Version | Source | Preview | Choose it for |
 | --- | --- | --- | --- |
@@ -11,12 +13,12 @@ No separate checkout or reference repository is required.
 
 ## Use the bundled source
 
-Copy `assets/fly/` or `assets/midnight/` from this skill into the requested target. Both
+Copy `assets/fly/` or `assets/midnight/` from this skill into the story folder in the target repo. Both
 include source code, package manifests, lockfiles, and build configuration. Midnight also
 includes Pip's avatar implementation and MIT license. `assets/starter/` is a smaller optional
 Midnight-style foundation, not a substitute for the full builds.
 
-Exclude `node_modules`, `dist`, `.git`, logs and `*.tsbuildinfo` when copying. In an existing
+Exclude `node_modules`, `dist`, `.git`, logs and `*.tsbuildinfo` when copying. Run `npm install`, dev and build commands from the target. In an existing
 project, integrate the source and dependencies while preserving its package scripts, stack
 and server configuration. For a new standalone copy, run `npm install` and `npm run build`.
 Use the dev-server URL printed at startup; the bundled configurations do not force a port.
