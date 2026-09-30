@@ -42,6 +42,7 @@ export function Composer({
   return (
     <form
       className="mn-composer"
+      data-tour="composer"
       data-docked={docked || undefined}
       data-kind={on ? 'on' : 'off'}
       data-animate={via === 'pointer' || undefined}

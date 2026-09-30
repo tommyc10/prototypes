@@ -6,9 +6,6 @@ import type { AssignmentGroup, AuditEntry, RelatedIncident, Resolution, Rule } f
 
 export const CURRENT_USER = 'Admiral Piett';
 
-/** Rules open as tabs when the page loads, so the working set has something in it. */
-export const INITIAL_OPEN_TABS = ['RUL-0419', 'RUL-0433', 'RUL-0366'];
-
 export const GROUPS: AssignmentGroup[] = [
   { id: 'reactor', name: 'Reactor Core', unit: 'Death Star' },
   { id: 'tractor', name: 'Tractor Beam Ops', unit: 'Death Star' },

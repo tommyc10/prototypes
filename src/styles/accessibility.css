@@ -6,15 +6,22 @@
   .mn-composer,
   .mn-menu,
   .mn-palette,
-  .mn-toast {
+  .mn-toast,
+  .mn-tour-pop {
     background: var(--l4);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+  /* The tour's veil keeps its dim, without the blur. */
+  .mn-tour-veil {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --tour-veil: rgba(0, 0, 0, 0.6);
+  }
 }
 
 @media (prefers-contrast: more) {
-  :root:not([data-mn-theme='light']) :is(.mn, .mn-menu, .mn-palette, .mn-toast) {
+  :root:not([data-mn-theme='light']) :is(.mn, .mn-menu, .mn-palette, .mn-toast, .mn-tour) {
     --fg-2: #c4c4c4;
     --fg-3: #9a9a9a;
     --line: rgba(255, 255, 255, 0.2);
@@ -24,12 +31,13 @@
   .mn-composer,
   .mn-menu,
   .mn-palette,
-  .mn-toast {
+  .mn-toast,
+  .mn-tour-pop {
     background: var(--l4);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-  :root[data-mn-theme='light'] :is(.mn, .mn-menu, .mn-palette, .mn-toast) {
+  :root[data-mn-theme='light'] :is(.mn, .mn-menu, .mn-palette, .mn-toast, .mn-tour) {
     --fg-2: #333333;
     --fg-3: #555555;
     --line: rgba(0, 0, 0, 0.2);

@@ -12,7 +12,7 @@ export function Evidence({ rule }: { rule: Rule }) {
   const escalated = rule.related.filter((i) => i.resolution === 'escalated');
 
   return (
-    <section className="mn-sec">
+    <section className="mn-sec" data-tour="evidence">
       <h3>Evidence</h3>
       <p className="mn-p">{rule.evidence.summary}</p>
       {escalated.length > 0 && (

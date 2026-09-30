@@ -4,13 +4,14 @@
  * Material weight encodes hierarchy: the sidebar is the darkest, heaviest layer;
  * the detail pane sits lightest. Floating UI is translucent glass with a bright top edge.
  *
- * The tokens are declared on .mn-menu, .mn-palette and .mn-toast too, because those
+ * The tokens are declared on .mn-menu, .mn-palette, .mn-toast and .mn-tour too, because those
  * render outside the page (at the end of <body>) and wouldn't inherit them otherwise. */
 
 .mn,
 .mn-menu,
 .mn-palette,
-.mn-toast {
+.mn-toast,
+.mn-tour {
   --l0: #050505; /* sidebar: heaviest material */
   --l1: #0b0b0b; /* list pane */
   --l2: #101010; /* detail pane */
@@ -82,7 +83,7 @@
  * Same material hierarchy, inverted: the sidebar is the heaviest (darkest grey)
  * layer, the detail pane is paper white. Near-black becomes the single accent. */
 
-:root[data-mn-theme='light'] :is(.mn, .mn-menu, .mn-palette, .mn-toast) {
+:root[data-mn-theme='light'] :is(.mn, .mn-menu, .mn-palette, .mn-toast, .mn-tour) {
   --l0: #efefef;
   --l1: #f7f7f7;
   --l2: #ffffff;

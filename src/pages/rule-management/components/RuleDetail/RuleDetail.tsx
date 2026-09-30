@@ -3,6 +3,7 @@
  *   wide:   content, plus a decision rail on the right
  *   ultra:  two content columns (the full incident list gets its own), plus the rail */
 
+import type { ReactNode } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { groupById } from '../../data/mockData';
 import type { Decision } from '../../hooks/useDecision';
@@ -28,6 +29,7 @@ export function RuleDetail({
   mode,
   decision,
   composerVia,
+  toolbar,
   onAction,
   onSelect,
   onViewIncidents,
@@ -37,6 +39,8 @@ export function RuleDetail({
   mode: PaneMode;
   decision: Decision;
   composerVia: 'key' | 'pointer';
+  /** Buttons at the start of the header row (the sidebar and list toggles). */
+  toolbar?: ReactNode;
   onAction: (action: RuleAction) => void;
   onSelect: (id: string) => void;
   onViewIncidents: () => void;
@@ -48,6 +52,7 @@ export function RuleDetail({
   const header = (
     <>
       <div className="mn-detail-top">
+        {toolbar}
         <span className="mn-mono mn-subtle">{rule.id}</span>
         <span className="mn-badge" data-status={rule.status}>
           <span className="mn-dot" data-status={rule.status} />
@@ -119,7 +124,7 @@ export function RuleDetail({
           <History rule={rule} />
         </div>
         {composer || (
-          <div className="mn-actionbar">
+          <div className="mn-actionbar" data-tour="decision">
             <span className="mn-subtle mn-actionbar-note">Every change needs a written reason</span>
             <ActionButtons rule={rule} onAction={onAction} />
           </div>
@@ -151,7 +156,7 @@ export function RuleDetail({
             </div>
           )}
           <aside className="mn-rail" aria-label="Decision">
-            <div className="mn-rail-card">{composer || <DecisionCard rule={rule} onAction={onAction} />}</div>
+            <div className="mn-rail-card" data-tour="decision">{composer || <DecisionCard rule={rule} onAction={onAction} />}</div>
             <ImpactCard rule={rule} />
             <History rule={rule} />
             <AlsoInGroup rule={rule} rules={rules} onSelect={onSelect} />

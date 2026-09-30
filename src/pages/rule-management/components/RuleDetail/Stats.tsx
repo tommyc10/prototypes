@@ -9,7 +9,7 @@ import './Stats.css';
 export function Stats({ rule }: { rule: Rule }) {
   const low = isLowConfidence(rule);
   return (
-    <div className="mn-stats">
+    <div className="mn-stats" data-tour="stats">
       <Stat label="Confidence" value={pct(rule.confidence)} meter={rule.confidence} tone={low ? 'warn' : undefined}>
         {low && <span className="mn-chip-warn">Below {pct(LOW_CONFIDENCE)}</span>}
       </Stat>

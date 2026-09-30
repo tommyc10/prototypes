@@ -23,7 +23,8 @@
 }
 
 .mn kbd,
-.mn-palette kbd {
+.mn-palette kbd,
+.mn-tour kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -54,10 +54,6 @@
   height: auto;
 }
 
-.mn-detail .mn-inc-panel {
-  top: 41px; /* below the tab bar */
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mn {
     transition: none;

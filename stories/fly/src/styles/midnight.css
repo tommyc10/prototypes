@@ -1,6 +1,6 @@
 /* Midnight's look, shared by every direction: the dashboard's dark tokens, its small
  * components (dots, badges, buttons, cards, meters, code), and the story's captions, top bar
- * and chapter rail. Copied from midnight-story/src/styles so the directions look identical;
+ * and chapter rail. Copied from stories/midnight/src/styles so the directions look identical;
  * only how they move differs. */
 
 :root {

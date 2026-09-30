@@ -3,7 +3,7 @@
  * search matches against, which is why "RUL-0419" finds a rule by its id. */
 
 import { Command } from 'cmdk';
-import { Moon, Search, Sun } from 'lucide-react';
+import { CircleHelp, Moon, Search, Sun } from 'lucide-react';
 import { GROUPS } from '../../data/mockData';
 import type { Theme } from '../../hooks/useTheme';
 import { SORT_KEYS, SORT_LABEL, STATUS_TABS, type SortKey, type StatusFilter } from '../../model/browse';
@@ -25,6 +25,7 @@ export function CommandPalette({
   onViewIncidents,
   theme,
   onToggleTheme,
+  onStartTour,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -38,6 +39,7 @@ export function CommandPalette({
   onViewIncidents: () => void;
   theme: Theme;
   onToggleTheme: () => void;
+  onStartTour: () => void;
 }) {
   /** Run a command, then close the palette. */
   const run = (fn: () => void) => () => {
@@ -110,6 +112,11 @@ export function CommandPalette({
           <Command.Item value="theme appearance light dark mode" onSelect={run(onToggleTheme)}>
             {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             Switch to {theme === 'dark' ? 'light' : 'dark'} theme
+          </Command.Item>
+          <Command.Item value="tour help guide tutorial onboarding" onSelect={run(onStartTour)}>
+            <CircleHelp size={15} />
+            Take the tour
+            <kbd>?</kbd>
           </Command.Item>
         </Command.Group>
 

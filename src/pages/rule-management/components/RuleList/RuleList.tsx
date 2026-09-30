@@ -20,7 +20,6 @@ export function RuleList({
   counts,
   selectedId,
   onSelect,
-  onPin,
   searchRef,
 }: {
   hidden: boolean;
@@ -30,7 +29,6 @@ export function RuleList({
   counts: Record<StatusFilter, number>;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onPin: (id: string) => void;
   searchRef: RefObject<HTMLInputElement | null>;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -42,7 +40,7 @@ export function RuleList({
 
   return (
     <section className="mn-list" inert={hidden}>
-      <header className="mn-list-head">
+      <header className="mn-list-head" data-tour="list-tools">
         <div className="mn-list-title">
           <h1>Rules</h1>
           <span className="mn-subtle">{view.groupId === 'all' ? 'All groups' : groupById(view.groupId).name}</span>
@@ -77,7 +75,7 @@ export function RuleList({
         </div>
       </header>
 
-      <div className="mn-rows" ref={listRef} role="listbox" aria-label="Rules">
+      <div className="mn-rows" ref={listRef} data-tour="rows" role="listbox" aria-label="Rules">
         {visible.map((rule) => (
           <div
             key={rule.id}
@@ -86,7 +84,6 @@ export function RuleList({
             className="mn-row"
             data-selected={rule.id === selectedId || undefined}
             onClick={() => onSelect(rule.id)}
-            onDoubleClick={() => onPin(rule.id)}
           >
             <span className="mn-dot" data-status={rule.status} aria-label={statusLabel(rule)} />
             <div className="mn-row-main">
@@ -119,7 +116,6 @@ export function RuleList({
         <span><kbd>J</kbd><kbd>K</kbd> Navigate</span>
         <span><kbd>/</kbd> Search</span>
         <span><kbd>⌘K</kbd> Commands</span>
-        <span><kbd>↵</kbd> Pin</span>
       </footer>
     </section>
   );

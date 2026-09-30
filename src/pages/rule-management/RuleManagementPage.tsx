@@ -2,28 +2,31 @@
  *
  *   Sidebar      navigation and assignment groups
  *   RuleList     finding rules: search, status tabs, sort
- *   RuleTabs     the working set: rules you've opened
  *   RuleDetail   the selected rule, and the decision form
  *   IncidentsPanel / CommandPalette   on top when opened
+ *   Tour         the guided tour, over everything (its code lives in tours/)
  *
  * Data flows down as props; changes come back up as callbacks (onSelect, onAction…). */
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { CommandPalette } from './components/CommandPalette/CommandPalette';
 import { DecisionToast } from './components/common/DecisionToast';
+import { PaneToggles } from './components/common/PaneToggles';
 import { IncidentsPanel } from './components/Incidents/IncidentsPanel';
 import { RuleDetail } from './components/RuleDetail/RuleDetail';
 import { RuleList } from './components/RuleList/RuleList';
-import { RuleTabs } from './components/RuleTabs/RuleTabs';
 import { Sidebar } from './components/Sidebar/Sidebar';
+import { TOUR_STEPS } from '../../../tours/rule-management';
+import { Tour } from '../../../tours/Tour';
+import { useTour } from '../../../tours/useTour';
 import { useDecision } from './hooks/useDecision';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { usePaneMode } from './hooks/usePaneMode';
 import { useRuleView } from './hooks/useRuleView';
 import { useRulesStore } from './hooks/useRulesStore';
 import { useTheme } from './hooks/useTheme';
-import { useWorkingSet } from './hooks/useWorkingSet';
 import { actionsFor } from './model/policy';
 import type { RuleAction } from './model/types';
 import './RuleManagementPage.css';
@@ -31,8 +34,7 @@ import './RuleManagementPage.css';
 export function RuleManagementPage() {
   const rules = useRulesStore((s) => s.rules);
   const { view, update, visible, counts } = useRuleView(rules);
-  const workingSet = useWorkingSet();
-  const [selectedId, setSelectedId] = useState<string | null>(() => workingSet.openIds[0] ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [incidentsOpen, setIncidentsOpen] = useState(false);
   const [hideSide, setHideSide] = useState(false);
@@ -43,27 +45,26 @@ export function RuleManagementPage() {
   const [detailRef, mode] = usePaneMode();
   const searchRef = useRef<HTMLInputElement>(null);
   const incidentSearchRef = useRef<HTMLInputElement>(null);
+  const tour = useTour(TOUR_STEPS.length);
+  // Whether the tour opened the decision form (to show it), so it only closes its own.
+  const tourDecision = useRef(false);
 
   const decision = useDecision((rule, action) => {
-    workingSet.markDecided(rule.id);
     toast.custom(() => <DecisionToast rule={rule} action={action} />);
   });
 
   const selected = rules.find((r) => r.id === selectedId) ?? null;
 
-  // Keep the selection valid. An open tab can stay selected even when the list's filters
-  // hide it; otherwise, if the list no longer shows the selected rule, pick its first one.
+  // Keep the selection valid: if the list no longer shows the selected rule, pick its first one.
   useEffect(() => {
-    if (selectedId && workingSet.openIds.includes(selectedId)) return;
     if (!visible.length) return setSelectedId(null);
     if (!selectedId || !visible.some((r) => r.id === selectedId)) setSelectedId(visible[0].id);
-  }, [visible, selectedId, workingSet.openIds]);
+  }, [visible, selectedId]);
 
   /** Start a decision on the selected rule, if that action is allowed. */
   const act = (action: RuleAction, via: 'key' | 'pointer') => {
     if (!selected || !actionsFor(selected).includes(action)) return;
     setIncidentsOpen(false); // the form lives in the detail pane, so leave the panel first
-    workingSet.pin(selected.id); // deciding on a rule means you're working on it: keep its tab
     setComposerVia(via);
     decision.open(selected, action);
   };
@@ -75,12 +76,34 @@ export function RuleManagementPage() {
     if (next) setSelectedId(next.id);
   };
 
-  const closeTab = (id: string) => {
-    const neighbour = workingSet.close(id);
-    if (id === selectedId && neighbour) setSelectedId(neighbour); // like closing a browser tab
+  /** Start the tour with everything it points at on screen, on a rule that's waiting for a decision. */
+  const startTour = () => {
+    setHideSide(false);
+    setHideList(false);
+    setIncidentsOpen(false);
+    setPaletteOpen(false);
+    if (selected?.status !== 'proposed') {
+      const waiting = visible.find((r) => r.status === 'proposed');
+      if (waiting) setSelectedId(waiting.id);
+    }
+    tour.start();
   };
 
+  // The step about the decision form opens one on the selected rule; the others put it away again.
+  const tourStep = tour.open ? TOUR_STEPS[tour.index] : null;
+  useEffect(() => {
+    if (tourStep?.showsDecision && selected && !decision.target) {
+      tourDecision.current = true;
+      setComposerVia('pointer');
+      decision.open(selected, actionsFor(selected)[0]);
+    } else if (!tourStep?.showsDecision && tourDecision.current) {
+      tourDecision.current = false;
+      decision.close();
+    }
+  }, [tourStep]);
+
   useKeyboardShortcuts({
+    tourOpen: tour.open,
     paletteOpen,
     onTogglePalette: () => setPaletteOpen((open) => !open),
     decisionOpen: decision.target !== null,
@@ -97,20 +120,21 @@ export function RuleManagementPage() {
       x: () => act('reject', 'key'),
       e: () => act('activate', 'key'),
       d: () => act('deactivate', 'key'),
-      Enter: () => selectedId && workingSet.pin(selectedId),
       '[': () => setHideSide((hidden) => !hidden),
       ']': () => setHideList((hidden) => !hidden),
+      '?': startTour,
     },
   });
 
   return (
-    <div className="mn" data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
+    <div className="mn" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
       <Sidebar
         hidden={hideSide}
         rules={rules}
         groupId={view.groupId}
         onSelectGroup={(groupId) => update({ groupId })}
         onOpenPalette={() => setPaletteOpen(true)}
+        onStartTour={startTour}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -123,25 +147,10 @@ export function RuleManagementPage() {
         counts={counts}
         selectedId={selectedId}
         onSelect={setSelectedId}
-        onPin={workingSet.pin}
         searchRef={searchRef}
       />
 
       <section className="mn-detail" ref={detailRef}>
-        <RuleTabs
-          rules={rules}
-          openIds={workingSet.openIds}
-          selectedId={selectedId}
-          draftingId={decision.target?.rule.id ?? null}
-          decidedIds={workingSet.decidedIds}
-          hideSide={hideSide}
-          hideList={hideList}
-          onToggleSide={() => setHideSide((hidden) => !hidden)}
-          onToggleList={() => setHideList((hidden) => !hidden)}
-          onSelect={setSelectedId}
-          onPin={workingSet.pin}
-          onClose={closeTab}
-        />
         {selected ? (
           <RuleDetail
             rule={selected}
@@ -149,6 +158,14 @@ export function RuleManagementPage() {
             mode={mode}
             decision={decision}
             composerVia={composerVia}
+            toolbar={
+              <PaneToggles
+                hideSide={hideSide}
+                hideList={hideList}
+                onToggleSide={() => setHideSide((hidden) => !hidden)}
+                onToggleList={() => setHideList((hidden) => !hidden)}
+              />
+            }
             onAction={(action) => act(action, 'pointer')}
             onSelect={setSelectedId}
             onViewIncidents={() => setIncidentsOpen(true)}
@@ -184,7 +201,15 @@ export function RuleManagementPage() {
         onViewIncidents={() => setIncidentsOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onStartTour={startTour}
       />
+
+      {/* Rendered into <body>, outside the page, which is inert while the tour shows. */}
+      {tour.open &&
+        createPortal(
+          <Tour steps={TOUR_STEPS} index={tour.index} onIndex={tour.go} onDone={tour.finish} />,
+          document.body,
+        )}
     </div>
   );
 }

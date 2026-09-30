@@ -1,4 +1,5 @@
 /* One key listener for the whole page. It decides who gets each key press, in order:
+ *   0. While the tour is showing, it has the keyboard (see Tour.tsx).
  *   1. ⌘K always toggles the palette.
  *   2. While the palette is open, it handles its own keys.
  *   3. While a decision is open, only Esc (cancel) and ⌘↵ (submit) work.
@@ -9,6 +10,7 @@
 import { useEffect, useRef } from 'react';
 
 interface Shortcuts {
+  tourOpen: boolean;
   paletteOpen: boolean;
   onTogglePalette: () => void;
   decisionOpen: boolean;
@@ -27,6 +29,7 @@ export function useKeyboardShortcuts(shortcuts: Shortcuts) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const s = live.current;
+      if (s.tourOpen) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         s.onTogglePalette();

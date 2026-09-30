@@ -1,9 +1,9 @@
 /* The sidebar: brand, ⌘K button, navigation, the assignment groups (with a search box),
- * the signed-in user and the theme switch. It owns the group search text, because
+ * the signed-in user, the tour and the theme switch. It owns the group search text, because
  * nothing else needs it. */
 
 import { useState } from 'react';
-import { Bell, BookText, Filter, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
+import { Bell, BookText, CircleHelp, Filter, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
 import { groupCounts } from '../../model/browse';
 import type { Rule } from '../../model/types';
 import type { Theme } from '../../hooks/useTheme';
@@ -15,6 +15,7 @@ export function Sidebar({
   groupId,
   onSelectGroup,
   onOpenPalette,
+  onStartTour,
   theme,
   onToggleTheme,
 }: {
@@ -23,6 +24,7 @@ export function Sidebar({
   groupId: string;
   onSelectGroup: (groupId: string) => void;
   onOpenPalette: () => void;
+  onStartTour: () => void;
   theme: Theme;
   onToggleTheme: () => void;
 }) {
@@ -44,7 +46,7 @@ export function Sidebar({
         Imperial Ops
       </div>
 
-      <button className="mn-jump" onClick={onOpenPalette}>
+      <button className="mn-jump" onClick={onOpenPalette} data-tour="jump">
         <Search size={14} />
         <span>Search or jump to…</span>
         <kbd>⌘K</kbd>
@@ -73,7 +75,7 @@ export function Sidebar({
           aria-label="Find an assignment group"
         />
       </label>
-      <div className="mn-groups">
+      <div className="mn-groups" data-tour="groups">
         <button className="mn-group" data-active={groupId === 'all' || undefined} onClick={() => onSelectGroup('all')}>
           <span>All groups</span>
           <span className="mn-count">{rules.length}</span>
@@ -99,6 +101,9 @@ export function Sidebar({
           <div>Admiral Piett</div>
           <div className="mn-subtle">Rule governor</div>
         </div>
+        <button className="mn-icon-btn" onClick={onStartTour} aria-label="Take the tour" title="Take the tour  ?">
+          <CircleHelp size={15} />
+        </button>
         <button
           className="mn-icon-btn mn-theme-btn"
           onClick={onToggleTheme}
