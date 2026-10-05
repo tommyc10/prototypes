@@ -1,16 +1,16 @@
 /* The ⌘K command menu: jump to any rule, or run any command, without the mouse.
+ * (Its look is shared with the other pages' menus: see styles/palette.css.)
  * cmdk handles the search and arrow-key selection. Each item's `value` is what the
  * search matches against, which is why "RUL-0419" finds a rule by its id. */
 
 import { Command } from 'cmdk';
-import { CircleHelp, Moon, Search, Sun } from 'lucide-react';
+import { CircleHelp, History, Moon, Search, Sun } from 'lucide-react';
 import { GROUPS } from '../../data/mockData';
-import type { Theme } from '../../hooks/useTheme';
+import type { Theme } from '../../../../hooks/useTheme';
 import { SORT_KEYS, SORT_LABEL, STATUS_TABS, type SortKey, type StatusFilter } from '../../model/browse';
 import { ACTION_KEY, ACTION_LABEL } from '../../model/labels';
 import { actionsFor } from '../../model/policy';
 import type { Rule, RuleAction } from '../../model/types';
-import './CommandPalette.css';
 
 export function CommandPalette({
   open,
@@ -23,6 +23,7 @@ export function CommandPalette({
   onSort,
   onAction,
   onViewIncidents,
+  onNavigate,
   theme,
   onToggleTheme,
   onStartTour,
@@ -37,6 +38,8 @@ export function CommandPalette({
   onSort: (key: SortKey) => void;
   onAction: (action: RuleAction) => void;
   onViewIncidents: () => void;
+  /** Go to another page, e.g. '#/hindcast'. */
+  onNavigate: (to: string) => void;
   theme: Theme;
   onToggleTheme: () => void;
   onStartTour: () => void;
@@ -106,6 +109,13 @@ export function CommandPalette({
               <span className="mn-palette-meta">{group.unit}</span>
             </Command.Item>
           ))}
+        </Command.Group>
+
+        <Command.Group heading="Go to">
+          <Command.Item value="go to hindcast replay noise" onSelect={run(() => onNavigate('#/hindcast'))}>
+            <History size={15} />
+            Hindcast
+          </Command.Item>
         </Command.Group>
 
         <Command.Group heading="Preferences">

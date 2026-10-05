@@ -1,0 +1,226 @@
+/* Where the noise came from: the lead card, its ticket list, and the two breakdowns. */
+
+.hc-lead {
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2);
+}
+
+.hc-lead-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* The rank, as a counter: the one filled mark on the card. */
+.hc-lead-rank {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hc-lead-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.hc-lead-name h3 {
+  margin: 1px 0 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.hc-lead-name h3 .mn-subtle {
+  margin-left: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.hc-lead-open {
+  flex: none;
+  padding: 0 12px 0 14px;
+}
+
+.hc-lead-claim {
+  max-width: 76ch;
+  margin: 16px 0 18px;
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.hc-lead-claim strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* The metric well from ui.css, as four equal cells. */
+.mn-backtest.hc-well {
+  margin-bottom: 12px;
+}
+
+.mn-backtest.hc-well > div {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  padding: 10px 14px;
+}
+
+.mn-backtest.hc-well b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-backtest.hc-well span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- the expander, and the tickets behind it ---------- */
+
+.hc-expander {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0 0 -6px;
+  padding: 4px 8px 4px 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.hc-expander:active {
+  transform: scale(0.98);
+}
+
+.hc-expander svg {
+  color: var(--fg-3);
+  transition: transform 160ms var(--ease-out);
+}
+
+.hc-expander[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+
+.hc-expander:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hc-expander:hover {
+    background: var(--tint);
+    color: var(--fg);
+  }
+}
+
+.hc-tickets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  /* It opens on a click, so it arrives rather than appearing: a short fade, no movement. */
+  transition: opacity 180ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.hc-tickets > .mn-tabs {
+  flex-wrap: wrap;
+}
+
+.hc-ticket-list {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 12px;
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hc-ticket-list li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1.5fr) minmax(0, 1fr) 104px 52px;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.hc-ticket-reason {
+  font-size: 12px;
+}
+
+.hc-ticket-by {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.hc-ticket-by[data-outcome-text='missed'] {
+  color: var(--fg-3);
+}
+
+.hc-ticket-date {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.hc-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+/* A narrow pane drops the reason column; the filter tabs still say what caught each ticket. */
+@container report (max-width: 760px) {
+  .hc-ticket-list li {
+    grid-template-columns: 84px minmax(0, 1fr) 104px 52px;
+  }
+  .hc-ticket-reason {
+    display: none;
+  }
+  .mn-backtest.hc-well {
+    flex-wrap: wrap;
+  }
+  .mn-backtest.hc-well > div {
+    flex: 1 1 40%;
+  }
+  .mn-backtest.hc-well > div:nth-child(3) {
+    border-left: 0;
+  }
+  .mn-backtest.hc-well > div:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+}

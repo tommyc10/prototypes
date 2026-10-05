@@ -7,6 +7,8 @@ import '@fontsource-variable/geist-mono';
 import './styles/base.css';
 import './styles/theme.css';
 import './styles/ui.css';
+import './styles/shell.css';
+import './styles/palette.css';
 import { App } from './App';
 // Loaded after the app's own styles, so these accessibility overrides win.
 import './styles/accessibility.css';

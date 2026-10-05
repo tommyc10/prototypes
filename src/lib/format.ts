@@ -5,6 +5,9 @@ import { NOW } from './clock';
 /** 0.93 → "93%" */
 export const pct = (n: number) => `${Math.round(n * 100)}%`;
 
+/** 14412 → "14,412" */
+export const num = (n: number) => n.toLocaleString('en-GB');
+
 /** An ISO date → "just now", "5m ago", "3d ago"… */
 export function ago(iso: string) {
   const diff = (NOW.getTime() - new Date(iso).getTime()) / 1000;

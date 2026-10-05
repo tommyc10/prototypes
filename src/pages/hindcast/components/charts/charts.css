@@ -1,0 +1,480 @@
+/* The charts: the split bar, the weekly columns, the ranked breakdowns, the heat strip, and
+ * the legend, tooltip and table they share. No chart library; every mark is a div.
+ *
+ * Three tones carry the whole page, one ramp from strongest catch to none: caught by a rule,
+ * caught by a change window, not caught. They're tones of one grey on purpose. Colour on this
+ * page is kept for status (proposed, validated, unsafe), so it never has to compete with data.
+ * The ramp passes the ordinal checks in both themes (monotone lightness, steps you can tell
+ * apart, the faintest still 2:1 against the surface). */
+
+.hc {
+  --hc-rule: #ededed;
+  --hc-window: #8c8c8c;
+  --hc-missed: #4d4d4d;
+  --hc-grid: var(--line);
+}
+
+:root[data-mn-theme='light'] .hc {
+  --hc-rule: #171717;
+  --hc-window: #737373;
+  --hc-missed: #b0b0b0;
+}
+
+.hc [data-outcome='rule'],
+.hc [data-tone='rule'] {
+  background: var(--hc-rule);
+}
+
+.hc [data-outcome='window'],
+.hc [data-tone='window'] {
+  background: var(--hc-window);
+}
+
+.hc [data-outcome='missed'],
+.hc [data-tone='missed'] {
+  background: var(--hc-missed);
+}
+
+/* Proposed is amber everywhere in the app; here it's what the proposals would add. */
+.hc [data-tone='proposed'] {
+  background: var(--amber);
+}
+
+.hc [data-tone='tuning'] {
+  background: color-mix(in srgb, var(--amber) 42%, var(--hc-missed));
+}
+
+/* ---------- split bar ---------- */
+
+.hc-split {
+  width: 100%;
+  height: 10px;
+}
+
+.hc-split[data-size='sm'] {
+  height: 4px;
+}
+
+.hc-split[data-size='lg'] {
+  height: 16px;
+}
+
+.hc-split-fill {
+  display: flex;
+  gap: 2px; /* the surface shows through: that's what separates the segments */
+  height: 100%;
+  min-width: 3px;
+}
+
+.hc-split-fill span {
+  flex-basis: 0;
+  min-width: 2px;
+}
+
+/* Square at the baseline, rounded at the data end. */
+.hc-split-fill span:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+/* A whole (part-to-whole) bar is a meter: rounded at both ends. */
+.hc-split[data-whole] .hc-split-fill span:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.hc-split[data-size='sm'] .hc-split-fill span:last-child {
+  border-radius: 0 2px 2px 0;
+}
+
+/* ---------- legend ---------- */
+
+.hc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--fg-2);
+}
+
+.hc-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.hc-legend i,
+.hc-swatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* ---------- tooltip ---------- */
+
+.hc-tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  min-width: 176px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  /* Solid, not glass: it sits on top of the marks, and bright bars would wash through. */
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--fg-2);
+  pointer-events: none;
+}
+
+.hc-tip[data-edge='end'] {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.hc-tip[data-edge='start'] {
+  left: 0;
+  transform: none;
+}
+
+.hc-tip-title {
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.hc-tip-row {
+  display: grid;
+  grid-template-columns: 10px auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+/* A short stroke of the series colour: at this size a filled box would shout. */
+.hc-tip-row i {
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.hc-tip-row b {
+  min-width: 3ch;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--fg);
+}
+
+.hc-tip-foot {
+  margin-top: 6px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  color: var(--fg-3);
+}
+
+/* ---------- a figure: title, table switch, chart ---------- */
+
+.hc-fig {
+  min-width: 0;
+}
+
+.hc-fig h3,
+.hc-h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.hc-fig h3 .mn-subtle,
+.hc-h3 .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.hc-fig-toggle {
+  align-self: center;
+  width: 24px;
+  height: 24px;
+  margin: -4px -4px -4px auto;
+  color: var(--fg-3);
+}
+
+.hc-fig-toggle[aria-pressed='true'] {
+  background: var(--l4);
+  color: var(--fg);
+}
+
+.hc-fig-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Under a chart: its key, set to the right. */
+.hc-fig-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* ---------- table view ---------- */
+
+.hc-table-wrap {
+  padding: 4px 4px 2px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow-x: auto;
+}
+
+.hc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hc-table th,
+.hc-table td {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.hc-table thead th {
+  font-size: 12px;
+  font-weight: 400;
+  text-align: right;
+  color: var(--fg-3);
+}
+
+.hc-table th:first-child {
+  text-align: left;
+}
+
+.hc-table tbody th {
+  font-weight: 400;
+  color: var(--fg);
+}
+
+.hc-table td {
+  text-align: right;
+  color: var(--fg-2);
+}
+
+.hc-table tbody tr {
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- weekly columns ---------- */
+
+.hc-cols {
+  --gutter: 36px; /* room for the axis numbers */
+  padding-top: 6px;
+}
+
+.hc-cols-plot {
+  position: relative;
+  height: 200px;
+  margin-left: var(--gutter);
+}
+
+/* Gridlines: solid hairlines, one step off the surface. The baseline is a touch stronger. */
+.hc-cols-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--hc-grid);
+}
+
+.hc-cols-tick:first-child {
+  border-top-color: var(--line-3);
+}
+
+.hc-cols-tick span {
+  position: absolute;
+  top: -8px;
+  right: calc(100% + 10px);
+  font-size: 11px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.hc-cols-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hc-col {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  padding: 0 1px;
+  outline: none;
+}
+
+/* The whole slot is the hover target, not just the painted bar; a soft band shows which. */
+.hc-col[data-hover]::before {
+  content: '';
+  position: absolute;
+  inset: 0 1px;
+  border-radius: 6px 6px 0 0;
+  background: var(--tint);
+}
+
+.hc-col-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse; /* rule at the baseline, what was missed on top */
+  gap: 2px;
+  width: 62%; /* thin bars: the rest of the slot is air, however many weeks there are */
+  max-width: 24px;
+  min-height: 2px;
+}
+
+/* The column's tooltip sits beside it, inside the plot, so it never covers the title above
+ * or slides under the sticky bar. Past halfway it flips to the column's left. */
+.hc-col .hc-tip {
+  top: 0;
+  bottom: auto;
+  left: calc(100% + 6px);
+  transform: none;
+}
+
+.hc-col .hc-tip[data-edge='end'] {
+  left: auto;
+  right: calc(100% + 6px);
+}
+
+.hc-col-stack span {
+  flex-basis: 0;
+  min-height: 2px;
+}
+
+.hc-col-stack span:last-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.hc-col:focus-visible .hc-col-stack {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hc-cols-x {
+  display: flex;
+  height: 16px;
+  margin: 8px 0 0 var(--gutter);
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.hc-cols-x span {
+  position: relative;
+  flex: 1;
+}
+
+/* Centred on its column even when the label is wider than the column. */
+.hc-cols-x em {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+/* ---------- ranked breakdown ---------- */
+
+.hc-brows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hc-brow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 14px;
+  height: 34px;
+  margin: 0 -10px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.hc-brow[data-hover] {
+  background: var(--tint);
+}
+
+.hc-brow:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+
+.hc-brow-label {
+  color: var(--fg-2);
+}
+
+.hc-brow-val {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.hc-brow .hc-tip {
+  bottom: calc(100% + 2px);
+  right: 10px;
+}
+
+/* ---------- heat strip ---------- */
+
+.hc-heat {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.hc-heat-cell {
+  position: relative;
+  height: 20px;
+  border-radius: 3px;
+  background: var(--tint);
+}
+
+.hc-heat-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--hc-rule);
+  opacity: var(--heat);
+}
+
+.hc-heat-cell[data-hover] {
+  outline: 1px solid var(--line-3);
+  outline-offset: 1px;
+}

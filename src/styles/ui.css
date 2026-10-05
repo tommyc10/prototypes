@@ -191,6 +191,15 @@
   }
 }
 
+/* The sidebar and list toggles, at the start of the detail pane's header row. */
+.mn-pane-toggles {
+  display: flex;
+  gap: 2px;
+  margin: -2px 2px -2px -6px;
+  padding-right: 8px;
+  border-right: 1px solid var(--line);
+}
+
 /* ---------- buttons ---------- */
 
 .mn-btn {

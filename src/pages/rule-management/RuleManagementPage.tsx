@@ -1,6 +1,6 @@
 /* The rule management page. This file owns the page's state and wires the pieces together:
  *
- *   Sidebar      navigation and assignment groups
+ *   Sidebar      navigation (shared with the other pages), with this page's assignment groups in it
  *   RuleList     finding rules: search, status tabs, sort
  *   RuleDetail   the selected rule, and the decision form
  *   IncidentsPanel / CommandPalette   on top when opened
@@ -13,28 +13,29 @@ import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { CommandPalette } from './components/CommandPalette/CommandPalette';
 import { DecisionToast } from './components/common/DecisionToast';
-import { PaneToggles } from './components/common/PaneToggles';
+import { GroupNav } from './components/GroupNav/GroupNav';
 import { IncidentsPanel } from './components/Incidents/IncidentsPanel';
 import { RuleDetail } from './components/RuleDetail/RuleDetail';
 import { RuleList } from './components/RuleList/RuleList';
-import { Sidebar } from './components/Sidebar/Sidebar';
+import { PaneToggles } from '../../components/PaneToggles';
+import { Sidebar } from '../../components/Sidebar/Sidebar';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useTheme } from '../../hooks/useTheme';
+import { navigate } from '../../lib/route';
 import { TOUR_STEPS } from '../../../tours/rule-management';
 import { Tour } from '../../../tours/Tour';
 import { useTour } from '../../../tours/useTour';
 import { useDecision } from './hooks/useDecision';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { usePaneMode } from './hooks/usePaneMode';
 import { useRuleView } from './hooks/useRuleView';
 import { useRulesStore } from './hooks/useRulesStore';
-import { useTheme } from './hooks/useTheme';
 import { actionsFor } from './model/policy';
 import type { RuleAction } from './model/types';
-import './RuleManagementPage.css';
 
-export function RuleManagementPage() {
+export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a link from another page). */ initialRuleId?: string }) {
   const rules = useRulesStore((s) => s.rules);
   const { view, update, visible, counts } = useRuleView(rules);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialRuleId ?? null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [incidentsOpen, setIncidentsOpen] = useState(false);
   const [hideSide, setHideSide] = useState(false);
@@ -130,14 +131,14 @@ export function RuleManagementPage() {
     <div className="mn" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
       <Sidebar
         hidden={hideSide}
-        rules={rules}
-        groupId={view.groupId}
-        onSelectGroup={(groupId) => update({ groupId })}
+        page="rules"
         onOpenPalette={() => setPaletteOpen(true)}
         onStartTour={startTour}
         theme={theme}
         onToggleTheme={toggleTheme}
-      />
+      >
+        <GroupNav rules={rules} groupId={view.groupId} onSelectGroup={(groupId) => update({ groupId })} />
+      </Sidebar>
 
       <RuleList
         hidden={hideList}
@@ -199,6 +200,7 @@ export function RuleManagementPage() {
         onSort={(sort) => update({ sort })}
         onAction={(action) => act(action, 'key')}
         onViewIncidents={() => setIncidentsOpen(true)}
+        onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}
         onStartTour={startTour}

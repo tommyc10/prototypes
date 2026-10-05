@@ -1,13 +1,5 @@
-/* The rule list: title, search, status tabs, rows and keyboard hints. */
-
-.mn-list {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--l1);
-  border-right: 1px solid var(--line);
-}
+/* The rule list: title, search, status tabs, rows and keyboard hints.
+ * (The column itself, .mn-list, is part of the shell: see styles/shell.css.) */
 
 .mn-list-head {
   display: flex;

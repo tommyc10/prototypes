@@ -6,7 +6,11 @@ import { useEffect, useState } from 'react';
 
 const SEEN = 'mn-tour-seen';
 
-export function useTour(stepCount: number) {
+export function useTour(
+  stepCount: number,
+  /** `auto: false` for a tour that only starts when asked. `seenKey` keeps each page's first visit apart. */
+  { auto = true, seenKey = SEEN }: { auto?: boolean; seenKey?: string } = {},
+) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
 
@@ -17,7 +21,7 @@ export function useTour(stepCount: number) {
 
   // First visit: wait for the page to settle, then start.
   useEffect(() => {
-    if (localStorage.getItem(SEEN)) return;
+    if (!auto || localStorage.getItem(seenKey)) return;
     const timer = setTimeout(start, 600);
     return () => clearTimeout(timer);
   }, []);
@@ -29,7 +33,7 @@ export function useTour(stepCount: number) {
     go: (i: number) => setIndex(Math.min(stepCount - 1, Math.max(0, i))),
     finish() {
       setOpen(false);
-      localStorage.setItem(SEEN, '1');
+      localStorage.setItem(seenKey, '1');
     },
   };
 }

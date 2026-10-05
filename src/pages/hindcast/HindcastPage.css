@@ -1,0 +1,87 @@
+/* The hindcast page: the report pane and the pieces every chapter shares (chapter headings,
+ * the two-up grid, notes). Each chapter's own styles sit beside its component; the charts'
+ * are in components/charts/charts.css.
+ *
+ * The report lays itself out from its own width, not the window's, because the sidebar and
+ * list beside it can be tucked away: `report` is a container, and the chapters ask it how
+ * wide it is (@container report …). */
+
+.hc {
+  --mn-list-w: 360px;
+}
+
+.hc-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container: report / inline-size;
+}
+
+.hc-report {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 14px 40px 120px;
+}
+
+/* ---------- chapters ---------- */
+
+.hc-chapter + .hc-chapter {
+  margin-top: 56px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+}
+
+/* A chapter's modules, evenly spaced. */
+.hc-chapter > * + * {
+  margin-top: 40px;
+}
+
+.hc-chapter > .hc-chapter-head + * {
+  margin-top: 24px;
+}
+
+.hc-kicker {
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+
+.hc-kicker span {
+  margin-left: 6px;
+  font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hc-chapter-head h2 {
+  margin: 6px 0 0;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* Two modules side by side when there's room, stacked when there isn't. */
+.hc-grid {
+  display: grid;
+  gap: 40px 56px;
+}
+
+@container report (min-width: 980px) {
+  .hc-grid[data-cols='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container report (max-width: 760px) {
+  .hc-report {
+    padding: 10px 24px 96px;
+  }
+}
+
+/* Nothing here moves: the page and its numbers change at once (it's used all day, often from
+ * the keyboard). The one fade is the ticket list opening, and reduced motion drops that too. */
+@media (prefers-reduced-motion: reduce) {
+  .hc-tickets {
+    transition: none;
+  }
+}

@@ -1,0 +1,78 @@
+/* The report's sticky bar: pane toggles, chapters, lookback. */
+
+.hc-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 40px;
+  background: var(--l2);
+  border-bottom: 1px solid transparent;
+  transition: border-color 150ms ease;
+}
+
+.hc-top[data-scrolled] {
+  border-bottom-color: var(--line);
+}
+
+.hc-chapters {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.hc-top .mn-tab {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.hc-top .mn-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.hc-lookback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.hc-lookback-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* The lookback is a segmented control: a sunken track with the chosen value raised in it. */
+.hc-lookback .mn-tabs {
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hc-lookback .mn-tab {
+  justify-content: center;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 8px;
+}
+
+/* A narrow pane keeps the control and drops its label (the list's title says it too). */
+@container report (max-width: 760px) {
+  .hc-lookback-label {
+    display: none;
+  }
+  .hc-top {
+    padding: 0 24px;
+  }
+  /* The chapters scroll sideways when they don't all fit; the fade says there are more. */
+  .hc-chapters {
+    padding-right: 28px; /* so the last chapter can scroll clear of the fade */
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+}

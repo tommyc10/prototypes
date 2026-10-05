@@ -1,0 +1,164 @@
+/* The sidebar: brand, ⌘K button, navigation, the page's own section, user and theme switch. */
+
+.mn-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 14px 10px 12px;
+  background: var(--l0);
+  border-right: 1px solid var(--line);
+}
+
+.mn-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mn-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+.mn-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  margin-bottom: 10px;
+  padding: 0 6px 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-3);
+  font-size: 13px;
+  text-align: left;
+  transition:
+    background-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-jump span {
+  flex: 1;
+}
+
+.mn-jump:active {
+  transform: scale(0.98);
+}
+
+.mn-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mn-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 7px;
+  color: var(--fg-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.mn-nav-item svg {
+  color: var(--fg-3);
+}
+
+.mn-nav-item[data-active] {
+  background: var(--l4);
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.mn-nav-item[data-active] svg {
+  color: var(--fg);
+}
+
+.mn-nav-item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* The page's own section. It takes the room that's left, so the user row stays at the bottom. */
+.mn-side-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+}
+
+.mn-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.mn-user-text {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.mn-user-text .mn-subtle {
+  font-size: 12px;
+}
+
+.mn-avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--avatar);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-nav-item:hover {
+    background: var(--l3);
+    color: var(--fg);
+  }
+  .mn-jump:hover {
+    background: var(--l4);
+  }
+}
+
+:root[data-mn-theme='light'] .mn-nav-item[data-active] {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 0 0 1px var(--line);
+}
+
+:root[data-mn-theme='light'] .mn-jump {
+  background: #ffffff;
+}
+
+.mn-theme-btn svg {
+  transition: transform 300ms var(--ease-out);
+}
+
+.mn-theme-btn:active svg {
+  transform: rotate(-20deg) scale(0.92);
+}

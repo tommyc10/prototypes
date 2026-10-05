@@ -1,0 +1,168 @@
+/* How to read this: the population funnel, the method's steps, and the provenance. */
+
+/* ---------- the population ---------- */
+
+.hc-funnel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 12px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hc-funnel li {
+  position: relative;
+  padding: 14px 18px 14px 20px;
+}
+
+.hc-funnel .hc-stat-value {
+  font-size: 22px;
+}
+
+/* The arrow sits on the seam between two steps. */
+.hc-funnel-arrow {
+  position: absolute;
+  top: 50%;
+  left: -7px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--l2);
+  color: var(--fg-3);
+}
+
+.hc-funnel li:nth-child(odd) .hc-funnel-arrow {
+  display: none;
+}
+
+.hc-funnel li:nth-child(even) {
+  border-left: 1px solid var(--line);
+}
+
+.hc-funnel li:nth-child(n + 3) {
+  border-top: 1px solid var(--line);
+}
+
+@container report (min-width: 720px) {
+  .hc-funnel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .hc-funnel li:nth-child(n) {
+    border-top: 0;
+  }
+  .hc-funnel li + li {
+    border-left: 1px solid var(--line);
+  }
+  .hc-funnel li:nth-child(odd) .hc-funnel-arrow {
+    display: block;
+  }
+}
+
+/* ---------- how the replay works ---------- */
+
+.hc-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hc-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.hc-steps .mn-mono {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 11px;
+  color: var(--fg-2);
+}
+
+/* The line that joins one step to the next. */
+.hc-steps li:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  bottom: 2px;
+  left: 11px;
+  width: 1px;
+  background: var(--line-2);
+}
+
+.hc-steps strong {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 22px;
+}
+
+.hc-steps p {
+  max-width: 60ch;
+  margin: 1px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+/* ---------- provenance and assumptions ---------- */
+
+.hc-prov {
+  margin: 0;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13px;
+}
+
+.hc-prov > div {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 14px;
+}
+
+.hc-prov > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.hc-prov dt {
+  color: var(--fg-3);
+}
+
+.hc-prov dd {
+  margin: 0;
+}
+
+.hc-assume {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.hc-assume li {
+  position: relative;
+  padding: 3px 0 3px 16px;
+}
+
+.hc-assume li::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fg-3);
+}
