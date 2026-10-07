@@ -1,0 +1,318 @@
+/* The picked window: heading, reason, its run, then what it covers beside the details. */
+
+.cw-detail-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 24px;
+  padding: 0 10px 0 9px;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cw-badge[data-status='overrunning'] {
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.25);
+  color: var(--orange);
+}
+
+.cw-detail h2 {
+  max-width: 760px;
+  margin: 12px 0 6px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.cw-reason,
+.cw-note {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.cw-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.2);
+  font-size: 13px;
+  color: var(--orange-strong);
+}
+
+.cw-callout svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--orange);
+}
+
+.cw-callout strong {
+  font-weight: 600;
+}
+
+/* ---------- the run: start to end, with the alerts held back in each half hour ---------- */
+
+.cw-run {
+  margin-top: 24px;
+}
+
+.cw-run-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cw-run-head b {
+  font-weight: 600;
+}
+
+.cw-run-head b[data-status='overrunning'] {
+  color: var(--orange);
+}
+
+.cw-run-plot {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 72px;
+  margin-top: 10px;
+}
+
+/* One strip per half hour, all the same width, so the columns line up with the track below. */
+.cw-run-plot > div {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.cw-run-plot span {
+  width: 100%;
+  max-width: 44px; /* a short window has few strips: its columns stay columns, not slabs */
+  border-radius: 3px 3px 0 0; /* rounded at the data end, square on the baseline */
+  background: var(--cw-held);
+  transition: background-color 100ms ease;
+}
+
+.cw-run-plot > div[data-over] span {
+  background: var(--orange);
+}
+
+.cw-run-plot > div[data-hover] span {
+  background: var(--fg);
+}
+
+/* A dashed rule where the planned end falls, when the run went past it. The plot gets a
+ * band of clear space on top for the rule's label, so no column can reach it. */
+.cw-run-plot[data-late] {
+  height: 92px;
+  padding-top: 20px;
+}
+
+.cw-run-planned {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--line-3);
+  pointer-events: none;
+}
+
+.cw-run-planned span {
+  position: absolute;
+  top: 0;
+  right: 7px;
+  width: auto;
+  max-width: none;
+  background: none;
+  font-size: 11.5px;
+  font-style: normal;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--fg-3);
+}
+
+.cw-run-plot[hidden] {
+  display: none;
+}
+
+.cw-run-plot[hidden] + .cw-run-track {
+  margin-top: 10px;
+}
+
+.cw-run-track {
+  position: relative;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--tint-2);
+  overflow: hidden;
+}
+
+.cw-run-track span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--cw-active);
+}
+
+.cw-run-track span[data-status='ended'] {
+  background: var(--cw-ended);
+}
+
+.cw-run-track span[data-status='overrunning'] {
+  background: var(--orange);
+  box-shadow: -2px 0 0 var(--l2); /* a gap between the planned part and the overrun */
+}
+
+.cw-run-foot {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.cw-run-foot b {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ---------- covers | details ---------- */
+
+.cw-detail-grid {
+  display: grid;
+  gap: 32px 56px;
+  margin-top: 32px;
+}
+
+@container windows (min-width: 980px) {
+  .cw-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cw-detail h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.cw-detail h3 .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.cw-code {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--l1);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.85;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.cw-code-kw {
+  color: var(--fg-3);
+}
+
+.cw-code-val {
+  font-weight: 500;
+  color: var(--code-val);
+}
+
+:root[data-mn-theme='light'] .cw-code {
+  background: var(--l3);
+}
+
+.cw-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.cw-facts dt {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.cw-facts dd {
+  margin: 2px 0 0;
+}
+
+/* ---------- other windows for the same group ---------- */
+
+.cw-detail h3.cw-also {
+  margin-top: 28px;
+}
+
+.cw-others {
+  margin: 0 -10px;
+  padding: 0;
+  list-style: none;
+}
+
+.cw-others button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+
+.cw-others button > .mn-truncate {
+  flex: 1;
+}
+
+.cw-others .mn-subtle {
+  flex: none;
+  font-size: 12px;
+}
+
+.cw-others button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cw-others button:hover {
+    background: var(--l3);
+  }
+}

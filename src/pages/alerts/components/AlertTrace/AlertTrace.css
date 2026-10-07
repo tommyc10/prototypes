@@ -1,0 +1,206 @@
+/* One alert and what happened to it: a heading, the proposed-rule warning, three steps. */
+
+.al-trace h2,
+.al-rules h2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.al-trace h2 .mn-subtle,
+.al-rules h2 .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.al-note {
+  max-width: 60ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.al-trace-head {
+  display: flex;
+  gap: 11px;
+}
+
+.al-trace-head i {
+  margin-top: 8px;
+}
+
+.al-trace-title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.al-trace-sub {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+/* A proposed rule fits this alert. Red only when the alert paged someone. */
+.al-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.2);
+  font-size: 13px;
+  color: var(--orange-strong);
+}
+
+.al-callout svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--orange);
+}
+
+.al-callout strong {
+  font-weight: 600;
+}
+
+.al-callout .mn-link {
+  flex: none;
+  margin-left: auto;
+  font-size: 13px;
+  color: inherit;
+}
+
+.al-callout[data-tone='bad'] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.2);
+  color: var(--red-text);
+}
+
+.al-callout[data-tone='bad'] svg {
+  color: var(--red);
+}
+
+.al-callout[data-tone='bad'] strong {
+  color: var(--red-strong);
+}
+
+/* ---------- the three steps, top to bottom, joined by a line ---------- */
+
+.al-steps {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.al-steps li {
+  position: relative;
+  padding: 0 0 18px 22px;
+}
+
+.al-steps li:last-child {
+  padding-bottom: 0;
+}
+
+.al-steps li::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.al-steps li::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 18px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--line-2);
+}
+
+.al-steps li:last-child::after {
+  display: none;
+}
+
+/* The last step is the outcome, so its dot is drawn the way the chart draws that outcome. */
+.al-steps li[data-outcome]::before {
+  box-shadow: none;
+}
+.al-steps li[data-outcome='paged']::before {
+  background: var(--al-paged);
+}
+.al-steps li[data-outcome='folded']::before {
+  background: var(--al-folded);
+}
+.al-steps li[data-outcome='hidden']::before {
+  background: var(--al-hidden);
+}
+
+.al-step-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.al-step-head strong {
+  font-weight: 500;
+}
+
+.al-steps p {
+  max-width: 62ch;
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+/* A rule's name, as a link to it on the Rules page. */
+.al-rule-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--line-3);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.al-rule-link svg {
+  display: inline;
+  margin-left: 2px;
+  vertical-align: -1px;
+  color: var(--fg-3);
+}
+
+.al-rule-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .al-rule-link:hover {
+    text-decoration-color: var(--fg);
+  }
+}

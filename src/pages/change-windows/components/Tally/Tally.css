@@ -1,0 +1,63 @@
+/* Four numbers in a row, divided by hairlines rather than boxed: they introduce the
+ * schedule below, which is the heavy thing on the page. */
+
+.cw-tally {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.cw-tally > div {
+  min-width: 0;
+  padding: 2px 20px 4px;
+  border-left: 1px solid var(--line);
+}
+
+.cw-tally > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.cw-tally dt {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.cw-tally dd {
+  margin: 2px 0 0;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.cw-tally [data-lit] dd {
+  color: var(--fg);
+}
+
+.cw-tally [data-tone='warn'] dd {
+  color: var(--orange);
+}
+
+.cw-tally span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+/* A narrow pane: two by two. */
+@container windows (max-width: 640px) {
+  .cw-tally {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .cw-tally > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+}

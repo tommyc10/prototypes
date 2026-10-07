@@ -1,0 +1,69 @@
+/* The page's sticky bar: pane toggles, the time now, and the schedule's range. */
+
+.cw-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  /* The same centred column as the page below it, so on a wide screen the controls
+   * stay above the schedule instead of drifting out to the corners. */
+  padding: 0 max(40px, calc((100% - 1560px) / 2 + 40px));
+  background: var(--l2);
+}
+
+.cw-clock {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cw-clock .mn-mono {
+  margin-left: 4px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.cw-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.cw-range-label {
+  font-size: 12px;
+}
+
+/* A segmented control: a sunken track with the chosen value raised in it. */
+.cw-range .mn-tabs {
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cw-range .mn-tab {
+  justify-content: center;
+  min-width: 38px;
+  height: 26px;
+  padding: 0 8px;
+}
+
+.cw-range .mn-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+@container windows (max-width: 760px) {
+  .cw-top {
+    padding: 0 24px;
+  }
+  .cw-range-label {
+    display: none;
+  }
+}

@@ -1,0 +1,117 @@
+/* The list column: title, search, tabs and one row per window.
+ * (The column itself, .mn-list, is part of the shell: see styles/shell.css.) */
+
+.cw-list-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 16px 10px;
+}
+
+.cw-list-title h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cw-list-head .mn-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.cw-rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 8px 12px;
+  scroll-padding: 8px;
+  /* Scroll edge: rows fade under the header rather than hitting a hard line. */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 16px), transparent 100%);
+}
+
+.cw-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  cursor: default;
+  transition: background-color 120ms ease;
+}
+
+.cw-row + .cw-row {
+  margin-top: 1px;
+}
+
+.cw-row[data-selected] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cw-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cw-row-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--row-name);
+}
+
+.cw-row[data-selected] .cw-row-name {
+  color: var(--fg);
+}
+
+/* A window that's over sits back. */
+.cw-row[data-status='ended'] .cw-row-name {
+  font-weight: 400;
+  color: var(--fg-2);
+}
+
+.cw-row-sub {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.cw-row-when {
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--fg-2);
+}
+
+.cw-row[data-status='ended'] .cw-row-when {
+  color: var(--fg-3);
+}
+
+.cw-row[data-status='overrunning'] .cw-row-when {
+  font-weight: 500;
+  color: var(--orange);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cw-row:hover:not([data-selected]) {
+    background: var(--l3);
+  }
+}
+
+.cw-list-foot {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--fg-3);
+}
+
+.cw-list-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

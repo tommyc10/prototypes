@@ -1,0 +1,50 @@
+/* The change windows page: the pane, and the tones every part of the page shares.
+ * Each component's own styles sit beside it.
+ *
+ * The page lays itself out from its own width, not the window's, because the sidebar and
+ * list beside it can be tucked away: `windows` is a container, and the pieces ask it how
+ * wide it is (@container windows …). */
+
+.cw {
+  --mn-list-w: 380px;
+  /* One ink, by where a window is in its life: in place (solid), upcoming (an outline),
+   * ended (faint). Orange is kept for one thing: past its planned end. */
+  --cw-active: #e4e4e4;
+  --cw-upcoming: #8a8a8a;
+  --cw-ended: #474747;
+  --cw-held: #7d7d7d;
+}
+
+:root[data-mn-theme='light'] .cw {
+  --cw-active: #1f1f1f;
+  --cw-upcoming: #7a7a7a;
+  --cw-ended: #c9c9c9;
+  --cw-held: #8a8a8a;
+}
+
+.cw-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container: windows / inline-size;
+}
+
+.cw-page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 14px 40px 96px;
+}
+
+.cw-detail {
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+@container windows (max-width: 760px) {
+  .cw-page {
+    padding: 10px 24px 80px;
+  }
+}

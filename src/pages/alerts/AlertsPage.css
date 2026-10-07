@@ -1,0 +1,76 @@
+/* The alerts page: the stream pane, and the three tones every part of the page shares.
+ * Each component's own styles sit beside it.
+ *
+ * The page lays itself out from its own width, not the window's, because the sidebar and
+ * list beside it can be tucked away: `stream` is a container, and the pieces ask it how
+ * wide it is (@container stream …). */
+
+.al {
+  --mn-list-w: 380px;
+  /* One ink, three strengths, by how far an alert got: reached a person, folded, hidden.
+   * Colour is kept for status (red: this would hide a real page). Every strength is at
+   * least 3:1 against the pane, so the faintest dot is still a dot. */
+  --al-paged: #ededed;
+  --al-folded: #9a9a9a;
+  --al-hidden: #646464;
+}
+
+:root[data-mn-theme='light'] .al {
+  --al-paged: #171717;
+  --al-folded: #707070;
+  --al-hidden: #949494;
+}
+
+.al-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container: stream / inline-size;
+}
+
+.al-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 14px 40px 96px;
+}
+
+/* The line under the chart: what you're looking at, or what the preview found. */
+.al-verdict {
+  max-width: 96ch;
+  margin: -10px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.al-verdict strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.al-verdict[data-tone='bad'] strong {
+  color: var(--red);
+}
+
+/* The picked alert and the rules: side by side when there's room, stacked when there isn't. */
+.al-below {
+  display: grid;
+  gap: 40px 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+@container stream (min-width: 980px) {
+  .al-below {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@container stream (max-width: 760px) {
+  .al-page {
+    padding: 10px 24px 80px;
+  }
+}

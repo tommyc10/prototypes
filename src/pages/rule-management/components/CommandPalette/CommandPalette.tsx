@@ -4,7 +4,7 @@
  * search matches against, which is why "RUL-0419" finds a rule by its id. */
 
 import { Command } from 'cmdk';
-import { CircleHelp, History, Moon, Search, Sun } from 'lucide-react';
+import { CalendarClock, Bell, CircleHelp, History, Moon, Search, Sun } from 'lucide-react';
 import { GROUPS } from '../../data/mockData';
 import type { Theme } from '../../../../hooks/useTheme';
 import { SORT_KEYS, SORT_LABEL, STATUS_TABS, type SortKey, type StatusFilter } from '../../model/browse';
@@ -115,6 +115,14 @@ export function CommandPalette({
           <Command.Item value="go to hindcast replay noise" onSelect={run(() => onNavigate('#/hindcast'))}>
             <History size={15} />
             Hindcast
+          </Command.Item>
+          <Command.Item value="go to alerts stream" onSelect={run(() => onNavigate('#/alerts'))}>
+            <Bell size={15} />
+            Alerts
+          </Command.Item>
+          <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
+            <CalendarClock size={15} />
+            Change windows
           </Command.Item>
         </Command.Group>
 

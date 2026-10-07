@@ -1,0 +1,168 @@
+/* The waterline chart: the canvas, the labels each side of the line, and the tooltip. */
+
+.al-water {
+  margin: 0;
+}
+
+.al-water-plot {
+  position: relative;
+  height: 360px;
+}
+
+@container stream (min-width: 1100px) {
+  .al-water-plot {
+    height: 420px;
+  }
+}
+
+.al-water canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* dragging rewinds the stream; it shouldn't scroll the page too */
+}
+
+/* Direct labels: what's above the line, what's below it. They don't take clicks, so the
+ * dots underneath still can. */
+.al-water-label {
+  position: absolute;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: 12px;
+  color: var(--fg-2);
+  pointer-events: none;
+}
+
+.al-water-label[data-side='up'] {
+  top: 0;
+}
+
+.al-water-label[data-side='down'] {
+  bottom: 34px;
+  /* A soft patch of the surface behind the words, so dots passing under stay out of the way. */
+  padding: 3px 10px 3px 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--l2) 82%, transparent);
+}
+
+.al-water-label span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.al-water-label b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.al-water-gutter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 64px;
+  font-size: 11px;
+  text-align: center;
+  color: var(--fg-3);
+  pointer-events: none;
+}
+
+@container stream (max-width: 560px) {
+  .al-water-gutter {
+    display: none;
+  }
+}
+
+/* ---------- the key: a dot drawn exactly as the chart draws it ---------- */
+
+.al i[data-kind] {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.al i[data-kind='paged'] {
+  background: var(--al-paged);
+}
+.al i[data-kind='folded'] {
+  background: var(--al-folded);
+}
+.al i[data-kind='hidden'] {
+  background: var(--al-hidden);
+}
+.al i[data-kind='ring'] {
+  box-shadow: inset 0 0 0 1.2px var(--al-folded);
+}
+.al i[data-kind='ring-paged'] {
+  box-shadow: inset 0 0 0 1.2px var(--red);
+}
+
+/* ---------- tooltip ---------- */
+
+.al-tip {
+  position: absolute;
+  z-index: 5;
+  transform: translate(-50%, calc(-100% - 12px));
+  max-width: 280px;
+  padding: 8px 11px;
+  border-radius: 9px;
+  /* Solid, not glass: it sits on top of the dots, and they'd show through. */
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  color: var(--fg-2);
+  pointer-events: none;
+}
+
+/* A dot below the line gets its tooltip underneath, so it doesn't cover the line. */
+.al-tip[data-below] {
+  transform: translate(-50%, 12px);
+}
+
+/* A minute's counts sit beside its band, not over it. */
+.al-tip[data-minute] {
+  transform: translate(10px, 0);
+}
+
+.al-tip[data-minute][data-flip] {
+  transform: translate(calc(-100% - 22px), 0);
+}
+
+.al-tip-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.al-tip-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.al-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
+}
+
+.al-tip-row b {
+  min-width: 2ch;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--fg);
+}

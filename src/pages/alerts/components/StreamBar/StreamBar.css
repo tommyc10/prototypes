@@ -1,0 +1,155 @@
+/* The stream's sticky bar: pane toggles, live status, the preview switch, pause. */
+
+.al-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  /* The same centred column as the page below it, so on a wide screen the controls
+   * stay above the chart instead of drifting out to the corners. */
+  padding: 0 max(40px, calc((100% - 1560px) / 2 + 40px));
+  background: var(--l2);
+}
+
+.al-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.al-status .mn-mono {
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The status light: hollow when rewound, green and breathing when live. */
+.al-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.al-status[data-live] i {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(69, 196, 122, 0.14);
+  animation: al-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes al-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ---------- the preview switch ---------- */
+
+.al-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px 0 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.al-switch[aria-checked='true'] {
+  color: var(--fg);
+}
+
+.al-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.al-switch:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.al-switch-track {
+  display: block;
+  width: 26px;
+  height: 16px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--tint-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transition: background-color 150ms ease;
+}
+
+.al-switch-track span {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--fg-3);
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 150ms ease;
+}
+
+.al-switch[aria-checked='true'] .al-switch-track {
+  background: var(--primary);
+  box-shadow: none;
+}
+
+.al-switch[aria-checked='true'] .al-switch-track span {
+  transform: translateX(10px);
+  background: var(--primary-fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .al-switch:hover:not(:disabled) {
+    background: var(--l3);
+    color: var(--fg);
+  }
+}
+
+/* A narrow pane keeps the controls and drops the words that explain them. */
+@container stream (max-width: 760px) {
+  .al-top {
+    padding: 0 24px;
+  }
+  .al-top kbd {
+    display: none;
+  }
+  .al-top .mn-btn {
+    padding: 0 12px;
+  }
+}
+
+/* Narrower still: the switch and the button keep their shape and lose their words. */
+@container stream (max-width: 560px) {
+  .al-long,
+  .al-status .mn-mono {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .al-status[data-live] i {
+    animation: none;
+  }
+  .al-switch-track span {
+    transition: none;
+  }
+}

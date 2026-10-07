@@ -1,9 +1,9 @@
 /* The sidebar every page shares: brand, ⌘K button, navigation, the signed-in user, the tour
  * and the theme switch. Whatever a page wants under the navigation (the rules page puts its
- * assignment groups there) comes in as children. */
+ * pinned groups there) comes in as children. */
 
 import type { ReactNode } from 'react';
-import { Bell, BookText, CircleHelp, Filter, History, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
+import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
 import type { PageId } from '../../lib/route';
 import type { Theme } from '../../hooks/useTheme';
 import './Sidebar.css';
@@ -46,12 +46,17 @@ export function Sidebar({
 
       <nav className="mn-nav">
         <a className="mn-nav-item"><Siren size={16} /> Incidents</a>
-        <a className="mn-nav-item"><Bell size={16} /> Alerts</a>
+        <a className="mn-nav-item" href="#/alerts" data-active={page === 'alerts' || undefined}>
+          <Bell size={16} /> Alerts
+        </a>
         <a className="mn-nav-item" href="#/rules" data-active={page === 'rules' || undefined}>
           <Filter size={16} /> Rules
         </a>
         <a className="mn-nav-item" href="#/hindcast" data-active={page === 'hindcast' || undefined}>
           <History size={16} /> Hindcast
+        </a>
+        <a className="mn-nav-item" href="#/changes" data-active={page === 'changes' || undefined}>
+          <CalendarClock size={16} /> Change windows
         </a>
         <a className="mn-nav-item"><LayoutGrid size={16} /> Services</a>
         <a className="mn-nav-item"><BookText size={16} /> Audit log</a>

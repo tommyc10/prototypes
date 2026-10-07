@@ -1,0 +1,59 @@
+/* Four numbers in a row, divided by hairlines rather than boxed: the chart below is the
+ * heavy thing on the page, and these introduce it. */
+
+.al-tally {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.al-tally > div {
+  min-width: 0;
+  padding: 2px 20px 4px;
+  border-left: 1px solid var(--line);
+}
+
+.al-tally > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.al-tally dt {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.al-tally dd {
+  margin: 2px 0 0;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.al-tally [data-lit] dd {
+  color: var(--fg);
+}
+
+.al-tally span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+/* A narrow pane: two by two. */
+@container stream (max-width: 640px) {
+  .al-tally {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .al-tally > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
