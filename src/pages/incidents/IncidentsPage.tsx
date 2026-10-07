@@ -41,6 +41,10 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const [selectedId, setSelectedId] = useState<string | null>(initialId ?? null);
   const [filter, setFilter] = useState<EndFilter>('all');
   const [query, setQuery] = useState('');
+  // How the incident on screen was opened. The pointer (or a link) plays its journey; the
+  // keyboard shows it at once. `replay` counts presses of "play again".
+  const [via, setVia] = useState<'pointer' | 'key'>('pointer');
+  const [replay, setReplay] = useState(0);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [hideSide, setHideSide] = useState(false);
   const [hideList, setHideList] = useState(false);
@@ -83,6 +87,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const select = (id: string) => {
     const target = lives.find((l) => l.incident.id === id);
     if (!target) return;
+    setVia('pointer');
     setSelectedId(id);
     if (!list.shown.includes(target)) {
       setFilter('all');
@@ -94,7 +99,9 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const move = (step: number) => {
     const i = list.shown.findIndex((l) => l.incident.id === life?.incident.id);
     const next = list.shown[Math.min(list.shown.length - 1, Math.max(0, i + step))];
-    if (next) setSelectedId(next.incident.id);
+    if (!next) return;
+    setVia('key');
+    setSelectedId(next.incident.id);
   };
 
   /** Jump to a checkpoint's section. Instant: it's a jump, not a journey. */
@@ -147,7 +154,10 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
         query={query}
         onQuery={setQuery}
         selectedId={life?.incident.id ?? null}
-        onSelect={setSelectedId}
+        onSelect={(id) => {
+          setVia('pointer');
+          setSelectedId(id);
+        }}
         searchRef={searchRef}
       />
 
@@ -190,7 +200,17 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
                 </p>
               </header>
 
-              <Journey life={life} onJump={jump} />
+              {/* `key` gives each incident (and each "play again") a fresh journey, so it plays from the start. */}
+              <Journey
+                key={`${life.incident.id}-${replay}`}
+                life={life}
+                play={via === 'pointer'}
+                onJump={jump}
+                onReplay={() => {
+                  setVia('pointer');
+                  setReplay((n) => n + 1);
+                }}
+              />
 
               <Stages
                 life={life}

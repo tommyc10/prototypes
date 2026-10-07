@@ -1,5 +1,34 @@
 /* The journey: six checkpoints on a line. */
 
+.ic-journey-wrap {
+  position: relative;
+  /* How long the dot takes to cross from one checkpoint to the next. */
+  --step: 150ms;
+}
+
+/* How the journey ended colours where it ended (the mark, the gate, the rays, the ring). */
+.ic-journey-wrap[data-tone='quiet'] {
+  --ic-end: var(--fg-3);
+}
+.ic-journey-wrap[data-tone='through'] {
+  --ic-end: var(--fg);
+}
+.ic-journey-wrap[data-tone='wait'] {
+  --ic-end: var(--amber);
+}
+.ic-journey-wrap[data-tone='bad'] {
+  --ic-end: var(--red);
+}
+
+/* Play it again: tucked in the corner, for when you want to watch it once more. */
+.ic-replay {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 1;
+  color: var(--fg-3);
+}
+
 .ic-journey {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -15,7 +44,9 @@
 
 /* ---------- the line ----------
  * Each checkpoint draws the stretch that leads to it: from the middle of the one before
- * to its own middle. Lit if the incident crossed it, dashed and faint if it didn't. */
+ * to its own middle. Every stretch is a faint dashed track. A stretch the incident
+ * crossed has a solid line laid over the track, and that solid line is what "fills in"
+ * when the journey plays. */
 .ic-leg {
   position: absolute;
   top: 9px;
@@ -25,8 +56,15 @@
   border-top: 1.5px dashed var(--line-3);
 }
 
-.ic-leg[data-lit] {
-  border-top: 1.5px solid var(--fg-2);
+.ic-leg[data-lit]::before {
+  content: '';
+  position: absolute;
+  top: -1.5px;
+  right: 0;
+  left: 0;
+  height: 1.5px;
+  background: var(--fg-2);
+  transform-origin: left; /* it grows from the checkpoint before */
 }
 
 /* How long the step took, sitting on the line. */
@@ -68,6 +106,7 @@
 
 /* The mark on the line. A ring of the pane's colour keeps the line from touching it. */
 .ic-station i {
+  position: relative; /* for the ring that lands on the last one */
   width: 19px;
   height: 19px;
   border-radius: 999px;
@@ -119,19 +158,6 @@
     inset 0 0 0 4px var(--ic-end);
 }
 
-.ic-journey[data-tone='quiet'] {
-  --ic-end: var(--fg-3);
-}
-.ic-journey[data-tone='through'] {
-  --ic-end: var(--fg);
-}
-.ic-journey[data-tone='wait'] {
-  --ic-end: var(--amber);
-}
-.ic-journey[data-tone='bad'] {
-  --ic-end: var(--red);
-}
-
 .ic-journey[data-tone='bad'] li[data-state='stopped'] .ic-station-verdict {
   color: var(--red);
 }
@@ -145,6 +171,319 @@
 .ic-journey li[data-state='unreached'] :is(.ic-station-name, .ic-station-verdict) {
   color: var(--fg-3);
   font-weight: 400;
+}
+
+/* ---------- what's at the stopping point, playing or not ---------- */
+
+/* The gate: a short bar across the line, just past the mark. The journey was stopped here. */
+.ic-gate {
+  position: absolute;
+  top: -3px;
+  left: calc(50% + 21px);
+  width: 2.5px;
+  height: 26px;
+  border-radius: 2px;
+  background: var(--ic-end);
+}
+
+/* The rays and the ring only exist while they're playing: at rest they're invisible. */
+.ic-rays,
+.ic-station i::after {
+  position: absolute;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Twelve rays from one element: a striped cone, with its middle and its rim masked away. */
+.ic-rays {
+  inset: -26px;
+  background: repeating-conic-gradient(var(--ic-end) 0 2.5deg, transparent 2.5deg 30deg);
+  mask-image: radial-gradient(circle, transparent 52%, #000 54%, #000 86%, transparent 88%);
+}
+
+.ic-journey li[data-arrival] .ic-station i::after {
+  content: '';
+  inset: -6px;
+  box-shadow: 0 0 0 1.5px var(--ic-end);
+}
+
+/* With the team now: a small dot circles the open mark, for as long as they have it. */
+.ic-orbit {
+  position: absolute;
+  inset: -11px;
+  border-radius: 999px;
+  animation: ic-spin 2.6s linear infinite;
+}
+
+.ic-orbit::after {
+  content: '';
+  position: absolute;
+  top: -2.5px;
+  left: calc(50% - 2.5px);
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ic-end);
+}
+
+/* ---------- playing the journey ----------
+ * Only with [data-play], which the page sets when an incident is opened with the pointer.
+ * Everything is transform and opacity, so the browser can run it without re-laying-out
+ * the page. Each piece waits its turn: --i is a checkpoint's place in the order, --stop is
+ * how many stretches the dot crosses, and a delay is that many steps.
+ *
+ * The travelling is linear, because it's constant motion. The arriving is where the
+ * character is, and it has a little overshoot: this is the one moment on the page that's
+ * allowed to be playful. Nothing waits for any of it; every button works from the first
+ * frame. */
+
+/* The dot. It sits at the right-hand end of an invisible bar as long as its journey, and
+ * the bar slides in from the left by its own length (translateX is in the element's own
+ * width), which carries the dot from the first checkpoint to the last one it reached. */
+.ic-traveller {
+  position: absolute;
+  top: 35px; /* on the line */
+  left: calc(100% / 12); /* the middle of the first checkpoint */
+  width: calc(var(--stop) * 100% / 6);
+  height: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation:
+    ic-travel calc(var(--stop) * var(--step)) linear both,
+    ic-vanish 90ms linear both;
+  animation-delay:
+    0s,
+    calc(var(--stop) * var(--step));
+}
+
+.ic-traveller::after {
+  content: '';
+  position: absolute;
+  top: -4.5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--fg);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--fg) 16%, transparent);
+}
+
+/* Its tail: the line it has just drawn, brighter for a short way behind it. */
+.ic-traveller::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: 0;
+  width: 64px;
+  max-width: 100%;
+  height: 2px;
+  background: linear-gradient(to left, var(--fg), transparent);
+}
+
+.ic-journey[data-play] .ic-leg[data-lit]::before {
+  animation: ic-draw var(--step) linear both;
+  animation-delay: calc((var(--i) - 1) * var(--step));
+}
+
+/* The time on the line fades in while its stretch is being drawn. */
+.ic-journey[data-play] .ic-leg[data-lit] span {
+  animation: ic-arrive 200ms var(--ease-out) both;
+  animation-delay: calc((var(--i) - 0.5) * var(--step));
+}
+
+/* A checkpoint comes up to full strength as the dot passes it. */
+.ic-journey[data-play] li:not([data-state='unreached']) .ic-station {
+  animation: ic-arrive 220ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step));
+}
+
+/* --- gate: stopped on the way. The gate snaps shut and the mark runs into it. --- */
+
+.ic-journey[data-play] .ic-gate {
+  transform-origin: center;
+  animation: ic-shut 170ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) - 60ms); /* a moment before the dot gets there */
+}
+
+.ic-journey[data-play] li:is([data-arrival='gate'], [data-arrival='alarm']) .ic-station i {
+  animation: ic-thud 460ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step));
+}
+
+.ic-journey[data-play] li[data-arrival='gate'] .ic-station i::after {
+  animation: ic-ring 520ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) + 60ms);
+}
+
+/* --- alarm: a real incident was stopped. The same thud, then it shakes, and rings twice. --- */
+
+.ic-journey[data-play] li[data-arrival='alarm'] .ic-station i {
+  animation:
+    ic-thud 460ms var(--ease-out) both,
+    ic-shake 380ms linear both;
+  animation-delay:
+    calc(var(--i) * var(--step)),
+    calc(var(--i) * var(--step) + 380ms);
+}
+
+.ic-journey[data-play] li[data-arrival='alarm'] .ic-station i::after {
+  animation: ic-ring 520ms var(--ease-out) 2 both;
+  animation-delay: calc(var(--i) * var(--step) + 60ms);
+}
+
+/* --- burst: delivered. The mark blooms, a ring spreads and the rays fly out. --- */
+
+.ic-journey[data-play] li[data-arrival='burst'] .ic-station i {
+  animation: ic-bloom 520ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step));
+}
+
+.ic-journey[data-play] li[data-arrival='burst'] .ic-station i::after {
+  animation: ic-ring 620ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) + 40ms);
+}
+
+.ic-journey[data-play] .ic-rays {
+  animation: ic-rays 640ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) + 80ms);
+}
+
+/* --- orbit: still with the team. It arrives gently; the circling dot does the rest. --- */
+
+.ic-journey[data-play] li[data-arrival='orbit'] .ic-station i {
+  animation: ic-bloom 420ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step));
+}
+
+/* The verdict lands a beat after the mark, like a stamp. */
+.ic-journey[data-play] li[data-arrival] .ic-station-verdict {
+  animation: ic-stamp 280ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) + 160ms);
+}
+
+@keyframes ic-travel {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes ic-vanish {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ic-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ic-draw-down {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes ic-arrive {
+  from {
+    opacity: 0.25;
+  }
+}
+
+@keyframes ic-shut {
+  from {
+    transform: scaleY(0.15);
+    opacity: 0;
+  }
+}
+
+/* Running into the gate: it comes in from the left, squashes against it, springs back a
+ * little too far, and settles. */
+@keyframes ic-thud {
+  0% {
+    transform: translateX(-7px) scale(0.7);
+    opacity: 0.4;
+  }
+  38% {
+    transform: translateX(3px) scale(0.86, 1.16);
+    opacity: 1;
+  }
+  66% {
+    transform: translateX(-1.5px) scale(1.06, 0.96);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes ic-shake {
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* Never from nothing: it starts as a smaller version of itself, and goes a little past full size. */
+@keyframes ic-bloom {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.4;
+  }
+  55% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes ic-ring {
+  from {
+    transform: scale(0.75);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes ic-rays {
+  0% {
+    transform: scale(0.45) rotate(-8deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.3) rotate(6deg);
+    opacity: 0;
+  }
+}
+
+@keyframes ic-stamp {
+  from {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+@keyframes ic-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -162,6 +501,11 @@
   .ic-journey {
     grid-template-columns: minmax(0, 1fr);
     padding-top: 0;
+  }
+  /* Up into the gap above, clear of the times down the right-hand side. */
+  .ic-replay {
+    top: -30px;
+    right: -4px;
   }
   .ic-station {
     display: grid;
@@ -198,17 +542,40 @@
     border-top: 0;
     border-left: 1.5px dashed var(--line-3);
   }
-  .ic-leg[data-lit] {
-    border-top: 0;
-    border-left: 1.5px solid var(--fg-2);
+  /* The solid line runs down instead of across, and fills in from the top. */
+  .ic-leg[data-lit]::before {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: -1.5px;
+    width: 1.5px;
+    height: auto;
+    transform-origin: top;
+  }
+  .ic-journey[data-play] .ic-leg[data-lit]::before {
+    animation-name: ic-draw-down;
   }
   .ic-leg span {
     display: none;
   }
+  /* The dot and the gate belong to the line running across. On its side, the line simply fills in. */
+  .ic-traveller,
+  .ic-gate {
+    display: none;
+  }
 }
 
+/* Asked for less motion: nothing travels, lands or spreads. The journey is simply there. */
 @media (prefers-reduced-motion: reduce) {
   .ic-station {
     transition: none;
+  }
+  .ic-journey *,
+  .ic-journey *::before,
+  .ic-journey *::after {
+    animation: none !important;
+  }
+  .ic-traveller {
+    display: none;
   }
 }
