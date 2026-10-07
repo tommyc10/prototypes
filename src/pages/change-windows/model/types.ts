@@ -17,24 +17,28 @@ export interface ChangeWindow {
   name: string;
   groupId: string;
   reason: string;
-  /** "One-off", or how often it repeats. */
-  schedule: string;
+  /** "One-off", or how often it repeats. Missing when the source doesn't say. */
+  schedule?: string;
   /** Which CIs it covers, written the way a rule's condition is. */
   cis: string;
-  raisedBy: string;
-  approvedBy: string;
+  raisedBy?: string;
+  approvedBy?: string;
   /** Milliseconds. */
   start: number;
   plannedEnd: number;
   /** When it was closed. Missing while it's still in place, or hasn't started. */
   closedAt?: number;
-  /** Alerts held back in each half hour since it started. Empty until it starts. */
-  held: number[];
+  /** Alerts held back in each half hour since it started. Empty until it starts.
+   *  Missing altogether when nobody is counting: then the page says nothing about it. */
+  held?: number[];
   /** For a window that hasn't started: how many alerts its last run held back. */
   lastRunHeld?: number;
 }
 
 export type ListFilter = 'all' | 'now' | 'upcoming' | 'ended';
+
+/** Which made-up estate the prototype shows: a tidy one, or one shaped like a real feed. */
+export type Sample = 'tidy' | 'busy';
 
 /** How much time the schedule shows, in hours. */
 export type Range = 24 | 72 | 168;

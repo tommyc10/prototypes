@@ -102,7 +102,78 @@
   color: var(--fg-3);
 }
 
-/* ---------- a window: a bar with its name inside it, or under it when the bar is short ---------- */
+/* ---------- the bar: the same mark in both layouts ---------- */
+
+.cw-bar-mark {
+  position: relative;
+  display: block;
+  flex: none;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--cw-active);
+  overflow: hidden;
+  transition: transform 160ms var(--ease-out);
+}
+
+/* A bar that carries on past the edge of the chart is cut square there. */
+.cw-bar-mark[data-cut-start] {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.cw-bar-mark[data-cut-end] {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cw-bar-mark[data-status='upcoming'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--cw-upcoming);
+}
+
+.cw-bar-mark[data-status='ended'] {
+  background: var(--cw-ended);
+}
+
+/* The part past the planned end: that stretch of the bar is faded and gets an orange edge
+ * along the bottom. Not a solid orange block: a window that's a day late would be a slab
+ * of orange with its name lost in it, and twenty of them a wall. This way the planned part
+ * stays solid, the late part reads as "still going, shouldn't be", and a name on top is
+ * still readable. */
+.cw-bar-over {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, var(--orange) 5px, color-mix(in srgb, var(--l2) 50%, transparent) 5px);
+  box-shadow: -2px 0 0 var(--l2); /* a gap between the planned part and the late part */
+}
+
+.cw-bar-mark[data-status='ended'] .cw-bar-over {
+  opacity: 0.6;
+}
+
+/* The name written inside the bar: ink that reads on the bar's own colour. */
+.cw-bar-mark .cw-bar-name {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: none;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.cw-bar-mark:is([data-status='active'], [data-status='overrunning']) .cw-bar-name {
+  color: var(--primary-fg);
+}
+
+.cw-bar-mark[data-status='ended'] .cw-bar-name {
+  color: var(--fg-2);
+}
+
+/* ---------- by group: a button holding the bar, with its name under it when the bar is short ---------- */
 
 .cw-bar {
   position: absolute;
@@ -121,69 +192,6 @@
   align-items: flex-end;
 }
 
-.cw-bar-mark {
-  position: relative;
-  display: flex;
-  justify-content: flex-end;
-  flex: none;
-  height: 18px;
-  border-radius: 5px;
-  background: var(--cw-active);
-  overflow: hidden;
-  transition: transform 160ms var(--ease-out);
-}
-
-/* A bar that carries on past the edge of the chart is cut square there. */
-.cw-bar[data-cut-start] .cw-bar-mark {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-.cw-bar[data-cut-end] .cw-bar-mark {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.cw-bar[data-status='upcoming'] .cw-bar-mark {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--cw-upcoming);
-}
-
-.cw-bar[data-status='ended'] .cw-bar-mark {
-  background: var(--cw-ended);
-}
-
-/* The part past the planned end. A 2px gap of the pane's colour separates it from the rest. */
-.cw-bar-over {
-  flex: none;
-  background: var(--orange);
-  box-shadow: -2px 0 0 var(--l2);
-}
-
-/* The name written inside the bar: ink that reads on the bar's own colour. */
-.cw-bar-mark .cw-bar-name {
-  position: absolute;
-  inset: 0 auto 0 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  background: none;
-  font-size: 11.5px;
-  font-weight: 500;
-}
-
-.cw-bar:is([data-status='active'], [data-status='overrunning']) .cw-bar-mark .cw-bar-name {
-  color: var(--primary-fg);
-}
-
-.cw-bar[data-status='ended'] .cw-bar-mark .cw-bar-name {
-  color: var(--fg-2);
-}
-
-.cw-bar[data-status='ended'] .cw-bar-over {
-  opacity: 0.55;
-}
-
 .cw-bar-name {
   max-width: 100%;
   padding: 0 3px 0 1px;
@@ -198,13 +206,11 @@
   transition: color 120ms ease;
 }
 
-.cw-bar[data-status='ended'] .cw-bar-name {
+.cw-bar[data-status='ended'] > .cw-bar-name {
   color: var(--fg-3);
 }
 
-.cw-bar[data-status='active'] .cw-bar-name,
-.cw-bar[data-status='overrunning'] .cw-bar-name,
-.cw-bar[data-selected] .cw-bar-name {
+.cw-bar:is([data-status='active'], [data-status='overrunning'], [data-selected]) > .cw-bar-name {
   color: var(--fg);
 }
 
@@ -213,7 +219,7 @@
 }
 
 /* The picked bar: a ring around the mark, with a gap of the pane's colour. */
-.cw-bar[data-selected] .cw-bar-mark {
+:is(.cw-bar, .cw-flat)[data-selected] .cw-bar-mark {
   outline: 1.5px solid var(--fg);
   outline-offset: 2px;
 }
@@ -227,8 +233,144 @@
   transform: scaleY(0.88);
 }
 
+.cw-sched-group .mn-link {
+  margin-top: 4px;
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .cw-bar:hover .cw-bar-name {
+  .cw-bar:hover > .cw-bar-name {
+    color: var(--fg);
+  }
+}
+
+/* ---------- by window: one row each, the name beside the bar ---------- */
+
+/* Names need more room than group names did. */
+.cw-sched[data-layout='window'] :is(.cw-sched-axis, .cw-sched-grid, .cw-sched-row) {
+  grid-template-columns: 300px minmax(0, 1fr);
+}
+
+/* A heading for each kind, in the name column, with how many there are. */
+.cw-flat-head {
+  position: relative; /* above the grid lines */
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 14px 0 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.cw-flat-section:first-of-type .cw-flat-head {
+  padding-top: 8px;
+}
+
+.cw-flat-head span {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.cw-flat-head[data-status='overrunning'] {
+  color: var(--orange);
+}
+
+.cw-flat {
+  align-items: center;
+  width: 100%;
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+
+.cw-flat-label {
+  display: block;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.cw-flat-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--row-name);
+}
+
+.cw-flat[data-selected] .cw-flat-name {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.cw-flat-sub {
+  display: flex;
+  gap: 8px;
+  overflow: hidden;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--fg-3);
+}
+
+.cw-flat-when {
+  font-variant-numeric: tabular-nums;
+}
+
+.cw-flat[data-status='overrunning'] .cw-flat-when {
+  font-weight: 500;
+  color: var(--orange);
+}
+
+.cw-flat .cw-sched-plot {
+  display: block;
+  height: 18px;
+}
+
+.cw-flat-bar {
+  position: absolute;
+  top: 0;
+}
+
+.cw-flat:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.cw-sched-all {
+  position: relative; /* above the grid lines */
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--fg-2);
+  transition: color 120ms ease;
+}
+
+.cw-sched-all .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.cw-sched-all:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cw-flat:hover {
+    background: var(--tint);
+  }
+  .cw-sched-all:hover {
     color: var(--fg);
   }
 }
@@ -238,6 +380,8 @@
 .cw-tip {
   position: absolute;
   z-index: 5;
+  display: flex;
+  flex-direction: column;
   transform: translate(-50%, calc(-100% - 2px));
   padding: 8px 11px;
   border-radius: 9px;
@@ -299,7 +443,7 @@
   background: var(--cw-ended);
 }
 
-/* A narrow pane gives the group names less room. */
+/* A narrow pane gives the names less room. */
 @container windows (max-width: 760px) {
   .cw-sched-axis,
   .cw-sched-grid,
@@ -307,10 +451,18 @@
     grid-template-columns: 104px minmax(0, 1fr);
     column-gap: 12px;
   }
+  .cw-sched[data-layout='window'] :is(.cw-sched-axis, .cw-sched-grid, .cw-sched-row) {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+  /* No room for the ticket number as well as the timing: the timing is the one that matters. */
+  .cw-flat-sub .mn-mono {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cw-bar-mark {
+  .cw-bar-mark,
+  .cw-flat {
     transition: none;
   }
 }

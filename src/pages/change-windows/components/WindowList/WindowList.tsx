@@ -4,9 +4,8 @@
 
 import { useEffect, useRef, type RefObject } from 'react';
 import { Search } from 'lucide-react';
-import { groupById } from '../../../rule-management/data/mockData';
 import type { ChangeWindow, ListFilter } from '../../model/types';
-import { LIST_TABS, statusOf, timing } from '../../model/windows';
+import { LIST_TABS, groupOf, statusOf, timing } from '../../model/windows';
 import './WindowList.css';
 
 export function WindowList({
@@ -87,7 +86,7 @@ export function WindowList({
                 <div className="cw-row-name mn-truncate">{w.name}</div>
                 <div className="cw-row-sub mn-truncate">
                   <span className="mn-mono">{w.id}</span>
-                  {groupById(w.groupId).name}
+                  {groupOf(w.groupId).name}
                 </div>
               </div>
               <div className="cw-row-when">{timing(w, now)}</div>

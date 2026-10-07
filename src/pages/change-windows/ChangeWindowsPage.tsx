@@ -24,22 +24,23 @@ import { navigate } from '../../lib/route';
 import { WINDOWS_TOUR } from '../../../tours/change-windows';
 import { Tour } from '../../../tours/Tour';
 import { tourMode, useTour } from '../../../tours/useTour';
-import { groupById } from '../rule-management/data/mockData';
 import { WindowsPalette } from './components/Palette/WindowsPalette';
 import { Schedule } from './components/Schedule/Schedule';
 import { Tally } from './components/Tally/Tally';
 import { WindowDetail } from './components/WindowDetail/WindowDetail';
 import { WindowList } from './components/WindowList/WindowList';
 import { WindowsBar } from './components/WindowsBar/WindowsBar';
-import { WINDOWS } from './data/mockData';
-import type { ChangeWindow, ListFilter, Range } from './model/types';
-import { inFilter, sortWindows } from './model/windows';
+import { SAMPLES } from './data/mockData';
+import type { ChangeWindow, ListFilter, Range, Sample } from './model/types';
+import { groupOf, inFilter, sortWindows, statusOf } from './model/windows';
 import './ChangeWindowsPage.css';
 
 export function ChangeWindowsPage({ initialId }: { /** Open on this window (a link: its ticket number). */ initialId?: string }) {
   // The prototype's clock is frozen. In the real app this is the time now, refreshed every minute.
   const now = NOW.getTime();
-  const windows = useMemo(() => sortWindows(WINDOWS, now), [now]);
+  // Prototype only: two made-up estates, to see the page with neat data and with a real feed's shape.
+  const [sample, setSample] = useState<Sample>(() => (sessionStorage.getItem('mn-windows-sample') === 'busy' ? 'busy' : 'tidy'));
+  const windows = useMemo(() => sortWindows(SAMPLES[sample], now), [sample, now]);
 
   const [selectedKey, setSelectedKey] = useState<string | null>(() => windows.find((w) => w.id === initialId)?.key ?? null);
   // A linked window opens with the tab that has it in.
@@ -58,7 +59,7 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
 
   /** Every word of the search appears somewhere in the window: ticket, name, CIs, group or who raised it. */
   const matches = (w: ChangeWindow, search: string) => {
-    const group = groupById(w.groupId);
+    const group = groupOf(w.groupId);
     const haystack = `${w.id} ${w.name} ${w.cis} ${group.name} ${group.unit} ${w.raisedBy}`.toLowerCase();
     return search.toLowerCase().split(/\s+/).filter(Boolean).every((word) => haystack.includes(word));
   };
@@ -72,6 +73,14 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
       shown: found.filter((w) => inFilter(w, filter, now)),
     };
   }, [windows, query, filter, now]);
+
+  // The schedule draws what's in place and what's coming, whatever the tab, because that's
+  // what a schedule is for. Ended windows join it when the list is showing them. The
+  // search narrows both.
+  const scheduled = useMemo(
+    () => windows.filter((w) => matches(w, query) && (statusOf(w, now) !== 'ended' || filter === 'ended' || filter === 'all')),
+    [windows, query, filter, now],
+  );
 
   // The detail always shows a window that's in the list, so the two can't disagree: the
   // picked one if the list still has it, otherwise the list's first (the one that most
@@ -164,10 +173,29 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
             now={now}
             range={range}
             onRange={setRange}
+            sample={sample}
+            onSample={(next) => {
+              sessionStorage.setItem('mn-windows-sample', next);
+              setSample(next);
+              setSelectedKey(null);
+              setQuery('');
+              setFilter('now');
+            }}
           />
           <div className="cw-page">
             <Tally windows={windows} now={now} />
-            <Schedule windows={windows} now={now} range={range} selectedKey={selected?.key ?? null} onSelect={select} />
+            <Schedule
+              windows={scheduled}
+              now={now}
+              range={range}
+              selectedKey={selected?.key ?? null}
+              onSelect={select}
+              // The rest of a group's windows: narrow the list to that group.
+              onMore={(groupId) => {
+                setQuery(groupOf(groupId).name);
+                setFilter('all');
+              }}
+            />
             <WindowDetail window={selected} all={windows} now={now} onSelect={select} />
           </div>
         </div>

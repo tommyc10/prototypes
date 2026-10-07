@@ -1,5 +1,6 @@
 /* Reading a window: where it is in its life, how to say when, and what order to list them in. */
 
+import { GROUPS } from '../../rule-management/data/mockData';
 import type { ChangeWindow, ListFilter, Range, WindowStatus } from './types';
 
 export const HOUR = 3_600_000;
@@ -36,7 +37,13 @@ export const inPlace = (w: ChangeWindow, now: number) => ['active', 'overrunning
 /** When it stops holding alerts back: when it closed, or when it's planned to (or now, if it's overrunning). */
 export const endOf = (w: ChangeWindow, now: number) => w.closedAt ?? Math.max(w.plannedEnd, w.start > now ? 0 : now);
 
-export const heldTotal = (w: ChangeWindow) => w.held.reduce((sum, n) => sum + n, 0);
+export const heldTotal = (w: ChangeWindow) => (w.held ?? []).reduce((sum, n) => sum + n, 0);
+
+export const UNASSIGNED = 'unassigned';
+
+/** A window's group. A real feed has windows nobody assigned to a group: they get one of their own. */
+export const groupOf = (id: string) =>
+  GROUPS.find((g) => g.id === id) ?? { id: UNASSIGNED, name: 'Unassigned', unit: 'No assignment group', serviceGroupId: '' };
 
 /** A length of time → "40m", "2h 40m", "1d 3h" */
 export function howLong(ms: number) {

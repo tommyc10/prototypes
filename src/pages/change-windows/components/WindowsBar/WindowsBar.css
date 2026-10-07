@@ -67,3 +67,10 @@
     display: none;
   }
 }
+
+/* Narrower still: the date gives way to the controls. */
+@container windows (max-width: 520px) {
+  .cw-clock {
+    visibility: hidden;
+  }
+}

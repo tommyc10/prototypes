@@ -2,11 +2,19 @@
  * (the change calendar, plus a count of the alerts each window held back). Nothing else
  * in the app knows the data is fake.
  *
- * The ticket numbers and names match the windows the Hindcast page talks about, so the
- * two pages describe the same estate. Times are written in hours from now. */
+ * There are two made-up estates, because a page that only ever sees neat data breaks the
+ * day it meets a real feed:
+ *
+ *   tidy   sixteen windows across eight groups, every field filled in. The ticket numbers
+ *          and names match the windows the Hindcast page talks about.
+ *   busy   about a hundred and fifty, nearly all with no assignment group, long ticket
+ *          titles, a batch running many hours late, facts missing, and nobody counting the
+ *          alerts held back. This is the one to design against.
+ *
+ * Times are written in hours from now. */
 
 import { NOW } from '../../../lib/clock';
-import type { ChangeWindow } from '../model/types';
+import type { ChangeWindow, Sample } from '../model/types';
 
 const HOUR = 3_600_000;
 const now = NOW.getTime();
@@ -50,7 +58,7 @@ function build(d: Draft): ChangeWindow {
   };
 }
 
-export const WINDOWS: ChangeWindow[] = (
+const TIDY: ChangeWindow[] = (
   [
     // ---------- in place now ----------
     {
@@ -137,3 +145,74 @@ export const WINDOWS: ChangeWindow[] = (
     },
   ] satisfies Draft[]
 ).map(build);
+
+/* ---------- the busy estate ---------- */
+
+const WORK = ['Deploy', 'Roll out', 'Rebuild', 'Decommission', 'Patch', 'Migrate', 'Recalibrate', 'Replace'];
+const THING = [
+  'turbolaser targeting firmware 24.0.2',
+  'deflector shield emitter array',
+  'hyperdrive motivator control software',
+  'detention level door controllers',
+  'hangar bay tractor beam projectors',
+  'thermal exhaust port sensor mesh',
+  'HoloNet relay encryption modules',
+  'reactor coolant pump control units',
+  'superlaser tributary beam focusing lenses',
+  'life support atmosphere recyclers',
+];
+const WHERE = [
+  'Death Star northern hemisphere, sectors 1 to 14',
+  'Executor command tower and forward batteries',
+  'Star Destroyer Avenger, all decks',
+  'Death Star equatorial trench, port side',
+  'Outer Rim relay chain, Ord Mantell to Scarif',
+  'Death Squadron, second battle group',
+];
+
+function busy(): ChangeWindow[] {
+  const r = rng('busy');
+  const between = (low: number, high: number) => low + r() * (high - low);
+  const pick = <T,>(from: T[]) => from[Math.floor(r() * from.length)];
+  const some = ['reactor', 'hangar', 'holonet'];
+
+  const draft = (i: number, start: number, end: number, closed?: number): ChangeWindow => {
+    const phase = 1 + Math.floor(r() * 6);
+    return build({
+      id: `CHG-${3000 + i}`,
+      name: `${pick(WORK)} ${pick(THING)}, ${pick(WHERE)}, phase ${phase} of ${phase + Math.floor(r() * 3)}`,
+      // Nine in ten have no group at all.
+      groupId: r() < 0.9 ? 'unassigned' : pick(some),
+      start,
+      end,
+      closed,
+      rate: 0,
+      cis: `${pick(['ds', 'exec', 'isd', 'relay'])}-${pick(['battery', 'deck', 'node', 'bay'])}-*`,
+      reason: 'Raised by the release pipeline. Alerts from the things being changed are expected until the work is closed.',
+      // A real feed leaves fields empty. The page shows what it has and says nothing about the rest.
+      schedule: r() < 0.3 ? 'One-off' : undefined,
+      raisedBy: r() < 0.6 ? 'Release pipeline' : undefined,
+      approvedBy: undefined,
+    });
+  };
+
+  const windows = [
+    // In place and late: started yesterday, planned to end hours ago, never closed.
+    ...Array.from({ length: 18 }, (_, i) => draft(i, between(-40, -18), between(-17, -2.5))),
+    // In place and on time.
+    ...Array.from({ length: 78 }, (_, i) => draft(18 + i, between(-30, -0.3), between(0.2, 30))),
+    // Upcoming.
+    ...Array.from({ length: 34 }, (_, i) => draft(96 + i, between(0.5, 120), 0)),
+    // Ended.
+    ...Array.from({ length: 22 }, (_, i) => draft(130 + i, between(-60, -8), 0, between(-6, -0.5))),
+  ];
+  // Give the ones written with a placeholder end a length, then drop the counts nobody keeps.
+  return windows.map((w) => ({
+    ...w,
+    // An ended one was planned to end about when it closed (a few ran late); an upcoming one runs 1 to 12 hours.
+    plannedEnd: w.closedAt ? w.closedAt - between(-0.3, 1.2) * HOUR : w.plannedEnd > w.start ? w.plannedEnd : w.start + between(1, 12) * HOUR,
+    held: undefined,
+  }));
+}
+
+export const SAMPLES: Record<Sample, ChangeWindow[]> = { tidy: TIDY, busy: busy() };

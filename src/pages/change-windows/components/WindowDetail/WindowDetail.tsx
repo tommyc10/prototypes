@@ -7,9 +7,11 @@
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { num } from '../../../../lib/format';
-import { groupById } from '../../../rule-management/data/mockData';
 import type { ChangeWindow } from '../../model/types';
-import { HOUR, STATUS_LABEL, heldTotal, hourLabel, howLong, overlapping, statusOf, timing, when } from '../../model/windows';
+import { HOUR, STATUS_LABEL, UNASSIGNED, groupOf, heldTotal, hourLabel, howLong, overlapping, statusOf, timing, when } from '../../model/windows';
+
+/** How many overlapping windows to list before "and N more". */
+const OTHERS_SHOWN = 5;
 import './WindowDetail.css';
 
 export function WindowDetail({
@@ -32,9 +34,18 @@ export function WindowDetail({
     );
   }
 
-  const group = groupById(w.groupId);
+  const group = groupOf(w.groupId);
+  const grouped = group.id !== UNASSIGNED;
   const status = statusOf(w, now);
-  const others = overlapping(w, all, now);
+  // "Also for this group" only means something when there is a group.
+  const others = grouped ? overlapping(w, all, now) : [];
+  // Only the facts the source actually has. A missing one is left out, not marked "unavailable".
+  const facts = [
+    ['Repeats', w.schedule],
+    ['Planned length', howLong(w.plannedEnd - w.start)],
+    ['Raised by', w.raisedBy],
+    ['Approved by', w.approvedBy],
+  ].filter(([, value]) => value);
 
   return (
     <section className="cw-detail" data-tour="cw-detail">
@@ -52,8 +63,8 @@ export function WindowDetail({
         <div className="cw-callout">
           <AlertTriangle size={14} />
           <span>
-            <strong>Past its planned end by {howLong(now - w.plannedEnd)}.</strong> It's still holding alerts back for {group.name}. Either the
-            work is running late or nobody closed the window.
+            <strong>Past its planned end by {howLong(now - w.plannedEnd)}.</strong> It's still holding alerts back
+            {grouped ? ` for ${group.name}` : ''}. Either the work is running late or nobody closed the window.
           </span>
         </div>
       )}
@@ -68,10 +79,12 @@ export function WindowDetail({
             <div>
               <span className="cw-code-kw">where</span> ci <span className="cw-code-kw">matches</span> <span className="cw-code-val">{w.cis}</span>
             </div>
-            <div>
-              <span className="cw-code-kw">{'  and'}</span> assignment_group <span className="cw-code-kw">=</span>{' '}
-              <span className="cw-code-val">{group.name}</span>
-            </div>
+            {grouped && (
+              <div>
+                <span className="cw-code-kw">{'  and'}</span> assignment_group <span className="cw-code-kw">=</span>{' '}
+                <span className="cw-code-val">{group.name}</span>
+              </div>
+            )}
           </div>
           {others.length > 0 && (
             <>
@@ -79,7 +92,7 @@ export function WindowDetail({
                 Also for {group.name} <span className="mn-subtle">at the same time</span>
               </h3>
               <ul className="cw-others">
-                {others.map((o) => (
+                {others.slice(0, OTHERS_SHOWN).map((o) => (
                   <li key={o.key}>
                     <button onClick={() => onSelect(o.key)}>
                       <i data-status={statusOf(o, now)} aria-hidden />
@@ -89,6 +102,7 @@ export function WindowDetail({
                   </li>
                 ))}
               </ul>
+              {others.length > OTHERS_SHOWN && <p className="cw-note cw-others-more">and {others.length - OTHERS_SHOWN} more</p>}
             </>
           )}
         </div>
@@ -96,22 +110,12 @@ export function WindowDetail({
         <div>
           <h3>Details</h3>
           <dl className="cw-facts">
-            <div>
-              <dt>Repeats</dt>
-              <dd>{w.schedule}</dd>
-            </div>
-            <div>
-              <dt>Planned length</dt>
-              <dd>{howLong(w.plannedEnd - w.start)}</dd>
-            </div>
-            <div>
-              <dt>Raised by</dt>
-              <dd>{w.raisedBy}</dd>
-            </div>
-            <div>
-              <dt>Approved by</dt>
-              <dd>{w.approvedBy}</dd>
-            </div>
+            {facts.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
           </dl>
         </div>
       </div>
@@ -132,7 +136,10 @@ function Run({ window: w, now }: { window: ChangeWindow; now: number }) {
   // The run ends at the planned end, or later if it ran (or is running) past it.
   const end = Math.max(w.plannedEnd, w.closedAt ?? (started ? now : 0));
   const slots = Math.max(1, Math.ceil((end - w.start) / half));
-  const max = Math.max(1, ...w.held);
+  // No counts at all (nobody keeps them): the picture is just the track, and nothing is said about alerts.
+  const held = w.held ?? [];
+  const counted = w.held !== undefined;
+  const max = Math.max(1, ...held);
   /** How far along the run a moment is, 0 to 1. */
   const along = (ms: number) => Math.min(1, Math.max(0, (ms - w.start) / (slots * half)));
   const reached = along(w.closedAt ?? now);
@@ -158,15 +165,15 @@ function Run({ window: w, now }: { window: ChangeWindow; now: number }) {
         className="cw-run-plot"
         data-late={late || undefined}
         // Nothing to draw before it starts: only the empty track is shown.
-        hidden={!started}
+        hidden={!started || !counted}
         role="img"
-        aria-label={started ? `${heldTotal(w)} alerts held back since it started, in half hours.` : 'Not started.'}
+        aria-label={`${heldTotal(w)} alerts held back since it started, in half hours.`}
         onPointerLeave={() => setHover(null)}
       >
         {Array.from({ length: slots }, (_, i) => (
           // Each half hour is a full-height strip, so it's easy to point at; the column inside is the value.
           <div key={i} onPointerEnter={() => setHover(i)} data-hover={hover === i || undefined} data-over={w.start + i * half >= w.plannedEnd || undefined}>
-            {i < w.held.length && <span style={{ height: `${Math.max(4, (w.held[i] / max) * 100)}%` }} />}
+            {i < held.length && <span style={{ height: `${Math.max(4, (held[i] / max) * 100)}%` }} />}
           </div>
         ))}
         {/* Where the planned end falls, when the run went past it. */}
@@ -183,10 +190,10 @@ function Run({ window: w, now }: { window: ChangeWindow; now: number }) {
         {started && reached > planned && <span data-status="overrunning" style={{ left: `${planned * 100}%`, width: `${(reached - planned) * 100}%` }} />}
       </div>
 
-      <div className="cw-run-foot">
-        {hover !== null && hover < w.held.length ? (
+      <div className="cw-run-foot" hidden={!counted}>
+        {hover !== null && hover < held.length ? (
           <span>
-            <b>{w.held[hover]}</b> held back, {hourLabel(w.start + hover * half)} to {hourLabel(w.start + (hover + 1) * half)}
+            <b>{held[hover]}</b> held back, {hourLabel(w.start + hover * half)} to {hourLabel(w.start + (hover + 1) * half)}
           </span>
         ) : started ? (
           <span>
