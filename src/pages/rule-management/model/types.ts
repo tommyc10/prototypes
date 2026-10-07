@@ -9,6 +9,13 @@ export interface AssignmentGroup {
   id: string;
   name: string;
   unit: string;
+  serviceGroupId: string;
+}
+
+/** A family of related services. Each assignment group works for one. */
+export interface ServiceGroup {
+  id: string;
+  name: string;
 }
 
 export interface RelatedIncident {
@@ -24,6 +31,31 @@ export interface Condition {
   field: string;
   op: string;
   value: string;
+}
+
+/** A rule's condition, next to the value this incident actually had. */
+export interface MatchedCondition extends Condition {
+  actual: string;
+}
+
+/** One step in an incident's life, for its timeline. */
+export interface IncidentEvent {
+  at: string;
+  actor: string;
+  text: string;
+}
+
+/** Everything about one incident beyond its row in the list. Loaded when it's opened. */
+export interface IncidentDetail {
+  /** 1 (highest) to 4, as it stood when the incident closed. */
+  priority: number;
+  /** How many alerts were folded into this one incident. */
+  alertCount: number;
+  handledBy: string;
+  closeNote: string;
+  matched: MatchedCondition[];
+  /** Oldest first. */
+  events: IncidentEvent[];
 }
 
 export interface Evidence {

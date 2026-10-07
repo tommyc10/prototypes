@@ -1,25 +1,46 @@
-/* Mock data: 20 rules and 9 assignment groups, generated the same way every time.
+/* Mock data: 20 rules, 9 assignment groups and 5 service groups, generated the same way every time.
  * This is the file the real backend replaces. Nothing else in the app knows the data is fake. */
 
 import { NOW } from '../../../lib/clock';
-import type { AssignmentGroup, AuditEntry, RelatedIncident, Resolution, Rule } from '../model/types';
+import type {
+  AssignmentGroup,
+  AuditEntry,
+  Condition,
+  IncidentDetail,
+  IncidentEvent,
+  RelatedIncident,
+  Resolution,
+  Rule,
+  ServiceGroup,
+} from '../model/types';
 
 export const CURRENT_USER = 'Admiral Piett';
 
 export const GROUPS: AssignmentGroup[] = [
-  { id: 'reactor', name: 'Reactor Core', unit: 'Death Star' },
-  { id: 'tractor', name: 'Tractor Beam Ops', unit: 'Death Star' },
-  { id: 'facilities', name: 'Facilities', unit: 'Death Star' },
-  { id: 'detention', name: 'Detention Block AA-23', unit: 'Death Star' },
-  { id: 'lifesupport', name: 'Life Support', unit: 'Executor' },
-  { id: 'hyperdrive', name: 'Hyperdrive Maintenance', unit: 'Imperial Navy' },
-  { id: 'hangar', name: 'TIE Hangar Ops', unit: 'Imperial Navy' },
-  { id: 'holonet', name: 'HoloNet Comms', unit: 'ISB' },
-  { id: 'armory', name: 'Armory & Logistics', unit: 'Stormtrooper Corps' },
+  { id: 'reactor', name: 'Reactor Core', unit: 'Death Star', serviceGroupId: 'power' },
+  { id: 'tractor', name: 'Tractor Beam Ops', unit: 'Death Star', serviceGroupId: 'power' },
+  { id: 'facilities', name: 'Facilities', unit: 'Death Star', serviceGroupId: 'station' },
+  { id: 'detention', name: 'Detention Block AA-23', unit: 'Death Star', serviceGroupId: 'security' },
+  { id: 'lifesupport', name: 'Life Support', unit: 'Executor', serviceGroupId: 'station' },
+  { id: 'hyperdrive', name: 'Hyperdrive Maintenance', unit: 'Imperial Navy', serviceGroupId: 'power' },
+  { id: 'hangar', name: 'TIE Hangar Ops', unit: 'Imperial Navy', serviceGroupId: 'flight' },
+  { id: 'holonet', name: 'HoloNet Comms', unit: 'ISB', serviceGroupId: 'comms' },
+  { id: 'armory', name: 'Armory & Logistics', unit: 'Stormtrooper Corps', serviceGroupId: 'security' },
 ];
 
 /** Look up a group by its id. */
 export const groupById = (id: string) => GROUPS.find((g) => g.id === id)!;
+
+export const SERVICE_GROUPS: ServiceGroup[] = [
+  { id: 'power', name: 'Power & Propulsion' },
+  { id: 'station', name: 'Station Services' },
+  { id: 'security', name: 'Security' },
+  { id: 'flight', name: 'Flight Operations' },
+  { id: 'comms', name: 'Communications' },
+];
+
+/** Look up a service group by its id. */
+export const serviceGroupById = (id: string) => SERVICE_GROUPS.find((s) => s.id === id)!;
 
 /* ---------- deterministic generation helpers ---------- */
 
@@ -808,4 +829,120 @@ export function allIncidents(rule: Rule): RelatedIncident[] {
     };
   });
   return [...rule.related, ...rest].sort((a, b) => b.openedAt.localeCompare(a.openedAt));
+}
+
+/* ---------- one incident, opened ----------
+ * The timeline, the close note and the values the rule matched on, made up from the
+ * incident's row. The real app fetches this from the server when an incident is opened. */
+
+const OPERATORS = ['TK-421', 'TK-710', 'Lieutenant Tanbris', 'Chief Bast'];
+
+/** A value this incident could have had for the rule's condition to match it. */
+function actualValue(condition: Condition, incident: RelatedIncident, openedAt: number, r: () => number) {
+  const { field, op, value } = condition;
+  if (field === 'ci') return incident.ci;
+  if (field === 'priority') return `P${openedAt}`;
+  if (op === 'in') {
+    const options = value.split(', ');
+    return options[Math.floor(r() * options.length)];
+  }
+  if (op === 'matches') return value.replace('*', String(1 + Math.floor(r() * 12)).padStart(2, '0'));
+  if (op === 'between') {
+    const [low, high] = value.split('–').map(Number);
+    return String(Math.round(low + r() * (high - low)));
+  }
+  // "< 72", "< 90s", "> 5": a number on the right side of the limit, keeping its unit.
+  const [, digits, unit] = value.match(/^(-?\d+(?:\.\d+)?)(.*)$/) ?? [];
+  if (digits && /^[<>]/.test(op)) {
+    const limit = Number(digits);
+    const gap = Math.max(Math.abs(limit) * (0.05 + r() * 0.3), 0.1);
+    const n = op.startsWith('<') ? limit - gap : limit + gap;
+    const decimals = digits.split('.')[1]?.length ?? 0;
+    return (decimals ? n.toFixed(decimals) : String(op.startsWith('<') ? Math.floor(n) : Math.ceil(n))) + unit;
+  }
+  return value;
+}
+
+export function incidentDetail(rule: Rule, incident: RelatedIncident): IncidentDetail {
+  const r = rng(incident.id + 'detail');
+  const group = groupById(rule.groupId);
+  const operator = OPERATORS[Math.floor(r() * OPERATORS.length)];
+  const end = incident.minutesOpen;
+  const openedAt = incident.resolution === 'escalated' || incident.resolution === 'worked' || r() > 0.6 ? 3 : 4;
+  const at = (minutes: number) => new Date(new Date(incident.openedAt).getTime() + minutes * 60_000).toISOString();
+  const step = (minutes: number, actor: string, text: string): IncidentEvent => ({ at: at(minutes), actor, text });
+
+  const matched = rule.evidence.conditions.map((c) => ({ ...c, actual: actualValue(c, incident, openedAt, r) }));
+
+  const opening = [
+    step(-(1 + Math.floor(r() * 3)), 'Monitoring', `Alert raised on ${incident.ci}`),
+    step(0, 'Event bridge', `Incident opened at P${openedAt} for ${group.name}`),
+  ];
+
+  switch (incident.resolution) {
+    case 'auto-cleared':
+      return {
+        priority: openedAt,
+        alertCount: 1 + Math.floor(r() * 3),
+        handledBy: 'Nobody, closed automatically',
+        closeNote: 'The alert cleared before anyone picked it up. No action was taken.',
+        matched,
+        events: [...opening, step(end, 'Monitoring', 'Alert cleared on its own. Incident closed automatically.')],
+      };
+    case 'closed-no-action':
+      return {
+        priority: openedAt,
+        alertCount: 1 + Math.floor(r() * 3),
+        handledBy: operator,
+        closeNote: 'Checked the reading against the baseline. Within the normal range, so closed without action.',
+        matched,
+        events: [
+          ...opening,
+          step(Math.max(1, Math.round(end * 0.4)), operator, 'Acknowledged'),
+          step(end, operator, 'Closed. No action needed.'),
+        ],
+      };
+    case 'duplicate': {
+      const original = `INC-${Number(incident.id.slice(4)) - 1}`;
+      return {
+        priority: openedAt,
+        alertCount: 2 + Math.floor(r() * 5),
+        handledBy: 'Duplicate detector',
+        closeNote: `The same fault as ${original}, raised again while that one was still open.`,
+        matched,
+        events: [...opening, step(end, 'Duplicate detector', `Closed as a duplicate of ${original}`)],
+      };
+    }
+    case 'worked':
+      return {
+        priority: 3,
+        alertCount: 1 + Math.floor(r() * 4),
+        handledBy: operator,
+        closeNote: 'Reset the sensor and watched the reading settle. A minor fault, fixed on the spot.',
+        matched,
+        events: [
+          ...opening,
+          step(Math.round(end * 0.2), operator, 'Acknowledged'),
+          step(Math.round(end * 0.6), operator, 'Reset the sensor on site'),
+          step(end, operator, 'Resolved. Minor fault.'),
+        ],
+      };
+    case 'escalated': {
+      const priority = r() < 0.5 ? 1 : 2;
+      return {
+        priority,
+        alertCount: 4 + Math.floor(r() * 12),
+        handledBy: `${operator}, then the ${group.name} on-call`,
+        closeNote:
+          'Not a flap. The fault was real and kept getting worse, so it was escalated and worked as a major incident until repaired.',
+        matched,
+        events: [
+          ...opening,
+          step(Math.round(end * 0.08), operator, 'Acknowledged'),
+          step(Math.round(end * 0.2), operator, `Escalated to the ${group.name} on-call. Raised to P${priority}.`),
+          step(end, `${group.name} on-call`, 'Resolved after a repair'),
+        ],
+      };
+    }
+  }
 }

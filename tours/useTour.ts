@@ -39,3 +39,10 @@ export function useTour(
 }
 
 export type Tour = ReturnType<typeof useTour>;
+
+/** Which tour to show. By default it picks for itself: the full one, or the lite one if the
+ *  machine is struggling. `?tour=lite` or `?tour=full` in the address forces one. */
+export function tourMode(): boolean | 'auto' {
+  const mode = new URLSearchParams(window.location.search).get('tour');
+  return mode === 'lite' ? true : mode === 'full' ? false : 'auto';
+}

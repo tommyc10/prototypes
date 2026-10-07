@@ -74,6 +74,14 @@
   letter-spacing: -0.055em;
 }
 
+.hc-hero-figure[data-level='good'] {
+  color: var(--green);
+}
+
+.hc-hero-figure[data-level='low'] {
+  color: var(--amber);
+}
+
 .hc-hero-figure span {
   margin-left: 3px;
   font-size: 0.46em;

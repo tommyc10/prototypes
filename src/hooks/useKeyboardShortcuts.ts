@@ -3,9 +3,10 @@
  *   1. ⌘K always toggles the palette.
  *   2. While the palette is open, it handles its own keys.
  *   3. While a decision is open, only Esc (cancel) and ⌘↵ (submit) work.
- *   4. While typing in a field, keys are text; Esc, ↵ and ↓ leave the field.
- *   5. Keys held with ⌘, Ctrl or Alt are left for the browser.
- *   6. Otherwise, the key is looked up in `keys`. */
+ *   4. A popup marked `data-own-keys` (the group filter) handles its own keys.
+ *   5. While typing in a field, keys are text; Esc, ↵ and ↓ leave the field.
+ *   6. Keys held with ⌘, Ctrl or Alt are left for the browser.
+ *   7. Otherwise, the key is looked up in `keys`. */
 
 import { useEffect, useRef } from 'react';
 
@@ -48,6 +49,7 @@ export function useKeyboardShortcuts(shortcuts: Shortcuts) {
         return;
       }
       const target = e.target as HTMLElement;
+      if (target.closest('[data-own-keys]')) return;
       if (/^(INPUT|TEXTAREA)$/.test(target.tagName) || target.isContentEditable) {
         if (e.key === 'Escape' || e.key === 'Enter' || e.key === 'ArrowDown') {
           e.preventDefault();

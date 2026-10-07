@@ -1,21 +1,19 @@
 /* The charts: the split bar, the weekly columns, the ranked breakdowns, the heat strip, and
  * the legend, tooltip and table they share. No chart library; every mark is a div.
  *
- * Three tones carry the whole page, one ramp from strongest catch to none: caught by a rule,
- * caught by a change window, not caught. They're tones of one grey on purpose. Colour on this
- * page is kept for status (proposed, validated, unsafe), so it never has to compete with data.
- * The ramp passes the ordinal checks in both themes (monotone lightness, steps you can tell
- * apart, the faintest still 2:1 against the surface). */
+ * Three tones carry the whole page. Caught by a rule is the page's one data colour: it is the
+ * good outcome and the thing the report is about, so it is the part you should see first.
+ * Caught by a change window and not caught stay grey, strongest to faintest, so the green
+ * never has to compete. Every other colour on this page is status (proposed, unsafe). */
 
 .hc {
-  --hc-rule: #ededed;
+  --hc-rule: var(--green);
   --hc-window: #8c8c8c;
   --hc-missed: #4d4d4d;
   --hc-grid: var(--line);
 }
 
 :root[data-mn-theme='light'] .hc {
-  --hc-rule: #171717;
   --hc-window: #737373;
   --hc-missed: #b0b0b0;
 }

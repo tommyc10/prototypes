@@ -19,7 +19,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { navigate } from '../../lib/route';
 import { HINDCAST_TOUR } from '../../../tours/hindcast';
 import { Tour } from '../../../tours/Tour';
-import { useTour } from '../../../tours/useTour';
+import { tourMode, useTour } from '../../../tours/useTour';
 import { CaughtBy } from './components/CaughtBy/CaughtBy';
 import { Method } from './components/Method/Method';
 import { HindcastPalette } from './components/Palette/HindcastPalette';
@@ -68,7 +68,8 @@ export function HindcastPage({ serviceId: fromAddress, weeks: weeksFromAddress }
 
   /** Move the selection up or down the list. "All services" is the row above the first service. */
   const move = (step: number) => {
-    const ids = [...(q ? [] : ['all']), ...shown.map((s) => s.id)];
+    // A service nobody cancelled a ticket for has no report, so J and K step over it.
+    const ids = [...(q ? [] : ['all']), ...shown.filter((s) => s.cancelled > 0).map((s) => s.id)];
     const next = ids[Math.min(ids.length - 1, Math.max(0, ids.indexOf(serviceId) + step))];
     if (next && next !== serviceId) selectService(next);
   };
@@ -154,7 +155,7 @@ export function HindcastPage({ serviceId: fromAddress, weeks: weeksFromAddress }
       <HindcastPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
-        services={report.services}
+        services={report.services.filter((s) => s.cancelled > 0)}
         onService={selectService}
         onWeeks={setWeeks}
         onChapter={(id) => chapters.jump(id, 'key')}
@@ -167,7 +168,7 @@ export function HindcastPage({ serviceId: fromAddress, weeks: weeksFromAddress }
       {/* Rendered into <body>, outside the page, which is inert while the tour shows. */}
       {tour.open &&
         createPortal(
-          <Tour steps={HINDCAST_TOUR} index={tour.index} onIndex={tour.go} onDone={tour.finish} />,
+          <Tour steps={HINDCAST_TOUR} index={tour.index} onIndex={tour.go} onDone={tour.finish} lite={tourMode()} />,
           document.body,
         )}
     </div>

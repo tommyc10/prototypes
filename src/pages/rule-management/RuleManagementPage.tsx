@@ -1,9 +1,10 @@
 /* The rule management page. This file owns the page's state and wires the pieces together:
  *
- *   Sidebar      navigation (shared with the other pages), with this page's assignment groups in it
- *   RuleList     finding rules: search, status tabs, sort
+ *   Sidebar      navigation (shared with the other pages), with this page's pinned groups in it
+ *   RuleList     finding rules: group filter, search, status tabs, sort
  *   RuleDetail   the selected rule, and the decision form
  *   IncidentsPanel / CommandPalette   on top when opened
+ *   IncidentView one incident, in a popup over the page when a row is clicked
  *   Tour         the guided tour, over everything (its code lives in tours/)
  *
  * Data flows down as props; changes come back up as callbacks (onSelect, onAction…). */
@@ -13,8 +14,9 @@ import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { CommandPalette } from './components/CommandPalette/CommandPalette';
 import { DecisionToast } from './components/common/DecisionToast';
-import { GroupNav } from './components/GroupNav/GroupNav';
 import { IncidentsPanel } from './components/Incidents/IncidentsPanel';
+import { IncidentView } from './components/Incidents/IncidentView';
+import { PinnedGroups } from './components/PinnedGroups/PinnedGroups';
 import { RuleDetail } from './components/RuleDetail/RuleDetail';
 import { RuleList } from './components/RuleList/RuleList';
 import { PaneToggles } from '../../components/PaneToggles';
@@ -24,20 +26,24 @@ import { useTheme } from '../../hooks/useTheme';
 import { navigate } from '../../lib/route';
 import { TOUR_STEPS } from '../../../tours/rule-management';
 import { Tour } from '../../../tours/Tour';
-import { useTour } from '../../../tours/useTour';
+import { tourMode, useTour } from '../../../tours/useTour';
 import { useDecision } from './hooks/useDecision';
 import { usePaneMode } from './hooks/usePaneMode';
+import { usePinnedGroups } from './hooks/usePinnedGroups';
 import { useRuleView } from './hooks/useRuleView';
 import { useRulesStore } from './hooks/useRulesStore';
 import { actionsFor } from './model/policy';
-import type { RuleAction } from './model/types';
+import type { RelatedIncident, RuleAction } from './model/types';
 
 export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a link from another page). */ initialRuleId?: string }) {
   const rules = useRulesStore((s) => s.rules);
   const { view, update, visible, counts } = useRuleView(rules);
+  const [pins, togglePin] = usePinnedGroups();
   const [selectedId, setSelectedId] = useState<string | null>(initialRuleId ?? null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [incidentsOpen, setIncidentsOpen] = useState(false);
+  // The incident that's open, and the rule it was opened from.
+  const [opened, setOpened] = useState<{ ruleId: string; incident: RelatedIncident } | null>(null);
   const [hideSide, setHideSide] = useState(false);
   const [hideList, setHideList] = useState(false);
   // Keyboard-opened decisions appear instantly; pointer-opened ones animate in.
@@ -55,6 +61,10 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
   });
 
   const selected = rules.find((r) => r.id === selectedId) ?? null;
+  // An open incident belongs to one rule: moving to another rule puts it away.
+  const incident = selected && opened?.ruleId === selected.id ? opened.incident : null;
+  useEffect(() => setOpened(null), [selectedId]);
+  const openIncident = (incident: RelatedIncident) => selected && setOpened({ ruleId: selected.id, incident });
 
   // Keep the selection valid: if the list no longer shows the selected rule, pick its first one.
   useEffect(() => {
@@ -65,7 +75,8 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
   /** Start a decision on the selected rule, if that action is allowed. */
   const act = (action: RuleAction, via: 'key' | 'pointer') => {
     if (!selected || !actionsFor(selected).includes(action)) return;
-    setIncidentsOpen(false); // the form lives in the detail pane, so leave the panel first
+    setIncidentsOpen(false); // the form lives in the detail pane, so leave the panels first
+    setOpened(null);
     setComposerVia(via);
     decision.open(selected, action);
   };
@@ -82,6 +93,7 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
     setHideSide(false);
     setHideList(false);
     setIncidentsOpen(false);
+    setOpened(null);
     setPaletteOpen(false);
     if (selected?.status !== 'proposed') {
       const waiting = visible.find((r) => r.status === 'proposed');
@@ -111,19 +123,23 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
     onCancelDecision: decision.close,
     onSubmitDecision: decision.submit,
     keys: {
-      j: () => move(1),
-      ArrowDown: () => move(1),
-      k: () => move(-1),
-      ArrowUp: () => move(-1),
-      '/': () => (incidentsOpen ? incidentSearchRef : searchRef).current?.focus(),
-      Escape: () => setIncidentsOpen(false),
+      // Esc steps back one layer at a time: the incident first, then the incident list.
+      Escape: () => (incident ? setOpened(null) : setIncidentsOpen(false)),
       a: () => act('approve', 'key'),
       x: () => act('reject', 'key'),
       e: () => act('activate', 'key'),
       d: () => act('deactivate', 'key'),
-      '[': () => setHideSide((hidden) => !hidden),
-      ']': () => setHideList((hidden) => !hidden),
-      '?': startTour,
+      // While an incident's popup is open, the page behind it stays as it is.
+      ...(!incident && {
+        j: () => move(1),
+        ArrowDown: () => move(1),
+        k: () => move(-1),
+        ArrowUp: () => move(-1),
+        '/': () => (incidentsOpen ? incidentSearchRef : searchRef).current?.focus(),
+        '[': () => setHideSide((hidden) => !hidden),
+        ']': () => setHideList((hidden) => !hidden),
+        '?': startTour,
+      }),
     },
   });
 
@@ -137,13 +153,21 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
         theme={theme}
         onToggleTheme={toggleTheme}
       >
-        <GroupNav rules={rules} groupId={view.groupId} onSelectGroup={(groupId) => update({ groupId })} />
+        <PinnedGroups
+          rules={rules}
+          pins={pins}
+          view={view}
+          onSelect={(pin) => update({ groupBy: pin.by, groupId: pin.id })}
+        />
       </Sidebar>
 
       <RuleList
         hidden={hideList}
+        rules={rules}
         view={view}
         update={update}
+        pins={pins}
+        onTogglePin={togglePin}
         visible={visible}
         counts={counts}
         selectedId={selectedId}
@@ -170,6 +194,7 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
             onAction={(action) => act(action, 'pointer')}
             onSelect={setSelectedId}
             onViewIncidents={() => setIncidentsOpen(true)}
+            onOpenIncident={openIncident}
           />
         ) : (
           <div className="mn-empty">Select a rule</div>
@@ -181,10 +206,21 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
             wide={mode !== 'narrow'}
             searchRef={incidentSearchRef}
             onAction={(action) => act(action, 'pointer')}
+            onOpenIncident={openIncident}
             onClose={() => setIncidentsOpen(false)}
           />
         )}
       </section>
+
+      {selected && incident && (
+        <IncidentView
+          rule={selected}
+          incident={incident}
+          onOpen={openIncident}
+          onAction={(action) => act(action, 'pointer')}
+          onClose={() => setOpened(null)}
+        />
+      )}
 
       <CommandPalette
         open={paletteOpen}
@@ -196,7 +232,7 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
           setSelectedId(id);
         }}
         onStatus={(status) => update({ status })}
-        onGroup={(groupId) => update({ groupId })}
+        onGroup={(groupId) => update({ groupBy: 'assignment', groupId })}
         onSort={(sort) => update({ sort })}
         onAction={(action) => act(action, 'key')}
         onViewIncidents={() => setIncidentsOpen(true)}
@@ -209,7 +245,7 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
       {/* Rendered into <body>, outside the page, which is inert while the tour shows. */}
       {tour.open &&
         createPortal(
-          <Tour steps={TOUR_STEPS} index={tour.index} onIndex={tour.go} onDone={tour.finish} />,
+          <Tour steps={TOUR_STEPS} index={tour.index} onIndex={tour.go} onDone={tour.finish} lite={tourMode()} />,
           document.body,
         )}
     </div>

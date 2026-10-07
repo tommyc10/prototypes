@@ -213,6 +213,62 @@ button.hc-action:focus-visible .hc-rank-go {
 
 /* ---------- proposed rule validation ---------- */
 
+/* Above the table: the verdict tabs with their counts, and a search. */
+.hc-proposed-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+
+.hc-proposed-search {
+  width: 240px;
+  height: 30px;
+}
+
+/* Every row is one height, filled or blank, so a page of two is as tall as a page of eight. */
+.hc-proposed tbody tr {
+  height: 39px;
+}
+
+.hc-proposed tbody tr.hc-proposed-fill {
+  border-top-color: transparent;
+  cursor: default;
+}
+
+.hc-proposed tbody tr.hc-proposed-fill:hover {
+  background: transparent;
+}
+
+.hc-proposed-fill td {
+  text-align: center;
+  color: var(--fg-3);
+}
+
+.hc-pager {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hc-pager > span:first-child {
+  flex: 1;
+}
+
+.hc-pager > span + span {
+  margin-right: 6px;
+}
+
+.hc-pager .mn-icon-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .hc-proposed tbody tr {
   cursor: pointer;
   outline: none;

@@ -1,0 +1,193 @@
+/* The group filter: its button beside the page title, and the popup it opens.
+ * The popup borrows the sort menu's glass look (.mn-menu) and is wide enough for long names. */
+
+.mn-gp {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mn-gp-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 7px 0 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 13px;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+/* A filter that's on reads as a chip, so a narrowed list is never a surprise. */
+.mn-gp-trigger[data-filtered] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.mn-gp-trigger[data-popup-open] {
+  background: var(--l4);
+  color: var(--fg);
+}
+
+.mn-gp-trigger svg {
+  flex: none;
+}
+
+.mn-gp-clear {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--fg-3);
+}
+
+.mn-gp-popup {
+  width: 400px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+}
+
+.mn-gp-by {
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--tint-2);
+}
+
+.mn-gp-by .mn-tab {
+  flex: 1;
+  justify-content: center;
+  height: 26px;
+  font-size: 12.5px;
+}
+
+.mn-gp-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  margin-top: 4px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg-3);
+}
+
+.mn-gp-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+
+.mn-gp-search input::placeholder {
+  color: var(--fg-3);
+}
+
+/* About nine rows, then it scrolls: the popup never grows with the number of groups. */
+.mn-gp-list {
+  max-height: 300px;
+  margin-top: 4px;
+  overflow-y: auto;
+  scroll-padding: 4px;
+}
+
+.mn-gp-popup [cmdk-item] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 4px 0 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--fg-2);
+  cursor: default;
+}
+
+.mn-gp-popup [cmdk-item][data-selected='true'] {
+  background: var(--tint-2);
+  color: var(--fg);
+}
+
+.mn-gp-check {
+  display: flex;
+  flex: none;
+  width: 14px;
+  color: var(--fg);
+}
+
+/* Names wrap rather than truncate: groups that share a long prefix must stay tellable apart. */
+.mn-gp-name {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+  overflow-wrap: anywhere;
+}
+
+.mn-gp-waiting {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-gp-waiting .mn-dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.mn-gp-popup .mn-count {
+  flex: none;
+  min-width: 22px;
+  text-align: right;
+}
+
+/* The pin shows on the row you're on, and stays on rows that are pinned. */
+.mn-gp-pin {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+}
+
+.mn-gp-pin[aria-pressed='true'] {
+  opacity: 1;
+  color: var(--fg);
+}
+
+.mn-gp-pin[aria-pressed='true'] svg {
+  fill: currentColor;
+}
+
+.mn-gp-popup [cmdk-item][data-selected='true'] .mn-gp-pin,
+.mn-gp-pin:focus-visible {
+  opacity: 1;
+}
+
+.mn-gp-empty {
+  padding: 20px 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+.mn-gp-foot {
+  margin-top: 4px;
+  padding: 8px 8px 4px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--fg-3);
+}

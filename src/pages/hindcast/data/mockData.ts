@@ -351,6 +351,46 @@ const ASSUMPTIONS = [
 ];
 
 /** The hindcast for one scope, against the rules as they stand. The real app fetches this. */
+/* ---------- a large estate ----------
+ * A real estate has far more services than make noise, and far more proposed rules than are
+ * worth approving. These stand in for that long tail, so the page can show how it copes:
+ * services nobody cancelled a ticket for, and proposals that matched real work, not noise.
+ * None of them adds to a total, so every figure on the page still agrees with the others.
+ * Set both counts to 0 for the nine-service Empire on its own. */
+
+const QUIET_SERVICES = 84;
+const LONG_TAIL_PROPOSALS = 96;
+
+const SYSTEMS = ['Docking Bay', 'Turbolaser Battery', 'Shield Generator', 'Sensor Array', 'Garbage Masher', 'Barracks', 'Mess Hall', 'Droid Pool', 'Medical Bay', 'Cargo Lift', 'Ion Cannon', 'Command Bridge'];
+const UNITS = ['Death Star', 'Executor', 'Imperial Navy', 'ISB', 'Stormtrooper Corps'];
+const ALERTS = ['power draw above baseline', 'door cycle count exceeded', 'heartbeat missed', 'calibration overdue', 'coolant level low', 'queue depth high', 'access badge rejected', 'firmware checksum mismatch'];
+
+const QUIET: ServiceRow[] = Array.from({ length: QUIET_SERVICES }, (_, i) => ({
+  id: `quiet-${i}`,
+  name: `${SYSTEMS[i % SYSTEMS.length]} ${Math.floor(rng(`quiet-${i}`)() * 900) + 100}`,
+  unit: UNITS[i % UNITS.length],
+  tickets: 0,
+  cancelled: 0,
+  split: emptySplit(),
+}));
+
+/** One in four is short of the confidence floor; the rest matched something that escalated. */
+const LONG_TAIL: ProposedValidation[] = Array.from({ length: LONG_TAIL_PROPOSALS }, (_, i) => {
+  const r = rng(`tail-${i}`);
+  const review = i % 4 === 0;
+  const service = QUIET[i % Math.max(1, QUIET.length)];
+  return {
+    ruleId: `RUL-${String(1000 + i * 7)}`,
+    name: `${service?.name ?? SYSTEMS[i % SYSTEMS.length]}: ${ALERTS[i % ALERTS.length]}`,
+    serviceId: service?.id ?? 'all',
+    confidence: review ? 0.32 + r() * 0.27 : 0.6 + r() * 0.35,
+    wouldCatch: 0,
+    worked: Math.round(4 + r() * r() * 900),
+    escalated: review ? 0 : 1 + Math.floor(r() * 6),
+    verdict: review ? ('review' as const) : ('unsafe' as const),
+  };
+}).sort((a, b) => b.worked - a.worked);
+
 export function buildReport(scope: Scope, rules: Rule[]): HindcastReport {
   const first = HISTORY_WEEKS - scope.weeks;
   const all = scope.serviceId === 'all';
@@ -375,9 +415,12 @@ export function buildReport(scope: Scope, rules: Rule[]): HindcastReport {
   const services: ServiceRow[] = GROUPS.map((g) => {
     const theirs = inWindow.filter((t) => t.serviceId === g.id);
     return { id: g.id, name: g.name, unit: g.unit, tickets: volumeOf(g.id, 'tickets'), cancelled: theirs.length, split: splitOf(theirs) };
-  }).sort((a, b) => b.cancelled - a.cancelled);
+  })
+    .sort((a, b) => b.cancelled - a.cancelled)
+    .concat(QUIET);
 
-  const scoped = services.filter((s) => inScope(s.id));
+  // The quiet services raised nothing, so they have no weekly volume to add up.
+  const scoped = services.filter((s) => inScope(s.id) && s.id in DATA.volume);
   const split = splitOf(mine);
   const tickets = scoped.reduce((n, s) => n + s.tickets, 0);
 
@@ -451,7 +494,8 @@ export function buildReport(scope: Scope, rules: Rule[]): HindcastReport {
       return { ruleId: r.id, name: r.name, serviceId: r.groupId, confidence: r.confidence, wouldCatch: stillMissed(r.id), worked: realFor(r.id, false), escalated, verdict };
     })
     .filter((p) => p.wouldCatch > 0 || p.escalated > 0)
-    .sort((a, b) => b.wouldCatch - a.wouldCatch);
+    .sort((a, b) => b.wouldCatch - a.wouldCatch)
+    .concat(all ? LONG_TAIL : []);
 
   /* --- what to tune next --- */
   const tuning: TuningAction[] = [];
@@ -557,14 +601,14 @@ export function buildReport(scope: Scope, rules: Rule[]): HindcastReport {
       generatedAt: NOW.toISOString(),
       source: 'Imperial service desk, ticket export',
       activeRules: rules.filter((r) => r.status === 'active' && inScope(r.groupId)).length,
-      proposedRules: rules.filter((r) => r.status === 'proposed' && inScope(r.groupId)).length,
+      proposedRules: rules.filter((r) => r.status === 'proposed' && inScope(r.groupId)).length + (all ? LONG_TAIL.length : 0),
       changeWindows: WINDOWS.filter((w) => inScope(w.serviceId) && Array.from({ length: scope.weeks }, (_, i) => runs(w, first + i)).some(Boolean)).length,
       assumptions: ASSUMPTIONS,
     },
   };
 }
 
-/** Whether an id in the address is a real service. */
+/** Whether an id in the address is a service with a report to show. */
 export const isService = (id: string | undefined) => !!id && GROUPS.some((g) => g.id === id);
 
 /** A share, for sorting and labels elsewhere. */

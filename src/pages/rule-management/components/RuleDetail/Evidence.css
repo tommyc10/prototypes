@@ -24,6 +24,14 @@
   color: var(--red-strong);
 }
 
+/* "Open", pushed to the far end. */
+.mn-callout .mn-link {
+  flex: none;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--red-strong);
+}
+
 .mn-code {
   padding: 14px 16px;
   border-radius: 10px;

@@ -3,7 +3,7 @@
 
 import type { RefObject } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import type { Rule, RuleAction } from '../../model/types';
+import type { RelatedIncident, Rule, RuleAction } from '../../model/types';
 import { ActionButtons } from '../common/ActionButtons';
 import { IncidentBrowser } from './IncidentBrowser';
 import './IncidentsPanel.css';
@@ -13,12 +13,14 @@ export function IncidentsPanel({
   wide,
   searchRef,
   onAction,
+  onOpenIncident,
   onClose,
 }: {
   rule: Rule;
   wide: boolean;
   searchRef: RefObject<HTMLInputElement | null>;
   onAction: (action: RuleAction) => void;
+  onOpenIncident: (incident: RelatedIncident) => void;
   onClose: () => void;
 }) {
   return (
@@ -39,7 +41,7 @@ export function IncidentsPanel({
           <ActionButtons rule={rule} onAction={onAction} />
         </div>
       </header>
-      <IncidentBrowser rule={rule} wide={wide} pageSize={50} searchRef={searchRef} autoFocus />
+      <IncidentBrowser rule={rule} wide={wide} pageSize={50} searchRef={searchRef} autoFocus onOpen={onOpenIncident} />
     </section>
   );
 }

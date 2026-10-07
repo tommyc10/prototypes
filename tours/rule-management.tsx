@@ -23,9 +23,14 @@ export const TOUR_STEPS: RuleTourStep[] = [
   },
   {
     target: 'groups',
-    side: 'right',
+    side: 'bottom',
     title: 'Start with your groups',
-    body: <>Every rule is locked to one assignment group. An amber dot means rules there are waiting on a decision.</>,
+    body: (
+      <>
+        Every rule is locked to one assignment group. Open this to find a group or service by name; the ones with
+        rules waiting on a decision come first. Pin the few you use to keep them in the sidebar.
+      </>
+    ),
   },
   {
     target: 'list-tools',

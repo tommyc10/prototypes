@@ -1,21 +1,25 @@
-/* The rule list: title, search, status tabs, sort, the rows, and keyboard hints.
+/* The rule list: title, group filter, search, status tabs, sort, the rows, and keyboard hints.
  * It shows whatever `visible` it's given; filtering and sorting happen in useRuleView. */
 
 import { useEffect, useRef, type RefObject } from 'react';
 import { AlertTriangle, Search } from 'lucide-react';
 import { pct } from '../../../../lib/format';
-import { groupById } from '../../data/mockData';
-import { STATUS_TABS, type StatusFilter, type ViewState } from '../../model/browse';
+import type { Pin } from '../../hooks/usePinnedGroups';
+import { STATUS_TABS, groupName, type StatusFilter, type ViewState } from '../../model/browse';
 import { statusLabel } from '../../model/labels';
 import { isLowConfidence } from '../../model/policy';
 import type { Rule } from '../../model/types';
+import { GroupPicker } from '../GroupPicker/GroupPicker';
 import { SortMenu } from './SortMenu';
 import './RuleList.css';
 
 export function RuleList({
   hidden,
+  rules,
   view,
   update,
+  pins,
+  onTogglePin,
   visible,
   counts,
   selectedId,
@@ -23,8 +27,12 @@ export function RuleList({
   searchRef,
 }: {
   hidden: boolean;
+  /** Every rule, for the group filter's counts. `visible` is what the list shows. */
+  rules: Rule[];
   view: ViewState;
   update: (patch: Partial<ViewState>) => void;
+  pins: Pin[];
+  onTogglePin: (pin: Pin) => void;
   visible: Rule[];
   counts: Record<StatusFilter, number>;
   selectedId: string | null;
@@ -43,7 +51,7 @@ export function RuleList({
       <header className="mn-list-head" data-tour="list-tools">
         <div className="mn-list-title">
           <h1>Rules</h1>
-          <span className="mn-subtle">{view.groupId === 'all' ? 'All groups' : groupById(view.groupId).name}</span>
+          <GroupPicker rules={rules} view={view} update={update} pins={pins} onTogglePin={onTogglePin} />
         </div>
         <label className="mn-search">
           <Search size={14} />
@@ -90,7 +98,7 @@ export function RuleList({
               <div className="mn-row-name">{rule.name}</div>
               <div className="mn-row-meta">
                 <span className="mn-mono">{rule.id}</span>
-                <span>{groupById(rule.groupId).name}</span>
+                <span>{groupName(rule, view.groupBy)}</span>
               </div>
             </div>
             <div className="mn-row-side">

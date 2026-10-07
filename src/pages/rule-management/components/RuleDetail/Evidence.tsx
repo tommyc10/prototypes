@@ -4,10 +4,10 @@
 import { AlertTriangle } from 'lucide-react';
 import { shortDate } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
-import type { Rule } from '../../model/types';
+import type { RelatedIncident, Rule } from '../../model/types';
 import './Evidence.css';
 
-export function Evidence({ rule }: { rule: Rule }) {
+export function Evidence({ rule, onOpenIncident }: { rule: Rule; onOpenIncident: (incident: RelatedIncident) => void }) {
   const group = groupById(rule.groupId);
   const escalated = rule.related.filter((i) => i.resolution === 'escalated');
 
@@ -21,6 +21,9 @@ export function Evidence({ rule }: { rule: Rule }) {
           <span>
             Matched a real incident: <strong>{escalated[0].title}</strong> <span className="mn-mono">{escalated[0].id}</span>
           </span>
+          <button className="mn-link" onClick={() => onOpenIncident(escalated[0])}>
+            Open
+          </button>
         </div>
       )}
       <div className="mn-code">

@@ -9,7 +9,7 @@ import { groupById } from '../../data/mockData';
 import type { Decision } from '../../hooks/useDecision';
 import type { PaneMode } from '../../hooks/usePaneMode';
 import { SOURCE_LABEL, statusLabel } from '../../model/labels';
-import type { Rule, RuleAction } from '../../model/types';
+import type { RelatedIncident, Rule, RuleAction } from '../../model/types';
 import { ActionButtons } from '../common/ActionButtons';
 import { WeeklyBars } from '../common/WeeklyBars';
 import { Composer } from '../Composer/Composer';
@@ -33,6 +33,7 @@ export function RuleDetail({
   onAction,
   onSelect,
   onViewIncidents,
+  onOpenIncident,
 }: {
   rule: Rule;
   rules: Rule[];
@@ -44,6 +45,7 @@ export function RuleDetail({
   onAction: (action: RuleAction) => void;
   onSelect: (id: string) => void;
   onViewIncidents: () => void;
+  onOpenIncident: (incident: RelatedIncident) => void;
 }) {
   const group = groupById(rule.groupId);
   const wide = mode !== 'narrow';
@@ -86,7 +88,7 @@ export function RuleDetail({
         <h3>
           Matched incidents <span className="mn-subtle">{rule.incidentCount}</span>
         </h3>
-        <IncidentBrowser key={rule.id} rule={rule} wide={false} pageSize={15} />
+        <IncidentBrowser key={rule.id} rule={rule} wide={false} pageSize={15} onOpen={onOpenIncident} />
       </section>
     ) : (
       <section className="mn-sec">
@@ -96,7 +98,7 @@ export function RuleDetail({
             View all {rule.incidentCount}
           </button>
         </h3>
-        <IncidentList incidents={rule.related} wide={wide} />
+        <IncidentList incidents={rule.related} wide={wide} onOpen={onOpenIncident} />
       </section>
     );
 
@@ -118,7 +120,7 @@ export function RuleDetail({
         <div className="mn-detail-scroll" data-floating>
           {header}
           <Stats rule={rule} />
-          <Evidence rule={rule} />
+          <Evidence rule={rule} onOpenIncident={onOpenIncident} />
           {volume}
           {incidents}
           <History rule={rule} />
@@ -142,7 +144,7 @@ export function RuleDetail({
             <>
               <div className="mn-col">
                 <Stats rule={rule} />
-                <Evidence rule={rule} />
+                <Evidence rule={rule} onOpenIncident={onOpenIncident} />
                 {volume}
               </div>
               <div className="mn-col">{incidents}</div>
@@ -150,7 +152,7 @@ export function RuleDetail({
           ) : (
             <div className="mn-col">
               <Stats rule={rule} />
-              <Evidence rule={rule} />
+              <Evidence rule={rule} onOpenIncident={onOpenIncident} />
               {volume}
               {incidents}
             </div>

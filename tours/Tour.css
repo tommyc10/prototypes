@@ -39,6 +39,7 @@
 :root[data-mn-theme='light'] .mn-tour {
   --tour-veil: rgba(0, 0, 0, 0.22);
   --tour-ring: rgba(0, 0, 0, 0.35);
+  --tour-veil-lite: rgba(0, 0, 0, 0.4);
 }
 
 .mn-tour-veil,
@@ -229,6 +230,45 @@
 .mn-tour[data-leaving] :is(.mn-tour-veil, .mn-tour-ring, .mn-tour-pop) {
   opacity: 0;
   transition: opacity 180ms var(--ease-out);
+}
+
+/* ---------- lite: for machines without the power for blur ----------
+ * Remote desktops, dev pods, old laptops. Everything that repaints the whole window every
+ * frame is gone: no blur, no mask, no glide, no fades. The dim is one flat shadow around the
+ * ring, the card is solid, and each step simply appears. */
+
+.mn-tour[data-lite] .mn-tour-veil {
+  display: none;
+}
+
+.mn-tour[data-lite] .mn-tour-ring {
+  opacity: 1;
+  transition: none;
+  box-shadow: 0 0 0 200vmax var(--tour-veil-lite, rgba(0, 0, 0, 0.62));
+}
+
+.mn-tour[data-lite] .mn-tour-ring[data-on] {
+  box-shadow:
+    0 0 0 1px var(--tour-ring),
+    0 0 0 200vmax var(--tour-veil-lite, rgba(0, 0, 0, 0.62));
+}
+
+.mn-tour[data-lite] .mn-tour-card {
+  transition: none;
+}
+
+.mn-tour[data-lite] .mn-tour-pop {
+  background: var(--l4);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 0 0 1px var(--line-2),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: none;
+}
+
+.mn-tour[data-lite] .mn-tour-content {
+  animation: none;
 }
 
 /* Less motion: the spotlight and card jump between steps; the fades stay. */

@@ -1,0 +1,285 @@
+/* One incident: header facts, a verdict line, the stat cards, then a grid of cards. */
+
+/* ---------- the popup ----------
+ * A <dialog> opened with showModal() sits in the browser's "top layer", above everything,
+ * with no z-index needed. The browser centres it; we only give it a size and a look. */
+.mn-inc-modal {
+  width: min(1120px, calc(100vw - 48px));
+  max-width: none; /* the browser's own cap, which would undo the line above */
+  max-height: calc(100dvh - 96px);
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--l2);
+  box-shadow:
+    0 0 0 1px var(--line-2),
+    var(--shadow-palette);
+  color: inherit;
+  overflow: hidden;
+}
+
+/* Only while open: a closed dialog must stay display: none. */
+.mn-inc-modal[open] {
+  display: flex;
+  flex-direction: column;
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* The dimmed page behind it. */
+.mn-inc-modal::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  transition: opacity 180ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+:root[data-mn-theme='light'] .mn-inc-modal::backdrop {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-inc-modal[open] {
+    @starting-style {
+      transform: none;
+    }
+  }
+}
+
+/* The header stays put while the rest scrolls under it. */
+.mn-inc-modal .mn-inc-head {
+  flex: none;
+  padding: 14px 16px 14px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* The part that scrolls. */
+.mn-inc-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 28px 28px;
+  container-type: inline-size; /* the layout below responds to this width */
+}
+
+.mn-badge[data-res='escalated'] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.35);
+  color: var(--red);
+}
+
+.mn-inc-verdict {
+  grid-area: verdict;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.mn-inc-verdict svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--fg-3);
+}
+
+.mn-inc-verdict strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mn-inc-verdict[data-tone='bad'] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.2);
+  color: var(--red-text);
+}
+
+.mn-inc-verdict[data-tone='bad'] svg {
+  color: var(--red);
+}
+
+.mn-inc-verdict[data-tone='bad'] strong {
+  color: var(--red-strong);
+}
+
+/* ---------- the layout ----------
+ * One grid holds everything. Each piece is given a name (grid-area), and
+ * grid-template-areas draws where the names go, like a picture of the page.
+ *
+ * The picture changes with the width of the popup itself, not the window. That's a
+ * container query: `container-type` on the scrolling body above, then
+ * `@container (min-width: …)` instead of `@media`. */
+
+.mn-inc-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'top' 'verdict' 'stats' 'matched' 'timeline' 'resolution' 'also';
+  gap: 10px;
+}
+
+.mn-inc-top {
+  grid-area: top;
+  padding-bottom: 10px;
+}
+
+/* The rule's stat cards, but wrapping: four across, or two by two when there's no room. */
+.mn-inc-layout .mn-stats {
+  grid-area: stats;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  max-width: none;
+  margin: 0;
+}
+
+.mn-inc-layout .mn-stat-value {
+  white-space: nowrap;
+}
+
+.mn-inc-card[data-area='matched'] {
+  grid-area: matched;
+}
+.mn-inc-card[data-area='resolution'] {
+  grid-area: resolution;
+}
+.mn-inc-card[data-area='timeline'] {
+  grid-area: timeline;
+}
+.mn-inc-card[data-area='also'] {
+  grid-area: also;
+}
+
+/* Two columns: the tall timeline sits beside the two short cards. */
+@container (min-width: 700px) {
+  .mn-inc-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'top        top'
+      'verdict    verdict'
+      'stats      stats'
+      'matched    timeline'
+      'resolution timeline'
+      'also       also';
+  }
+}
+
+.mn-inc-card {
+  min-width: 0;
+  padding: 16px 18px 18px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.mn-inc-card h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mn-inc-card h3 .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* ---------- why the rule matched: the condition, then what this incident had ---------- */
+
+.mn-inc-match {
+  margin: 0;
+  padding: 2px 14px;
+  border-radius: 10px;
+  background: var(--l1);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mn-inc-match > div {
+  padding: 9px 0;
+}
+
+.mn-inc-match > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.mn-inc-match dt {
+  color: var(--fg-2);
+  overflow-wrap: anywhere; /* long CI patterns wrap instead of being cut off */
+}
+
+.mn-inc-match dd {
+  margin: 1px 0 0;
+  color: var(--code-val);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+:root[data-mn-theme='light'] .mn-inc-match {
+  background: var(--l2);
+}
+
+/* ---------- timeline and resolution ---------- */
+
+/* The hollow dots are filled with the surface behind them, which here is the card. */
+.mn-inc-card .mn-timeline li::before {
+  background: var(--l3);
+}
+
+.mn-inc-card .mn-timeline li:first-child::before {
+  background: var(--fg);
+}
+
+.mn-inc-card .mn-timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.mn-inc-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.mn-inc-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+
+.mn-inc-facts > div:last-child {
+  grid-column: 1 / -1; /* the long one gets the full width */
+}
+
+.mn-inc-facts dt {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-inc-facts dd {
+  margin: 2px 0 0;
+}
+
+/* ---------- also on this CI: the incident table, without its own box ---------- */
+
+.mn-inc-card .mn-incidents {
+  margin: -4px -12px -6px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}

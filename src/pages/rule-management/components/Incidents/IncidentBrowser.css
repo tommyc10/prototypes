@@ -11,23 +11,50 @@
   flex: 1;
 }
 
-.mn-sec .mn-inc-scroll {
-  padding-bottom: 0;
-}
-
 .mn-inc-filters {
   flex-wrap: wrap;
 }
 
+/* In the panel the list fills the space that's left and scrolls inside it. */
 .mn-inc-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: 40px;
 }
 
-.mn-inc-more {
+/* Inline in the detail pane it is exactly one page tall: rows of 38px with 1px between
+ * them, inside the table's 4px padding. */
+.mn-sec .mn-inc-scroll {
+  flex: none;
+  height: calc(var(--rows) * 39px + 7px);
+}
+
+/* The table keeps the full height when the page isn't full. */
+.mn-inc-scroll > .mn-incidents {
+  min-height: 100%;
+}
+
+.mn-inc-pager {
   display: flex;
-  justify-content: center;
-  padding-top: 12px;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-inc-pager > span:first-child {
+  flex: 1;
+}
+
+.mn-inc-pager > span + span {
+  margin-right: 6px;
+}
+
+.mn-inc-pager .mn-icon-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.mn-inc-panel .mn-inc-pager {
+  padding-bottom: 16px;
 }

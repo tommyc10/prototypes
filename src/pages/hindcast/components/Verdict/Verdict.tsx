@@ -49,7 +49,8 @@ export function Verdict({ report }: { report: HindcastReport }) {
 
       <div className="hc-hero" data-tour="hc-headline">
         <div>
-          <div className="hc-hero-figure">
+          {/* Green when most would have been caught, amber when little would, plain in between. */}
+          <div className="hc-hero-figure" data-level={rate >= 0.6 ? 'good' : rate < 0.3 ? 'low' : undefined}>
             {Math.round(rate * 100)}
             <span>%</span>
           </div>

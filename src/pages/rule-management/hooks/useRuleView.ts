@@ -2,16 +2,26 @@
  * The visible rules and the tab counts are worked out from it on every change. */
 
 import { useMemo, useState } from 'react';
-import { matches, sortRules, type ViewState } from '../model/browse';
+import { groupKey, matches, sortRules, type ViewState } from '../model/browse';
 import type { Rule } from '../model/types';
 
 export function useRuleView(rules: Rule[]) {
-  const [view, setView] = useState<ViewState>({ status: 'all', query: '', groupId: 'all', sort: 'updated', dir: 'desc' });
+  const [view, setView] = useState<ViewState>({
+    status: 'all',
+    query: '',
+    groupBy: 'assignment',
+    groupId: 'all',
+    sort: 'updated',
+    dir: 'desc',
+  });
 
   // Group and search first, so the tab counts describe what the search found.
   const scoped = useMemo(
-    () => rules.filter((r) => (view.groupId === 'all' || r.groupId === view.groupId) && matches(r, view.query)),
-    [rules, view.groupId, view.query],
+    () =>
+      rules.filter(
+        (r) => (view.groupId === 'all' || groupKey(r, view.groupBy) === view.groupId) && matches(r, view.query),
+      ),
+    [rules, view.groupBy, view.groupId, view.query],
   );
 
   const counts = useMemo(() => {

@@ -1,10 +1,13 @@
 /* The list column: every service, the noisiest first, with "All services" on top.
  * It is the page's service filter and its per-service breakdown at once: each row's bar is
  * as long as that service's share of the manual cancellations, and split by what would have
- * caught them. Pick a row and the report on the right is about that service. */
+ * caught them. Pick a row and the report on the right is about that service.
+ *
+ * Most services in a real estate raise no cancellations at all. They are folded into one row
+ * at the end, so the list stays about the noise; searching still finds them. */
 
-import { useEffect, useRef, type RefObject } from 'react';
-import { Search, Sigma } from 'lucide-react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import { ChevronDown, ChevronRight, Search, Sigma } from 'lucide-react';
 import { num, pct } from '../../../../lib/format';
 import { caught, share } from '../../model/labels';
 import type { HindcastReport, ServiceRow } from '../../model/types';
@@ -33,7 +36,10 @@ export function ServiceList({
   searchRef: RefObject<HTMLInputElement | null>;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
+  const [showQuiet, setShowQuiet] = useState(false);
   const { services } = report;
+  const noisy = shown.filter((s) => s.cancelled > 0);
+  const quiet = shown.filter((s) => s.cancelled === 0);
   const max = Math.max(1, ...services.map((s) => s.cancelled));
 
   // The whole Empire, as one row: every service added up.
@@ -87,7 +93,7 @@ export function ServiceList({
             </div>
           </div>
         )}
-        {shown.map((service) => (
+        {noisy.map((service) => (
           <div
             key={service.id}
             role="option"
@@ -112,6 +118,31 @@ export function ServiceList({
             </div>
           </div>
         ))}
+        {quiet.length > 0 && !query && (
+          <button className="hc-quiet-toggle" aria-expanded={showQuiet} onClick={() => setShowQuiet(!showQuiet)}>
+            {showQuiet ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+            {showQuiet ? 'Hide' : 'Show'} {quiet.length} services with no cancellations
+          </button>
+        )}
+        {/* Nothing was cancelled, so there is no report to open: these rows are for reference. */}
+        {(showQuiet || query) &&
+          quiet.map((service) => (
+            <div key={service.id} className="hc-row hc-row-quiet">
+              <span className="hc-rank mn-mono" aria-hidden>
+                {services.indexOf(service) + 1}
+              </span>
+              <div className="hc-row-main">
+                <div className="hc-row-top">
+                  <span className="hc-row-name mn-truncate">{service.name}</span>
+                  <span className="hc-row-num">0</span>
+                </div>
+                <div className="hc-row-meta">
+                  <span className="mn-truncate">{service.unit}</span>
+                  <span>No cancellations</span>
+                </div>
+              </div>
+            </div>
+          ))}
         {shown.length === 0 && (
           <div className="mn-empty">
             <div>No services match</div>

@@ -85,6 +85,57 @@
   }
 }
 
+/* The fold for the long tail: every service nobody cancelled a ticket for. */
+.hc-quiet-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  margin-top: 6px;
+  padding: 0 12px 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 12.5px;
+  text-align: left;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.hc-quiet-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hc-quiet-toggle:hover {
+    background: var(--l3);
+    color: var(--fg);
+  }
+}
+
+/* A quiet service: no bar, nothing to open, so it sits back and doesn't answer the pointer. */
+.hc-row-quiet {
+  padding-bottom: 8px;
+}
+
+.hc-row-quiet .hc-row-name,
+.hc-row-quiet .hc-row-num {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.hc-row-quiet .hc-row-meta {
+  margin-bottom: 0;
+}
+
+.hc-row.hc-row-quiet:hover {
+  background: transparent;
+}
+
 .hc-rank {
   flex: none;
   display: grid;
