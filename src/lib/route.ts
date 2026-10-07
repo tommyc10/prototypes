@@ -7,13 +7,15 @@
  *   #/alerts                 the alert stream
  *   #/changes                the change windows
  *   #/changes/CHG-2398       …opened on one window
+ *   #/incidents              every incident's journey
+ *   #/incidents/INC-41201    …opened on one incident
  *
- * Four pages don't need a router library. In the real app, swap this for the router's
+ * Five pages don't need a router library. In the real app, swap this for the router's
  * own hooks; the pages only ever see `parts`. */
 
 import { useEffect, useState } from 'react';
 
-export type PageId = 'rules' | 'hindcast' | 'alerts' | 'changes';
+export type PageId = 'rules' | 'hindcast' | 'alerts' | 'changes' | 'incidents';
 
 export interface Route {
   page: PageId;
@@ -23,7 +25,7 @@ export interface Route {
 
 function parse(hash: string): Route {
   const [page, ...parts] = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  return { page: page === 'hindcast' || page === 'alerts' || page === 'changes' ? page : 'rules', parts };
+  return { page: page === 'hindcast' || page === 'alerts' || page === 'changes' || page === 'incidents' ? page : 'rules', parts };
 }
 
 /** Go to another page. `replace` rewrites the address without adding a step to Back

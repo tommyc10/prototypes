@@ -3,7 +3,7 @@
  * shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun } from 'lucide-react';
+import { CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun, Siren } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import { FEED_TABS } from '../../model/labels';
 import type { FeedFilter } from '../../model/types';
@@ -87,6 +87,10 @@ export function AlertsPalette({
           <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
             <CalendarClock size={15} />
             Change windows
+          </Command.Item>
+          <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
+            <Siren size={15} />
+            Incidents
           </Command.Item>
         </Command.Group>
 

@@ -1,0 +1,326 @@
+/* One section per checkpoint: a numbered heading, what it asks, and the evidence. */
+
+.ic-stages {
+  display: flex;
+  flex-direction: column;
+}
+
+.ic-stages section {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 60px; /* clear of the sticky bar when jumped to */
+}
+
+/* The number sits in the margin, so the heading and the text under it share one left edge.
+ * Then the heading, what the checkpoint asks, and the time, on one line. */
+.ic-stages section > header {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 34px auto minmax(0, 1fr) auto;
+  align-items: baseline;
+}
+
+.ic-stage-number {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+/* Where the journey ended: the number is filled in. */
+.ic-stages section:is([data-state='stopped'], [data-state='current']) .ic-stage-number {
+  background: var(--primary);
+  box-shadow: none;
+  color: var(--primary-fg);
+}
+
+.ic-stages header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.ic-stage-asks {
+  margin-left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+/* Always the last column, whether or not the question beside the heading is showing. */
+.ic-stages header time {
+  grid-column: 4;
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+
+.ic-stage-body {
+  grid-column: 2;
+  margin-top: 8px;
+}
+
+.ic-stage-body p {
+  max-width: 72ch;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.ic-stage-body strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* A name that is also the way there: a rule, a change window, another incident. */
+.ic-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--line-3);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.ic-link svg {
+  display: inline;
+  margin-left: 2px;
+  vertical-align: -1px;
+  color: var(--fg-3);
+}
+
+.ic-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ic-link:hover {
+    text-decoration-color: var(--fg);
+  }
+}
+
+/* ---------- rules: the condition, then what this incident had ---------- */
+
+.ic-match {
+  max-width: 620px;
+  margin: 14px 0 0;
+  padding: 2px 14px;
+  border-radius: 10px;
+  background: var(--l1);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ic-match > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.ic-match > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.ic-match dt {
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.ic-match dd {
+  margin: 0;
+  font-weight: 500;
+  color: var(--code-val);
+  overflow-wrap: anywhere;
+}
+
+:root[data-mn-theme='light'] .ic-match {
+  background: var(--l3);
+}
+
+.ic-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 760px;
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--orange-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.2);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--orange-strong);
+}
+
+.ic-callout svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--orange);
+}
+
+.ic-callout strong {
+  color: inherit;
+}
+
+.ic-callout .mn-link {
+  flex: none;
+  margin-left: auto;
+  font-size: 13px;
+  color: inherit;
+}
+
+.ic-callout[data-tone='bad'] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.2);
+  color: var(--red-text);
+}
+
+.ic-callout[data-tone='bad'] svg {
+  color: var(--red);
+}
+
+/* ---------- enrichment: the ticket, before and after ---------- */
+
+.ic-diff {
+  max-width: 860px;
+  margin-top: 16px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+  font-size: 13px;
+}
+
+.ic-diff > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 0.7fr) minmax(0, 1.6fr);
+  gap: 16px;
+  padding: 10px 16px;
+}
+
+.ic-diff > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.ic-diff-head {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+/* The field's name, then what it said: struck through, because it's been replaced. */
+.ic-diff [role='cell']:nth-child(1) {
+  color: var(--fg-2);
+}
+
+.ic-diff [role='cell']:nth-child(2) {
+  color: var(--fg-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--line-3);
+}
+
+/* What the team added: full ink, with a mark in the margin to say it's new. */
+.ic-diff [role='cell']:nth-child(3) {
+  position: relative;
+  padding-left: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.ic-diff [role='cell']:nth-child(3)::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--green);
+}
+
+/* Not got to yet: nothing is struck through and nothing is added. */
+.ic-diff [data-waiting] [role='cell']:nth-child(2) {
+  text-decoration: none;
+}
+
+.ic-diff [data-waiting] [role='cell']:nth-child(3) {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.ic-diff [data-waiting] [role='cell']:nth-child(3)::before {
+  background: var(--line-3);
+}
+
+/* ---------- delivered: what the owner did with it ---------- */
+
+.ic-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ic-steps li {
+  display: flex;
+  gap: 14px;
+}
+
+.ic-steps time {
+  flex: none;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: var(--fg-3);
+}
+
+.ic-steps strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ic-unreached {
+  margin: 0;
+  padding: 18px 0 0 34px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+@container incident (max-width: 760px) {
+  .ic-stage-asks {
+    display: none;
+  }
+  .ic-diff > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .ic-diff-head {
+    display: none !important;
+  }
+}

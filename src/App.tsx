@@ -7,9 +7,10 @@ import { useRoute, type PageId } from './lib/route';
 import { AlertsPage } from './pages/alerts/AlertsPage';
 import { ChangeWindowsPage } from './pages/change-windows/ChangeWindowsPage';
 import { HindcastPage } from './pages/hindcast/HindcastPage';
+import { IncidentsPage } from './pages/incidents/IncidentsPage';
 import { RuleManagementPage } from './pages/rule-management/RuleManagementPage';
 
-const TITLE: Record<PageId, string> = { rules: 'Rules', hindcast: 'Hindcast', alerts: 'Alerts', changes: 'Change windows' };
+const TITLE: Record<PageId, string> = { rules: 'Rules', hindcast: 'Hindcast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents' };
 
 export function App() {
   const route = useRoute();
@@ -18,7 +19,10 @@ export function App() {
   }, [route.page]);
   return (
     <>
-      {route.page === 'alerts' ? (
+      {route.page === 'incidents' ? (
+        // The key gives a link to another incident a fresh page, opened on that incident.
+        <IncidentsPage key={route.parts[0] ?? ''} initialId={route.parts[0]} />
+      ) : route.page === 'alerts' ? (
         <AlertsPage />
       ) : route.page === 'changes' ? (
         <ChangeWindowsPage initialId={route.parts[0]} />

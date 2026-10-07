@@ -3,7 +3,7 @@
  * menu (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { CalendarClock, Bell, CircleHelp, Filter, Moon, Search, Sun } from 'lucide-react';
+import { CalendarClock, Bell, CircleHelp, Filter, Moon, Search, Sun, Siren } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import { num } from '../../../../lib/format';
 import { CHAPTERS, LOOKBACKS, type ChapterId } from '../../model/labels';
@@ -97,6 +97,10 @@ export function HindcastPalette({
           <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
             <CalendarClock size={15} />
             Change windows
+          </Command.Item>
+          <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
+            <Siren size={15} />
+            Incidents
           </Command.Item>
         </Command.Group>
 

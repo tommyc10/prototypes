@@ -45,7 +45,9 @@ export function Sidebar({
       </button>
 
       <nav className="mn-nav">
-        <a className="mn-nav-item"><Siren size={16} /> Incidents</a>
+        <a className="mn-nav-item" href="#/incidents" data-active={page === 'incidents' || undefined}>
+          <Siren size={16} /> Incidents
+        </a>
         <a className="mn-nav-item" href="#/alerts" data-active={page === 'alerts' || undefined}>
           <Bell size={16} /> Alerts
         </a>

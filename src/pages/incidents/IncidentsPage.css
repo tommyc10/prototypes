@@ -1,0 +1,142 @@
+/* The incidents page: the pane, the bar, and the incident's heading. Each component's own
+ * styles sit beside it.
+ *
+ * The page lays itself out from its own width, not the window's, because the sidebar and
+ * list beside it can be tucked away: `incident` is a container, and the pieces ask it how
+ * wide it is (@container incident …). */
+
+.ic {
+  --mn-list-w: 380px;
+  /* An incident that was stopped on the way: the dim ink the other pages use for "hidden". */
+  --ic-stopped: #646464;
+}
+
+:root[data-mn-theme='light'] .ic {
+  --ic-stopped: #949494;
+}
+
+.ic-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container: incident / inline-size;
+}
+
+/* The bar that stays at the top: the pane toggles, and which incident this is. */
+.ic-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  /* The same centred column as the page below it. */
+  padding: 0 max(40px, calc((100% - 1240px) / 2 + 40px));
+  background: var(--l2);
+}
+
+.ic-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.ic-badge[data-tone='through'] {
+  background: var(--primary);
+  box-shadow: none;
+  color: var(--primary-fg);
+}
+
+.ic-badge[data-tone='wait'] {
+  box-shadow: inset 0 0 0 1px rgba(224, 169, 62, 0.4);
+  color: var(--amber);
+}
+
+.ic-badge[data-tone='bad'] {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.35);
+  color: var(--red);
+}
+
+.ic-page {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 10px 40px 96px;
+}
+
+.ic-head h2 {
+  max-width: 22em;
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.ic-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ic-meta svg {
+  color: var(--fg-3);
+}
+
+.ic-sep {
+  width: 1px;
+  height: 12px;
+  margin: 0 6px;
+  background: var(--line-2);
+}
+
+/* The verdict: the whole journey in one sentence, set large enough to be the first thing read. */
+.ic-verdict {
+  max-width: 38em;
+  margin: 20px 0 0;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+  color: var(--fg-2);
+}
+
+.ic-verdict[data-tone='through'] {
+  color: var(--fg);
+}
+
+.ic-verdict[data-tone='bad'] {
+  color: var(--red);
+}
+
+@container incident (max-width: 760px) {
+  .ic-top {
+    padding: 0 24px;
+  }
+  .ic-page {
+    gap: 28px;
+    padding: 6px 24px 80px;
+  }
+  .ic-head h2 {
+    font-size: 23px;
+  }
+  .ic-verdict {
+    font-size: 17px;
+  }
+}

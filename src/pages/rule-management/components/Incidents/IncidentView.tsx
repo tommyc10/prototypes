@@ -79,6 +79,9 @@ export function IncidentView({
             Matched by {rule.id} · {rule.name}
           </div>
         </div>
+        <a className="mn-link" href={`#/incidents/${incident.id}`}>
+          Its whole journey
+        </a>
         <div className="mn-inc-actions">
           <ActionButtons rule={rule} onAction={onAction} />
         </div>

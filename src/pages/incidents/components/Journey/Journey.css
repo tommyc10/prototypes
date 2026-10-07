@@ -1,0 +1,214 @@
+/* The journey: six checkpoints on a line. */
+
+.ic-journey {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 0;
+  padding: 26px 0 0; /* room above the line for the times between checkpoints */
+  list-style: none;
+}
+
+.ic-journey li {
+  position: relative;
+  min-width: 0;
+}
+
+/* ---------- the line ----------
+ * Each checkpoint draws the stretch that leads to it: from the middle of the one before
+ * to its own middle. Lit if the incident crossed it, dashed and faint if it didn't. */
+.ic-leg {
+  position: absolute;
+  top: 9px;
+  right: 50%;
+  width: 100%;
+  height: 0;
+  border-top: 1.5px dashed var(--line-3);
+}
+
+.ic-leg[data-lit] {
+  border-top: 1.5px solid var(--fg-2);
+}
+
+/* How long the step took, sitting on the line. */
+.ic-leg span {
+  position: absolute;
+  bottom: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--fg-3);
+}
+
+/* ---------- a checkpoint ---------- */
+
+.ic-station {
+  position: relative; /* above the line */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  text-align: center;
+  transition: background-color 120ms ease;
+}
+
+.ic-station:disabled {
+  cursor: default;
+}
+
+.ic-station:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The mark on the line. A ring of the pane's colour keeps the line from touching it. */
+.ic-station i {
+  width: 19px;
+  height: 19px;
+  border-radius: 999px;
+  border: 5px solid var(--l2);
+  background: var(--fg-2);
+}
+
+.ic-station-name {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ic-station-verdict {
+  max-width: 22ch;
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  text-wrap: balance;
+  color: var(--fg-2);
+}
+
+.ic-station time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+/* Where the journey ended: the mark is larger and takes the colour of how it ended. */
+.ic-journey li:is([data-state='stopped'], [data-state='current']) .ic-station i {
+  width: 27px;
+  height: 27px;
+  margin: -4px 0;
+  box-shadow: 0 0 0 1.5px var(--ic-end);
+  background: var(--ic-end);
+}
+
+.ic-journey li:is([data-state='stopped'], [data-state='current']) .ic-station-verdict {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* Still here: the mark is hollow, because it isn't finished. */
+.ic-journey li[data-state='current'] .ic-station i {
+  background: var(--l2);
+  border-width: 4px;
+  box-shadow:
+    0 0 0 1.5px var(--ic-end),
+    inset 0 0 0 4px var(--ic-end);
+}
+
+.ic-journey[data-tone='quiet'] {
+  --ic-end: var(--fg-3);
+}
+.ic-journey[data-tone='through'] {
+  --ic-end: var(--fg);
+}
+.ic-journey[data-tone='wait'] {
+  --ic-end: var(--amber);
+}
+.ic-journey[data-tone='bad'] {
+  --ic-end: var(--red);
+}
+
+.ic-journey[data-tone='bad'] li[data-state='stopped'] .ic-station-verdict {
+  color: var(--red);
+}
+
+/* Never reached: a hollow mark and faint words. */
+.ic-journey li[data-state='unreached'] .ic-station i {
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1.5px var(--line-3);
+}
+
+.ic-journey li[data-state='unreached'] :is(.ic-station-name, .ic-station-verdict) {
+  color: var(--fg-3);
+  font-weight: 400;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ic-station:hover:not(:disabled) {
+    background: var(--l3);
+  }
+  .ic-station:hover:not(:disabled) i {
+    border-color: var(--l3);
+  }
+}
+
+/* ---------- a narrow pane: the line turns on its side ---------- */
+
+@container incident (max-width: 760px) {
+  .ic-journey {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 0;
+  }
+  .ic-station {
+    display: grid;
+    grid-template-columns: 27px minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 12px;
+    padding: 10px 8px;
+    text-align: left;
+  }
+  .ic-station i {
+    grid-row: span 2;
+    justify-self: center;
+  }
+  .ic-station-name {
+    margin-top: 0;
+  }
+  .ic-station-verdict {
+    grid-column: 2;
+    max-width: none;
+  }
+  .ic-station time {
+    grid-column: 3;
+    grid-row: 1;
+    margin-top: 2px;
+  }
+  /* The line runs down the left, behind the marks. */
+  .ic-leg {
+    top: auto;
+    right: auto;
+    bottom: calc(100% - 14px);
+    left: 21px;
+    width: 0;
+    height: calc(100% - 4px);
+    border-top: 0;
+    border-left: 1.5px dashed var(--line-3);
+  }
+  .ic-leg[data-lit] {
+    border-top: 0;
+    border-left: 1.5px solid var(--fg-2);
+  }
+  .ic-leg span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ic-station {
+    transition: none;
+  }
+}

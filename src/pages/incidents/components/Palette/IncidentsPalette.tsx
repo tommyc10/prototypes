@@ -1,20 +1,19 @@
-/* The ⌘K command menu on this page: jump to a window, change what the schedule shows, or
- * go to another page, without the mouse. cmdk handles the search and arrow keys; the look
- * is shared with the other pages' menus (styles/palette.css). */
+/* The ⌘K command menu on this page: find an incident by its number or title, keep one kind
+ * of ending, or go to another page, without the mouse. cmdk handles the search and arrow
+ * keys; the look is shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CircleHelp, Filter, History, Moon, Search, Sun, Siren } from 'lucide-react';
+import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
-import type { ChangeWindow, Range } from '../../model/types';
-import { RANGES, timing } from '../../model/windows';
+import { END_SHORT, END_TABS } from '../../model/lifecycle';
+import type { EndFilter, Lifecycle } from '../../model/types';
 
-export function WindowsPalette({
+export function IncidentsPalette({
   open,
   onOpenChange,
-  windows,
-  now,
+  lives,
   onSelect,
-  onRange,
+  onFilter,
   onNavigate,
   theme,
   onToggleTheme,
@@ -22,11 +21,10 @@ export function WindowsPalette({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Every window, in list order. */
-  windows: ChangeWindow[];
-  now: number;
-  onSelect: (key: string) => void;
-  onRange: (range: Range) => void;
+  /** Every incident, newest first. */
+  lives: Lifecycle[];
+  onSelect: (id: string) => void;
+  onFilter: (filter: EndFilter) => void;
   /** Go to another page, e.g. '#/rules'. */
   onNavigate: (to: string) => void;
   theme: Theme;
@@ -50,24 +48,29 @@ export function WindowsPalette({
     >
       <div className="mn-palette-search">
         <Search size={16} />
-        <Command.Input placeholder="Find a change window or run a command…" />
+        <Command.Input placeholder="Find an incident or run a command…" />
       </div>
       <Command.List className="mn-palette-list">
         <Command.Empty className="mn-palette-empty">No results</Command.Empty>
 
-        <Command.Group heading="Change window">
-          {windows.map((w) => (
-            <Command.Item key={w.key} value={`window ${w.id} ${w.name} ${w.key}`} onSelect={run(() => onSelect(w.key))}>
-              <span className="mn-truncate">{w.name}</span>
-              <span className="mn-palette-meta">{timing(w, now)}</span>
+        <Command.Group heading="Incident">
+          {lives.map((life) => (
+            <Command.Item
+              key={life.incident.id}
+              value={`incident ${life.incident.id} ${life.incident.title} ${life.incident.ci}`}
+              onSelect={run(() => onSelect(life.incident.id))}
+            >
+              <span className="mn-mono mn-subtle">{life.incident.id}</span>
+              <span className="mn-truncate">{life.incident.title}</span>
+              <span className="mn-palette-meta">{END_SHORT[life.end]}</span>
             </Command.Item>
           ))}
         </Command.Group>
 
-        <Command.Group heading="Schedule">
-          {RANGES.map((range) => (
-            <Command.Item key={range.hours} value={`schedule show range ${range.label}`} onSelect={run(() => onRange(range.hours))}>
-              Show {range.hours === 24 ? '24 hours' : `${range.hours / 24} days`}
+        <Command.Group heading="Show">
+          {END_TABS.map((tab) => (
+            <Command.Item key={tab.key} value={`show incidents ${tab.label}`} onSelect={run(() => onFilter(tab.key))}>
+              {tab.key === 'all' ? 'All incidents' : `${tab.label} only`}
             </Command.Item>
           ))}
         </Command.Group>
@@ -85,9 +88,9 @@ export function WindowsPalette({
             <History size={15} />
             Hindcast
           </Command.Item>
-          <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
-            <Siren size={15} />
-            Incidents
+          <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
+            <CalendarClock size={15} />
+            Change windows
           </Command.Item>
         </Command.Group>
 
