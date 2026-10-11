@@ -3,3 +3,7 @@ dist
 .DS_Store
 *.log
 tsconfig.tsbuildinfo
+
+# Agent skills installed locally; skills-lock.json records which ones
+.agents/
+.claude/

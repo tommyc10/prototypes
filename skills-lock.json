@@ -13,6 +13,12 @@
       "skillPath": "skills/animate-expo/SKILL.md",
       "computedHash": "5de09593d564091f9db60aabede7bed760251e118548272050a247c653c417d2"
     },
+    "animation-performance": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/animation-performance/SKILL.md",
+      "computedHash": "b68ba704106e27b1f83df0cb817e09ec947abb76825d86eabdee2954b6c1bb84"
+    },
     "animation-vocabulary": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
@@ -31,17 +37,77 @@
       "skillPath": "skills/ask-sonner/SKILL.md",
       "computedHash": "8bd257b845985f4b35b603b510a126604176521094af79c4b7347ffeb8a8f7ab"
     },
+    "better-accessibility": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-accessibility/SKILL.md",
+      "computedHash": "b7fffd77b6ac087d72e081c1b0afa312edc7b6c82bb3c863dd454937d4900cb3"
+    },
+    "better-colors": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-colors/SKILL.md",
+      "computedHash": "25be5683f90265ae9caad9e0f22c14607b47a0e8cd2481bdb4a498071fb5bd56"
+    },
+    "better-interface": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-interface/SKILL.md",
+      "computedHash": "9c73b05d59b188147335eb71308ec7f37237272202fe2298f54c322e6c318b3f"
+    },
+    "better-layout": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-layout/SKILL.md",
+      "computedHash": "96568d1af89fd3b0061622b9938ce2855b74c1c11134b63f2aec45961372e7ab"
+    },
+    "better-typography": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-typography/SKILL.md",
+      "computedHash": "f959c7e37cc5275dc1737090393998c546355919a14977bbf7d5f70cb6e3106b"
+    },
+    "better-ui": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-ui/SKILL.md",
+      "computedHash": "6f69968c0d1ed034753d64aa22f2bf4332f1471164f110db720d05faf76c3551"
+    },
+    "better-writing": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-writing/SKILL.md",
+      "computedHash": "fe296e430b1426c2b3dd8ef0e7675ebc1429ec4db5caa56dc355b24e2a1997fb"
+    },
+    "break": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/break/SKILL.md",
+      "computedHash": "044d70413a0961625cf05de247da12d9177a4c4d109cf7e5d0cd9bd3712ffc64"
+    },
     "break-ui": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/break-ui/SKILL.md",
       "computedHash": "60ada67662925f4df5e3c6ff41cac3ab241b66f8898100a5ffcd7ba7196cb868"
     },
+    "build-design": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/build-design/SKILL.md",
+      "computedHash": "d38359ac27edf6add264ed6cee95643001477d653e9ae87723f3d00605f3e55a"
+    },
     "emil-design-eng": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/emil-design-eng/SKILL.md",
       "computedHash": "51f2537e04d15911b41d78e2de24c36a0e26d41beae15e82a954fe5496a5eda9"
+    },
+    "explain-interface": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/explain-interface/SKILL.md",
+      "computedHash": "c15f9e3e5844fe4e70e2ea3251665d84fbdeff899bdc9a839cb88f9bdb5dfc65"
     },
     "find-animation-opportunities": {
       "source": "emilkowalski/skills",
@@ -54,6 +120,12 @@
       "sourceType": "github",
       "skillPath": "skills/improve-animations/SKILL.md",
       "computedHash": "524ea241e41d58bbdd8e288700fe24f5725e2a2f3ae7186ad7cebf9055058356"
+    },
+    "interface-review": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/interface-review/SKILL.md",
+      "computedHash": "8feb4aa0e2a35b629cdff8121ccbed7ff9bfca83bd245a691d16ca9ccd3e52b5"
     },
     "libraries-dev": {
       "source": "jakubantalik/libraries.dev",
@@ -91,11 +163,29 @@
       "skillPath": "skills/shadcn/SKILL.md",
       "computedHash": "da388f632cd83783c02967446e21941c9ee8291ccb43ba74c23f7d4e9b7c298c"
     },
+    "state-machine": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/state-machine/SKILL.md",
+      "computedHash": "9e714ed2746c3973188853f0fd44d214787b0f6fa0baa9db5f594e13474693ad"
+    },
     "transitions-dev": {
-      "source": "jakubantalik/transitions-dev",
+      "source": "Jakubantalik/transitions.dev",
       "sourceType": "github",
       "skillPath": "skills/transitions-dev/SKILL.md",
-      "computedHash": "68aa43bb832ef2e85128e506cf78ebe6a19a38b3e01046d163202bbdd61b5ef0"
+      "computedHash": "c7f9b40c6676ecc6d890db4ffecafa1ddebdb4ebaed3098521928e5115bd871f"
+    },
+    "transitions-polish": {
+      "source": "Jakubantalik/transitions.dev",
+      "sourceType": "github",
+      "skillPath": "skills/transitions-polish/SKILL.md",
+      "computedHash": "3f0630020cdfd0ea3d582ac45201c1ad4bced2ef7d0a0145d4cc81ad25f57ec3"
+    },
+    "variant": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "skillPath": "skills/variant/SKILL.md",
+      "computedHash": "f075d84aab2cb07b765c933eec19d3496f302c97c635adeede4fbf04ee2c1b3d"
     },
     "write-swift": {
       "source": "emilkowalski/skills",
