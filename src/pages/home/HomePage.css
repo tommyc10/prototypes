@@ -1,0 +1,282 @@
+/* The home page: one column of words beside the station. The station's own styles sit
+ * beside it (components/Station).
+ *
+ * The page lays itself out from its own width, not the window's, because the sidebar beside
+ * it can be tucked away: `home` is a container, and the layout inside asks it how wide it is. */
+
+/* No list column: the sidebar, then the page. */
+.mn.hm {
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.mn.hm[data-hide-side] {
+  grid-template-columns: 0px minmax(0, 1fr);
+}
+
+.hm-pane {
+  overflow: hidden auto; /* only the narrow layout, where the station goes under the words, is taller than the pane */
+  container: home / inline-size;
+}
+
+/* Over the page's corner, so the page itself stays centred. */
+.hm-side-toggle {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 1;
+}
+
+.hm-side-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hm-page {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+  min-width: 0;
+}
+
+.hm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-self: center;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 0 0 auto;
+  padding: 48px 0 48px 56px;
+}
+
+/* Each block arrives a moment after the one above it. */
+.hm-col > * {
+  animation: hm-arrive 220ms var(--ease-out) backwards;
+}
+
+.hm-col > :nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.hm-col > :nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.hm-col > :nth-child(n + 4) {
+  animation-delay: 150ms;
+}
+
+@keyframes hm-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.hm-head h1 {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.hm-date {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+/* The figure, and the sentence that says what it is. */
+.hm-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.hm-num {
+  color: var(--fg);
+  font-size: 88px;
+  font-weight: 600;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  border-radius: 9px;
+}
+
+.hm-num:focus-visible,
+.hm-need-row:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+}
+
+.hm-lead {
+  max-width: 44ch;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.62;
+  letter-spacing: -0.005em;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.hm-lead b {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one thing. */
+.hm-need {
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.hm-need-count {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hm-need-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 -12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.hm-need-row:active {
+  transform: scale(0.98);
+}
+
+.hm-need-row > i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.hm-need-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.hm-need-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.hm-need-kind {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--fg-3);
+}
+
+.hm-need-why {
+  color: var(--fg-2);
+}
+
+.hm-keys {
+  display: flex;
+  gap: 16px;
+  margin-top: -16px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.hm-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---------- the station ---------- */
+
+.hm-station {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  animation: hm-fade 220ms var(--ease-out) 100ms backwards;
+}
+
+@keyframes hm-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Which group the station is facing, said under it. */
+.hm-caption {
+  position: absolute;
+  right: 0;
+  bottom: 48px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hm-caption b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.hm-caption span {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hm-need-row:hover {
+    background: var(--l3);
+  }
+}
+
+/* Too narrow for both side by side: the words, then the station under them. */
+@container home (max-width: 860px) {
+  .hm-page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+  }
+  .hm-col {
+    margin: 0 auto;
+    padding: 56px 24px 0;
+  }
+  .hm-station {
+    height: 440px;
+    margin-bottom: 24px;
+  }
+  .hm-caption {
+    bottom: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-col > *,
+  .hm-station {
+    animation: none;
+  }
+  .hm-need-row {
+    transition: none;
+  }
+}

@@ -1,5 +1,6 @@
 /* Which page is showing. The address after the # says so:
  *
+ *   #/                       home (also what any address it doesn't know opens)
  *   #/rules                  the rule list
  *   #/rules/RUL-0428         …opened on one rule
  *   #/hindcast               the hindcast, all services, default lookback
@@ -10,12 +11,14 @@
  *   #/incidents              every incident's journey
  *   #/incidents/INC-41201    …opened on one incident
  *
- * Five pages don't need a router library. In the real app, swap this for the router's
+ * Six pages don't need a router library. In the real app, swap this for the router's
  * own hooks; the pages only ever see `parts`. */
 
 import { useEffect, useState } from 'react';
 
-export type PageId = 'rules' | 'hindcast' | 'alerts' | 'changes' | 'incidents';
+export type PageId = 'home' | 'rules' | 'hindcast' | 'alerts' | 'changes' | 'incidents';
+
+const PAGES: PageId[] = ['rules', 'hindcast', 'alerts', 'changes', 'incidents'];
 
 export interface Route {
   page: PageId;
@@ -25,7 +28,7 @@ export interface Route {
 
 function parse(hash: string): Route {
   const [page, ...parts] = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  return { page: page === 'hindcast' || page === 'alerts' || page === 'changes' || page === 'incidents' ? page : 'rules', parts };
+  return { page: PAGES.find((known) => known === page) ?? 'home', parts };
 }
 
 /** Go to another page. `replace` rewrites the address without adding a step to Back

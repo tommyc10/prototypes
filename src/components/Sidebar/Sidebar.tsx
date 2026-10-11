@@ -3,7 +3,7 @@
  * pinned groups there) comes in as children. */
 
 import type { ReactNode } from 'react';
-import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
+import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
 import type { PageId } from '../../lib/route';
 import type { Theme } from '../../hooks/useTheme';
 import './Sidebar.css';
@@ -21,14 +21,15 @@ export function Sidebar({
   /** The page that's showing, to mark it in the navigation. */
   page: PageId;
   onOpenPalette: () => void;
-  onStartTour: () => void;
+  /** A page with no tour leaves this out, and the button with it. */
+  onStartTour?: () => void;
   theme: Theme;
   onToggleTheme: () => void;
   children?: ReactNode;
 }) {
   return (
     <aside className="mn-side" inert={hidden}>
-      <div className="mn-brand">
+      <a className="mn-brand" href="#/" aria-label="Imperial Ops, home">
         <div className="mn-brand-mark" aria-hidden>
           <svg viewBox="0 0 24 24" width="14" height="14">
             <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -36,7 +37,7 @@ export function Sidebar({
           </svg>
         </div>
         Imperial Ops
-      </div>
+      </a>
 
       <button className="mn-jump" onClick={onOpenPalette} data-tour="jump">
         <Search size={14} />
@@ -45,6 +46,9 @@ export function Sidebar({
       </button>
 
       <nav className="mn-nav">
+        <a className="mn-nav-item" href="#/" data-active={page === 'home' || undefined}>
+          <House size={16} /> Home
+        </a>
         <a className="mn-nav-item" href="#/incidents" data-active={page === 'incidents' || undefined}>
           <Siren size={16} /> Incidents
         </a>
@@ -72,9 +76,11 @@ export function Sidebar({
           <div>Admiral Piett</div>
           <div className="mn-subtle">Rule governor</div>
         </div>
-        <button className="mn-icon-btn" onClick={onStartTour} aria-label="Take the tour" title="Take the tour  ?">
-          <CircleHelp size={15} />
-        </button>
+        {onStartTour && (
+          <button className="mn-icon-btn" onClick={onStartTour} aria-label="Take the tour" title="Take the tour  ?">
+            <CircleHelp size={15} />
+          </button>
+        )}
         <button
           className="mn-icon-btn mn-theme-btn"
           onClick={onToggleTheme}

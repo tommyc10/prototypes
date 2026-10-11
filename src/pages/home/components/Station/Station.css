@@ -1,0 +1,10 @@
+/* The station's canvas fills whatever it is put in. */
+
+.hm-station-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
