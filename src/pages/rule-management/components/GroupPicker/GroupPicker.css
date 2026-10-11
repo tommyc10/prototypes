@@ -22,7 +22,12 @@
   font-size: 13px;
   transition:
     background-color 150ms ease,
-    color 150ms ease;
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-gp-trigger:active {
+  transform: scale(0.97);
 }
 
 /* A filter that's on reads as a chip, so a narrowed list is never a surprise. */

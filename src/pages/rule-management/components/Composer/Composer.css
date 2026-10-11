@@ -80,6 +80,30 @@
   color: var(--fg-2) !important;
 }
 
+/* The result lands while the reason is being typed, so it arrives rather than swapping in. */
+.mn-composer .mn-backtest > div {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.mn-composer .mn-backtest > div + div {
+  transition-delay: 40ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-composer .mn-backtest > div {
+    transition: opacity 150ms ease;
+    @starting-style {
+      transform: none;
+    }
+  }
+}
+
 .mn-field {
   display: flex;
   flex-direction: column;

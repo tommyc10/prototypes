@@ -25,6 +25,9 @@ import './IncidentView.css';
 /** How many other incidents on the same CI to list. */
 const ALSO_SHOWN = 5;
 
+/** How long the popup takes to fade out; the exit in IncidentView.css is the same length. */
+const EXIT_MS = 150;
+
 export function IncidentView({
   rule,
   incident,
@@ -52,12 +55,32 @@ export function IncidentView({
   // Focus starts on Close, not on Approve: a stray Enter shouldn't begin a decision.
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
+  const leaving = useRef<number | undefined>(undefined);
   useLayoutEffect(() => {
     const el = dialog.current!;
     el.showModal();
     closeButton.current?.focus();
-    return () => el.close();
+    return () => {
+      clearTimeout(leaving.current);
+      el.close();
+    };
   }, []);
+
+  // Closed with the pointer: it fades out the way it came, then the page is told. Esc, and
+  // Enter on Close, skip this: what the keyboard closes goes at once.
+  const dismiss = () => {
+    const el = dialog.current!;
+    if (!el.open) return;
+    el.close();
+    leaving.current = window.setTimeout(onClose, EXIT_MS);
+  };
+  // Another incident opened in its place while it was fading out: it stays.
+  useLayoutEffect(() => {
+    const el = dialog.current!;
+    if (el.open) return;
+    clearTimeout(leaving.current);
+    el.showModal();
+  }, [incident]);
 
   return (
     <dialog
@@ -70,7 +93,7 @@ export function IncidentView({
         onClose();
       }}
       // A click on the dimmed area lands on the dialog itself, not on anything inside it.
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && dismiss()}
     >
       <header className="mn-inc-head">
         <div className="mn-inc-title">
@@ -85,7 +108,7 @@ export function IncidentView({
         <div className="mn-inc-actions">
           <ActionButtons rule={rule} onAction={onAction} />
         </div>
-        <button ref={closeButton} className="mn-icon-btn" onClick={onClose} aria-label="Close" title="Close (Esc)">
+        <button ref={closeButton} className="mn-icon-btn" onClick={(e) => (e.detail ? dismiss() : onClose())} aria-label="Close" title="Close (Esc)">
           <X size={15} />
         </button>
       </header>

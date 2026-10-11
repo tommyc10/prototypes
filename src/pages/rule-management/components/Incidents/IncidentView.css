@@ -16,12 +16,23 @@
     var(--shadow-palette);
   color: inherit;
   overflow: hidden;
+  /* Closed is where it leaves to, the way it came. `allow-discrete` keeps it drawn, and in
+   * the top layer, until the fade is over. Leaving is a little quicker than arriving. */
+  opacity: 0;
+  transform: scale(0.98);
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out),
+    display 150ms allow-discrete,
+    overlay 150ms allow-discrete;
 }
 
 /* Only while open: a closed dialog must stay display: none. */
 .mn-inc-modal[open] {
   display: flex;
   flex-direction: column;
+  opacity: 1;
+  transform: none;
   transition:
     opacity 180ms var(--ease-out),
     transform 180ms var(--ease-out);
@@ -34,6 +45,15 @@
 /* The dimmed page behind it. */
 .mn-inc-modal::backdrop {
   background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition:
+    opacity 150ms var(--ease-out),
+    display 150ms allow-discrete,
+    overlay 150ms allow-discrete;
+}
+
+.mn-inc-modal[open]::backdrop {
+  opacity: 1;
   transition: opacity 180ms var(--ease-out);
   @starting-style {
     opacity: 0;
@@ -45,6 +65,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mn-inc-modal {
+    transform: none;
+  }
   .mn-inc-modal[open] {
     @starting-style {
       transform: none;

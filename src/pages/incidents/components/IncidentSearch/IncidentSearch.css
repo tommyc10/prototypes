@@ -135,7 +135,13 @@
   color: var(--fg-2);
   font-size: 12.5px;
   text-align: left;
-  transition: background-color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ic-more:active {
+  transform: scale(0.98);
 }
 
 .ic-more:focus-visible {
