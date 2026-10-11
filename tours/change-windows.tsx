@@ -15,37 +15,42 @@ export const WINDOWS_TOUR: TourStep[] = [
     ),
   },
   {
-    target: 'cw-schedule',
-    side: 'bottom',
-    title: 'Everything on one timeline',
+    target: 'cw-list',
+    side: 'right',
+    title: 'Sorted into groups',
     body: (
       <>
-        A row for each group and a bar for each window, with a line at now. Solid is in place, an outline is still to come,
-        and an orange tail means it has run past its planned end.
+        Each row is a group, or a family of CI where nobody set a group, with how many windows are in place and how many
+        are late. The ones with something late come first.
       </>
     ),
   },
   {
-    target: 'cw-range',
-    side: 'bottom',
-    title: 'Look further ahead',
-    body: <>The schedule shows 24 hours, three days or a week. A quarter of it is behind now, the rest ahead.</>,
-  },
-  {
-    target: 'cw-list',
-    side: 'right',
-    title: 'What needs watching, first',
+    target: 'cw-timeline',
+    side: 'top',
+    title: 'One group on a timeline',
     body: (
       <>
-        Overrunning windows lead the list, then whatever ends soonest. Move with <kbd>J</kbd> <kbd>K</kbd>, and use the
-        tabs for what's coming up or already over.
+        A bar for each window, ten to a page, with a line at now. Solid is done, the lighter part is still planned, an
+        outline hasn't started, and rose means it has run past its planned end. Move with <kbd>J</kbd> <kbd>K</kbd>.
+      </>
+    ),
+  },
+  {
+    target: 'cw-tools',
+    side: 'bottom',
+    title: 'Which windows, and how much time',
+    body: (
+      <>
+        The tabs choose what's in place, late, not started or ended. Fit stretches the timeline to the windows showing;
+        24h, 3d and 7d look a fixed distance around now.
       </>
     ),
   },
   {
     target: 'cw-detail',
-    side: 'top',
+    side: 'left',
     title: 'One window, in full',
-    body: <>Why it's there, how far through it is, exactly what it covers, and how many alerts it has held back so far.</>,
+    body: <>Why it's there, its timeline among its neighbours, exactly what it covers, and how many alerts it has held back.</>,
   },
 ];

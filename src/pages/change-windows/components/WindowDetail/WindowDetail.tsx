@@ -1,10 +1,8 @@
-/* The picked window: what it is and why, how far through it is, what it covers, how many
- * alerts it has held back, and anything else in place for the same group at the same time.
- *
- * Everything here runs the full width of the page except the prose, which stops at a
- * comfortable line length. */
+/* The picked window, in the rail: what it is and why, its timeline, what it covers, how
+ * many alerts it has held back, and anything else in place for the same group at the same
+ * time. */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { num } from '../../../../lib/format';
 import type { ChangeWindow } from '../../model/types';
@@ -19,12 +17,15 @@ export function WindowDetail({
   all,
   now,
   onSelect,
+  timeline,
 }: {
   window: ChangeWindow | null;
   /** Every window, to find the ones that overlap this one. */
   all: ChangeWindow[];
   now: number;
   onSelect: (key: string) => void;
+  /** A fuller picture of the window's run (see WindowLanes), drawn above the usual one. */
+  timeline?: ReactNode;
 }) {
   if (!w) {
     return (
@@ -69,7 +70,9 @@ export function WindowDetail({
         </div>
       )}
 
-      <Run window={w} now={now} />
+      {timeline}
+      {/* With the timeline above, the plain run is only worth drawing for its count of held alerts. */}
+      {(!timeline || w.held !== undefined) && <Run window={w} now={now} />}
 
       <div className="cw-detail-grid">
         <div>
@@ -125,7 +128,7 @@ export function WindowDetail({
 
 /** The window's run, start to end, as one picture: how far through it is, and how many
  *  alerts it held back in each half hour so far. The time still to come is drawn empty,
- *  so the columns stop where "now" is. Time past the planned end is orange.
+ *  so the columns stop where "now" is. Time past the planned end is rose.
  *  One series, so no legend: the heading names it. */
 function Run({ window: w, now }: { window: ChangeWindow; now: number }) {
   const [hover, setHover] = useState<number | null>(null);

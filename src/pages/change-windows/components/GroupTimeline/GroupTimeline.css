@@ -1,0 +1,392 @@
+/* The picked category: its name and a sentence, the tabs, then a lane per window on a timeline. */
+
+.cw-groups-main {
+  min-width: 0;
+}
+
+.cw-groups-main h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.cw-groups-main h2[data-mono] {
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.cw-groups-main header p {
+  max-width: 68ch;
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.cw-groups-main header b {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.cw-groups-main header em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--cw-late);
+}
+
+/* The tabs on the left, how much time on the right. */
+.cw-groups-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 20px 0 14px;
+}
+
+.cw-groups-tools .mn-tab[data-late] span {
+  font-weight: 500;
+  color: var(--cw-late);
+}
+
+.cw-groups-tools .mn-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* A lane: name · track · timing. The header and the rules behind use the same grid. */
+.cw-gl {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 2.4fr) 108px;
+  align-items: center;
+  column-gap: 20px;
+  width: 100%;
+  height: 48px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  transition: background-color 120ms ease;
+}
+
+.cw-gl-head {
+  height: 28px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.cw-gl-name {
+  min-width: 0;
+}
+
+.cw-gl-name > .mn-truncate {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--row-name);
+}
+
+.cw-gl-name small {
+  display: block;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.cw-gl-name small .mn-mono {
+  margin-right: 8px;
+  font-size: 11px;
+}
+
+/* A window that's over sits back. */
+.cw-gl[data-status='ended'] .cw-gl-name > .mn-truncate {
+  font-weight: 400;
+  color: var(--fg-2);
+}
+
+.cw-gl[data-selected] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cw-gl[data-selected] .cw-gl-name > .mn-truncate {
+  color: var(--fg);
+}
+
+.cw-gl-track {
+  position: relative;
+  height: 100%;
+}
+
+.cw-gl-head .cw-gl-track small {
+  position: absolute;
+  top: 6px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* A midnight names the day, a shade stronger than the hours. */
+.cw-gl-head .cw-gl-track small[data-day] {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.cw-gl-head .cw-gl-track small[data-now] {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* The lanes sit on a layer of rules: one at each labelled moment, a stronger one at now. */
+.cw-gl-lanes {
+  position: relative;
+  padding-top: 4px;
+}
+
+.cw-gl-rules {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  pointer-events: none;
+}
+
+.cw-gl-rules i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+.cw-gl-rules i[data-day] {
+  background: var(--line-2);
+}
+
+.cw-gl-rules i[data-now] {
+  background: var(--fg-3);
+}
+
+.cw-gl-rules b {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--tint);
+}
+
+/* The strip over the lanes: how many are in place at once, as thin columns on the same axis. */
+.cw-gl-strip {
+  align-items: end;
+  height: 44px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.cw-gl-strip b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.cw-gl-strip .cw-gl-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 32px;
+}
+
+.cw-gl-strip .cw-gl-track i {
+  flex: 1;
+  min-width: 0;
+  border-radius: 1px 1px 0 0;
+  background: var(--cw-held);
+}
+
+/* What's planned is drawn fainter than what happened. */
+.cw-gl-strip .cw-gl-track i[data-ahead] {
+  opacity: 0.4;
+}
+
+/* The key under the lanes. */
+.cw-gl-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  padding: 14px 10px 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.cw-gl-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cw-gl-key i {
+  width: 14px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--cw-active);
+}
+
+.cw-gl-key i[data-part='to-go'] {
+  opacity: 0.38;
+}
+
+.cw-gl-key i[data-part='late'] {
+  background: var(--cw-late);
+}
+
+.cw-gl-key i[data-part='upcoming'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--cw-upcoming);
+}
+
+.cw-gl-bar {
+  position: absolute;
+  top: calc(50% - 9px);
+  display: flex;
+  height: 18px;
+  border-radius: 5px;
+  overflow: hidden;
+  /* Drawn in by uncovering it from its left, each lane 30ms after the one above. */
+  animation: cw-gl-draw 360ms var(--ease-out) backwards;
+  animation-delay: calc(var(--cw-i, 0) * 30ms);
+}
+
+@keyframes cw-gl-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+.cw-gl-bar[data-status='upcoming'] {
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1.5px var(--cw-upcoming);
+}
+
+.cw-gl[data-selected] .cw-gl-bar[data-status='upcoming'] {
+  background: var(--l4);
+}
+
+.cw-gl-bar[data-cut-start] {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.cw-gl-bar[data-cut-end] {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* The bar's parts, left to right: done (solid), still planned (the same ink, thinned), and
+ * past the planned end (rose, after a gap). */
+.cw-gl-bar i {
+  flex: none;
+  height: 100%;
+  background: var(--cw-active);
+}
+
+.cw-gl-bar i[data-part='to-go'] {
+  opacity: 0.38;
+  transition: opacity 120ms ease;
+}
+
+.cw-gl-bar i[data-part='late'] {
+  background: var(--cw-late);
+  box-shadow: -2px 0 0 var(--l2);
+}
+
+.cw-gl-bar[data-status='ended'] i {
+  background: var(--cw-ended);
+}
+
+.cw-gl-track > small {
+  position: absolute;
+  top: calc(50% - 9px);
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--fg-3);
+}
+
+.cw-gl-track > small[data-side='after'] {
+  right: 0;
+}
+
+.cw-gl-when {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--fg-2);
+}
+
+.cw-gl[data-status='overrunning'] .cw-gl-when {
+  font-weight: 500;
+  color: var(--cw-late);
+}
+
+.cw-gl:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.cw-gl-none {
+  margin: 0;
+  padding: 40px 10px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--fg-3);
+}
+
+/* The pager's foot, under the lanes. */
+.cw-gl-lanes .cw-pager-foot {
+  position: relative;
+  margin-top: 0;
+  padding: 10px 10px 0;
+  height: 38px;
+  border-top: 1px solid var(--line);
+  background: var(--l2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.cw-gl:hover .cw-gl-bar i[data-part='to-go'] {
+    opacity: 0.5;
+  }
+  button.cw-gl:hover:not([data-selected]) {
+    background: var(--tint);
+  }
+}
+
+/* Less room for the timeline: half the labels. */
+@container windows (max-width: 1100px) {
+  .cw-gl-head .cw-gl-track small:nth-child(even):not([data-now]) {
+    display: none;
+  }
+  .cw-gl {
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 1.6fr) 100px;
+    column-gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-gl-bar {
+    animation: none;
+  }
+}

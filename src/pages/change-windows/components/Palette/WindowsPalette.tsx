@@ -1,12 +1,12 @@
-/* The ⌘K command menu on this page: jump to a window, change what the schedule shows, or
- * go to another page, without the mouse. cmdk handles the search and arrow keys; the look
+/* The ⌘K command menu on this page: jump to a window, or go to another page, without the
+ * mouse. cmdk handles the search and arrow keys; the look
  * is shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
 import { Bell, CircleHelp, Filter, History, Moon, Search, Sun, Siren } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
-import type { ChangeWindow, Range } from '../../model/types';
-import { RANGES, timing } from '../../model/windows';
+import type { ChangeWindow } from '../../model/types';
+import { timing } from '../../model/windows';
 
 export function WindowsPalette({
   open,
@@ -14,7 +14,6 @@ export function WindowsPalette({
   windows,
   now,
   onSelect,
-  onRange,
   onNavigate,
   theme,
   onToggleTheme,
@@ -26,7 +25,6 @@ export function WindowsPalette({
   windows: ChangeWindow[];
   now: number;
   onSelect: (key: string) => void;
-  onRange: (range: Range) => void;
   /** Go to another page, e.g. '#/rules'. */
   onNavigate: (to: string) => void;
   theme: Theme;
@@ -60,14 +58,6 @@ export function WindowsPalette({
             <Command.Item key={w.key} value={`window ${w.id} ${w.name} ${w.key}`} onSelect={run(() => onSelect(w.key))}>
               <span className="mn-truncate">{w.name}</span>
               <span className="mn-palette-meta">{timing(w, now)}</span>
-            </Command.Item>
-          ))}
-        </Command.Group>
-
-        <Command.Group heading="Schedule">
-          {RANGES.map((range) => (
-            <Command.Item key={range.hours} value={`schedule show range ${range.label}`} onSelect={run(() => onRange(range.hours))}>
-              Show {range.hours === 24 ? '24 hours' : `${range.hours / 24} days`}
             </Command.Item>
           ))}
         </Command.Group>

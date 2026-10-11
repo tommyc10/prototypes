@@ -1,22 +1,19 @@
-/* The page's sticky bar: pane toggles, the time now, and the schedule's range. */
+/* The detail pane's top bar: pane toggles, the time now, and the prototype's sample switch. */
 
 .cw-top {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   display: flex;
+  flex: none;
   align-items: center;
   gap: 10px;
   height: 52px;
-  /* The same centred column as the page below it, so on a wide screen the controls
-   * stay above the schedule instead of drifting out to the corners. */
-  padding: 0 max(40px, calc((100% - 1560px) / 2 + 40px));
+  padding: 0 40px;
   background: var(--l2);
 }
 
 .cw-clock {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -28,6 +25,8 @@
   color: var(--fg-3);
 }
 
+/* A segmented control: a sunken track with the chosen value raised in it. The timeline's
+ * "Fit · 24h · 3d · 7d" uses it too. */
 .cw-range {
   display: flex;
   align-items: center;
@@ -39,7 +38,6 @@
   font-size: 12px;
 }
 
-/* A segmented control: a sunken track with the chosen value raised in it. */
 .cw-range .mn-tabs {
   padding: 2px;
   border-radius: 9px;
@@ -65,12 +63,5 @@
   }
   .cw-range-label {
     display: none;
-  }
-}
-
-/* Narrower still: the date gives way to the controls. */
-@container windows (max-width: 520px) {
-  .cw-clock {
-    visibility: hidden;
   }
 }

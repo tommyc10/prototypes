@@ -2,49 +2,137 @@
  * Each component's own styles sit beside it.
  *
  * The page lays itself out from its own width, not the window's, because the sidebar and
- * list beside it can be tucked away: `windows` is a container, and the pieces ask it how
- * wide it is (@container windows …). */
+ * list beside it can be tucked away: the pane, the timeline's half and the rail are each a
+ * container called `windows`, and the pieces ask the nearest one how wide it is
+ * (@container windows …). */
 
 .cw {
-  --mn-list-w: 380px;
+  /* A narrower list column than the other pages': a category's name is shorter than a rule's. */
+  --mn-list-w: 320px;
   /* One ink, by where a window is in its life: in place (solid), upcoming (an outline),
-   * ended (faint). Orange is kept for one thing: past its planned end. */
+   * ended (faint). The one colour, a dusty rose, is kept for one thing: past its planned end. */
   --cw-active: #e4e4e4;
   --cw-upcoming: #8a8a8a;
   --cw-ended: #474747;
   --cw-held: #7d7d7d;
+  --cw-late: #e58a98;
+  --cw-late-wash: rgba(229, 138, 152, 0.09);
+  --cw-late-strong: #f3c0c8;
 }
 
-:root[data-mn-theme='light'] .cw {
-  --cw-active: #1f1f1f;
-  --cw-upcoming: #7a7a7a;
-  --cw-ended: #c9c9c9;
-  --cw-held: #8a8a8a;
+/* Light: softened on this page. The pane is an off-white instead of paper white, and the
+ * ink is a slate instead of near-black, so the bars and headings don't shout. */
+:root[data-mn-theme='light'] .mn.cw {
+  --l1: #f2f2f0;
+  --l2: #f9f9f7;
+  --l3: #f2f2f0;
+  --fg: #2a2d32;
+  --row-name: #33363b;
+  --code-val: #2a2d32;
+  --cw-active: #4b5059;
+  --cw-upcoming: #868b93;
+  --cw-ended: #d0d2d6;
+  --cw-held: #a2a6ad;
+  --cw-late: #b4505f;
+  --cw-late-wash: rgba(180, 80, 95, 0.07);
+  --cw-late-strong: #8c3545;
 }
 
-.cw-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+/* The mark beside a status word: a short bar, solid, rose, outlined or faint. */
+.cw i[data-status] {
+  flex: none;
+  width: 14px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.cw i[data-status='active'] {
+  background: var(--cw-active);
+}
+.cw i[data-status='overrunning'] {
+  background: var(--cw-late);
+}
+.cw i[data-status='upcoming'] {
+  box-shadow: inset 0 0 0 1.5px var(--cw-upcoming);
+}
+.cw i[data-status='ended'] {
+  background: var(--cw-ended);
+}
+
+/* The detail pane: the bar on top, the timeline (and the rail) filling the rest. */
+.cw-pane {
   container: windows / inline-size;
 }
 
-.cw-page {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  max-width: 1560px;
-  margin: 0 auto;
-  padding: 14px 40px 96px;
+.cw-frame {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
 }
 
-.cw-detail {
-  padding-top: 32px;
-  border-top: 1px solid var(--line);
+.cw-frame[data-rail] {
+  grid-template-columns: minmax(0, 1fr) 500px;
 }
 
-@container windows (max-width: 760px) {
-  .cw-page {
-    padding: 10px 24px 80px;
+.cw-frame-main {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 40px 64px;
+  container: windows / inline-size;
+}
+
+/* The rail: the picked window. It arrives from the right. */
+.cw-rail {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 28px 48px;
+  border-left: 1px solid var(--line);
+  container: windows / inline-size;
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+@starting-style {
+  .cw-rail {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+.cw-rail-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+}
+
+/* Too narrow for two columns: the rail goes under the timeline and the pane scrolls as one. */
+@container windows (max-width: 1040px) {
+  .cw-frame,
+  .cw-frame[data-rail] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+    overflow-y: auto;
+  }
+  .cw-frame-main,
+  .cw-rail {
+    overflow: visible;
+  }
+  .cw-frame-main {
+    padding: 10px 24px 32px;
+  }
+  .cw-rail {
+    padding: 24px 24px 48px;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-rail {
+    transition: none;
   }
 }

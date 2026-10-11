@@ -1,0 +1,57 @@
+/* Pages of rows, side by side: scroll or press to move one page. */
+
+.cw-pager-track {
+  display: grid;
+  grid-auto-columns: 100%;
+  grid-auto-flow: column;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.cw-pager-page {
+  display: grid;
+  grid-template-columns: repeat(var(--cw-page-cols, 1), minmax(0, 1fr));
+  align-content: start;
+  column-gap: 56px;
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.cw-pager-foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.cw-pager-foot > span:first-child {
+  flex: 1;
+}
+
+.cw-pager-foot > span + span {
+  margin-right: 6px;
+}
+
+.cw-pager-foot .mn-icon-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.cw-pager-foot .mn-icon-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-pager-track {
+    scroll-behavior: auto;
+  }
+}
