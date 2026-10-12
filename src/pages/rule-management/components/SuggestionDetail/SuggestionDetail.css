@@ -1,0 +1,15 @@
+/* The suggestion's detail borrows RuleDetail's layout whole. Only the decision card's two
+ * notes are its own. */
+
+/* Hiding a real incident is a danger, not a warning: red, where a rule's low confidence is orange. */
+.mn-decide .mn-suggest-risk {
+  color: var(--danger-fg);
+}
+
+.mn-decide .mn-link {
+  font-size: inherit;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--line-3);
+  text-underline-offset: 3px;
+}

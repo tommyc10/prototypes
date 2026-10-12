@@ -1,0 +1,127 @@
+/* The overnight block: a card at the top of the list. Its rows are the list's own rows,
+ * and it is pulled 2px wider than them so its padding keeps their dots in one column. */
+
+.mn-overnight {
+  position: relative; /* anchors the beam that travels round it */
+  margin: 0 -2px 8px;
+  padding: 2px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.mn-overnight-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font-size: 12px;
+  text-align: left;
+}
+
+.mn-overnight-head:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.mn-overnight-head svg {
+  flex: none;
+  /* The chevron sits where the rows' dots do. */
+  margin: 0 2px 0 -1px;
+  color: var(--fg-3);
+  transition: transform 160ms var(--ease-out);
+}
+
+.mn-overnight[data-collapsed] .mn-overnight-head svg {
+  transform: rotate(-90deg);
+}
+
+.mn-overnight-title {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mn-overnight-title b {
+  margin-left: 2px;
+  font-weight: 500;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-overnight-sum {
+  flex: 1;
+  color: var(--fg-3);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Last night as one bar: a segment per pattern, then everything that fit none. */
+.mn-overnight-share {
+  display: flex;
+  gap: 2px;
+  height: 4px;
+  margin: 2px 10px 10px;
+}
+
+.mn-overnight[data-collapsed] .mn-overnight-share {
+  margin-bottom: 8px;
+}
+
+.mn-overnight-share span {
+  flex: 0 0 0;
+  border-radius: 2px;
+  background: var(--fg-3);
+  transition: background-color 150ms ease;
+}
+
+.mn-overnight-share span[data-on] {
+  background: var(--fg);
+}
+
+.mn-overnight-share span[data-rest] {
+  background: var(--tint-2);
+}
+
+/* Rows on a card lift with a tint, and the selected one goes two rungs up, not one. */
+.mn-overnight .mn-row[data-selected] {
+  background: var(--l5);
+}
+
+.mn-overnight .mn-row-meta .mn-bad {
+  color: var(--danger-fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-overnight .mn-row:hover:not([data-selected]) {
+    background: var(--tint);
+  }
+  .mn-overnight-head:hover .mn-overnight-title {
+    color: var(--fg);
+  }
+}
+
+:root[data-mn-theme='light'] .mn-overnight {
+  background: var(--l2);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 1px 2px var(--tint);
+}
+
+:root[data-mn-theme='light'] .mn-overnight .mn-row[data-selected] {
+  background: var(--l4);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-overnight-head svg,
+  .mn-overnight-share span {
+    transition: none;
+  }
+}

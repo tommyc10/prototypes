@@ -1,0 +1,39 @@
+/* The night chart: sixteen bars on a baseline, sharing WeeklyBars' greys. */
+
+.mn-nb-bars {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  align-items: end;
+  gap: 2px;
+  height: 56px;
+  border-bottom: 1px solid var(--line-3);
+}
+
+.mn-nb-bars span {
+  height: 100%;
+  border-radius: 2px 2px 0 0;
+  background: var(--fg);
+  transform-origin: bottom;
+  transition: transform 200ms var(--ease-out);
+}
+
+.mn-nb-bars span[data-empty] {
+  height: 2px;
+  border-radius: 0;
+  background: var(--wb-bar-c);
+}
+
+.mn-nb-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-nb-bars span {
+    transition: none;
+  }
+}

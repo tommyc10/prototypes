@@ -35,3 +35,9 @@
   font-size: 12px;
   color: var(--fg-2);
 }
+
+/* Takes the room, so a link after it (View, Undo) sits at the toast's edge. */
+.mn-toast-text {
+  flex: 1;
+  min-width: 0;
+}

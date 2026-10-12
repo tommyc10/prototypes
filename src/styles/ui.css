@@ -62,6 +62,11 @@
   box-shadow: inset 0 0 0 1.5px var(--fg-3);
 }
 
+/* Not a rule yet: a hollow amber ring, which fills in when it is proposed. */
+.mn-dot[data-status='suggested'] {
+  box-shadow: inset 0 0 0 1.5px var(--amber);
+}
+
 /* ---------- search box ---------- */
 
 .mn-search {
@@ -343,6 +348,7 @@
 /* ---------- metric well: a row of numbers in a sunken box ---------- */
 
 .mn-backtest {
+  position: relative; /* anchors the beam while a backtest runs */
   display: flex;
   flex: none;
   min-height: 40px;
@@ -375,4 +381,93 @@
 
 .mn-backtest > div[data-bad] b {
   color: var(--red);
+}
+
+/* ---------- beam: a light that travels round an element's edge ----------
+ * Two uses, and no others: the backtest well while the rule engine is working, and the
+ * overnight block for as long as it has suggestions waiting. It runs while data-active is set.
+ *
+ * Put <span class="mn-beam" aria-hidden /> inside a positioned element; it takes that
+ * element's radius. The span is masked down to a 1px ring, and a short streak of light follows
+ * the ring's own outline (offset-path), so it keeps one steady pace along the sides and round
+ * the corners whatever the element's shape. The colours are text tokens, so it is grey on dark
+ * and grey on light. --mn-beam-lap is how long one trip round takes. */
+
+.mn-beam {
+  --mn-beam-lap: 9s;
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: opacity 600ms var(--ease-out);
+}
+
+/* The streak: bright at its head, fading to nothing behind it. */
+.mn-beam::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 220px;
+  height: 24px;
+  background: linear-gradient(to right, transparent, var(--line-3) 55%, var(--fg));
+  offset-path: border-box;
+  offset-anchor: 100% 50%;
+  offset-rotate: auto;
+  /* Linear: it is travelling at a steady pace, not arriving anywhere. */
+  animation: mn-beam-travel var(--mn-beam-lap) linear infinite paused;
+}
+
+/* It holds its place while it fades, rather than jumping back to the start. */
+.mn-beam[data-active] {
+  opacity: 1;
+}
+
+.mn-beam[data-active]::before {
+  animation-play-state: running;
+}
+
+@keyframes mn-beam-travel {
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Browsers that cannot follow a box's outline turn a gradient instead: the same light,
+ * a little quicker along the long sides than round the corners. */
+@supports not (offset-path: border-box) {
+  .mn-beam::before {
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: auto;
+    aspect-ratio: 1;
+    background: conic-gradient(transparent 0deg 250deg, var(--line-3) 310deg, var(--fg) 356deg, transparent 360deg);
+    transform: translate(-50%, -50%);
+    animation-name: mn-beam-turn;
+  }
+}
+
+@keyframes mn-beam-turn {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+/* The label beside it already says what is happening, so with reduced motion it just isn't there. */
+@media (prefers-reduced-motion: reduce) {
+  .mn-beam {
+    display: none;
+  }
 }

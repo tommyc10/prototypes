@@ -78,6 +78,8 @@ export function Composer({
             ) : (
               <span className="mn-backtest-wait">Rule engine is backtesting 90 days…</span>
             )}
+            {/* Circles the well while the rule engine works, and fades once the numbers land. */}
+            <span className="mn-beam" data-active={!backtest || undefined} aria-hidden />
           </div>
         )}
       </div>

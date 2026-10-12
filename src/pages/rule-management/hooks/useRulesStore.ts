@@ -1,6 +1,6 @@
-/* Where the rules live. Components read them with `useRulesStore((s) => s.rules)`,
- * and `apply()` is the only thing that ever changes one. In the real app this becomes
- * a data-fetching query plus a mutation that calls the API. */
+/* Where the rules live. Components read them with `useRulesStore((s) => s.rules)`.
+ * `apply()` is the only thing that ever changes one, and `propose()` the only thing that
+ * adds one. In the real app this becomes a data-fetching query plus mutations that call the API. */
 
 import { create } from 'zustand';
 import { NOW } from '../../../lib/clock';
@@ -11,10 +11,13 @@ import type { Rule, RuleAction } from '../model/types';
 interface RulesState {
   rules: Rule[];
   apply: (id: string, action: RuleAction, reason: string, override: boolean) => Rule;
+  /** Add a rule that a person has just proposed from an overnight suggestion. */
+  propose: (rule: Rule) => void;
 }
 
 export const useRulesStore = create<RulesState>((set, get) => ({
   rules: RULES,
+  propose: (rule) => set({ rules: [rule, ...get().rules] }),
   apply: (id, action, reason, override) => {
     const at = NOW.toISOString();
     let updated!: Rule;

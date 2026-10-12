@@ -42,6 +42,10 @@
   box-shadow: inset 0 0 0 1.5px var(--fg-3);
 }
 
+.mn-badge .mn-dot[data-status='suggested'] {
+  box-shadow: inset 0 0 0 1.5px var(--amber);
+}
+
 .mn-title {
   max-width: 760px;
   margin: 12px 0 8px;

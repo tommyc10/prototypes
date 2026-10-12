@@ -71,6 +71,15 @@
   gap: 12px;
 }
 
+/* The well is a fraction of the overnight block's size, so its light takes a shorter trip. */
+.mn-composer .mn-beam {
+  --mn-beam-lap: 5s;
+}
+
+.mn-composer .mn-beam::before {
+  width: 120px;
+}
+
 .mn-backtest-wait {
   display: flex;
   align-items: center;

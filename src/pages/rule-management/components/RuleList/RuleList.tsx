@@ -1,7 +1,8 @@
 /* The rule list: title, group filter, search, status tabs, sort, the rows, and keyboard hints.
- * It shows whatever `visible` it's given; filtering and sorting happen in useRuleView. */
+ * It shows whatever `visible` it's given; filtering and sorting happen in useRuleView.
+ * `pinned` is whatever the page wants above the rows (the overnight suggestions). */
 
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { AlertTriangle, Search } from 'lucide-react';
 import { pct } from '../../../../lib/format';
 import type { Pin } from '../../hooks/usePinnedGroups';
@@ -25,6 +26,7 @@ export function RuleList({
   selectedId,
   onSelect,
   searchRef,
+  pinned,
 }: {
   hidden: boolean;
   /** Every rule, for the group filter's counts. `visible` is what the list shows. */
@@ -38,6 +40,7 @@ export function RuleList({
   selectedId: string | null;
   onSelect: (id: string) => void;
   searchRef: RefObject<HTMLInputElement | null>;
+  pinned?: ReactNode;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +87,7 @@ export function RuleList({
       </header>
 
       <div className="mn-rows" ref={listRef} data-tour="rows" role="listbox" aria-label="Rules">
+        {pinned}
         {visible.map((rule) => (
           <div
             key={rule.id}
@@ -110,7 +114,7 @@ export function RuleList({
             </div>
           </div>
         ))}
-        {visible.length === 0 && (
+        {visible.length === 0 && !pinned && (
           <div className="mn-empty">
             <div>No rules match</div>
             <button className="mn-btn" onClick={() => update({ query: '', status: 'all', groupId: 'all' })}>

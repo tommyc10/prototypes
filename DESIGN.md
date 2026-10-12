@@ -423,6 +423,10 @@ colour (what the rule caught, in green); every other series is a grey from the t
 - **Keyboard-opened things appear instantly;** pointer-opened things animate. The decision
   form gets `data-animate` only when opened with the mouse.
 - **Reduced motion:** movement is removed, a short opacity fade may stay.
+- **The beam** (`mn-beam`) is a 1px grey light that travels round an element's edge. It has two
+  uses and no others: the backtest well while the rule engine is working, and the overnight
+  block for as long as it has suggestions waiting. It always marks a state that ends, and it
+  travels slowly (5 to 9 seconds a lap). Never on a button, never as decoration.
 - **Theme switch** dissolves through the View Transitions API over 200ms.
 
 ## Interaction patterns
@@ -437,6 +441,7 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `/` | Focus search |
 | `⌘K` | Command palette |
 | `A` `X` `E` `D` | Approve, reject, activate, deactivate (Rules) |
+| `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
 | `1` to `5` | Jump to a chapter (Hindcast) |
 | `[` `]` | Tuck away the sidebar / the list |
 | `?` | Start the guided tour |
