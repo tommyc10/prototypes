@@ -5,15 +5,14 @@
 import { Command } from 'cmdk';
 import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
-import { END_SHORT, END_TABS } from '../../model/lifecycle';
-import type { EndFilter, Lifecycle } from '../../model/types';
+import { END_SHORT } from '../../model/lifecycle';
+import type { Lifecycle } from '../../model/types';
 
 export function IncidentsPalette({
   open,
   onOpenChange,
   lives,
   onSelect,
-  onFilter,
   onNavigate,
   theme,
   onToggleTheme,
@@ -21,10 +20,9 @@ export function IncidentsPalette({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Every incident, newest first. */
+  /** The incidents in the list beside it, newest first. */
   lives: Lifecycle[];
   onSelect: (id: string) => void;
-  onFilter: (filter: EndFilter) => void;
   /** Go to another page, e.g. '#/rules'. */
   onNavigate: (to: string) => void;
   theme: Theme;
@@ -63,14 +61,6 @@ export function IncidentsPalette({
               <span className="mn-mono mn-subtle">{life.incident.id}</span>
               <span className="mn-truncate">{life.incident.title}</span>
               <span className="mn-palette-meta">{END_SHORT[life.end]}</span>
-            </Command.Item>
-          ))}
-        </Command.Group>
-
-        <Command.Group heading="Show">
-          {END_TABS.map((tab) => (
-            <Command.Item key={tab.key} value={`show incidents ${tab.label}`} onSelect={run(() => onFilter(tab.key))}>
-              {tab.key === 'all' ? 'All incidents' : `${tab.label} only`}
             </Command.Item>
           ))}
         </Command.Group>

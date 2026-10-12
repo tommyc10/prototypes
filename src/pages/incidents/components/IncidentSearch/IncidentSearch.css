@@ -25,9 +25,17 @@
   font-size: 13px;
 }
 
-.ic-list-head .mn-tab:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: -2px;
+/* What the rows are, in words: the latest few, or how many the search found. */
+.ic-list-says {
+  margin: -2px 2px 0;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* While a newer search is on its way, the rows it will replace sit back. */
+.ic-rows[data-searching] .ic-row {
+  opacity: 0.5;
 }
 
 .ic-rows {

@@ -66,6 +66,46 @@
   color: var(--red);
 }
 
+/* Nothing picked: the pane says how to find one, and nothing else. */
+.ic-blank {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 18vh 40px 96px;
+}
+
+.ic-blank h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.ic-blank p {
+  max-width: 62ch;
+  margin: 0;
+  line-height: 1.6;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.ic-blank-keys {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px !important;
+  font-size: 12px;
+  color: var(--fg-3) !important;
+}
+
+.ic-blank-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .ic-page {
   display: flex;
   flex-direction: column;

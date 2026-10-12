@@ -3,15 +3,20 @@
  * enriched and delivered? This file owns the page's state and wires the pieces together:
  *
  *   Sidebar          navigation (shared with the other pages)
- *   IncidentSearch   the list column: search, and how the journey ended
+ *   IncidentSearch   the list column: the latest few, and the search that finds any other
  *   the header       the incident, and its verdict in one sentence
  *   Journey          the line of checkpoints, lit as far as it got
  *   Stages           one section per checkpoint it reached, with the evidence
  *   IncidentsPalette / Tour   on top when opened
  *
  * The state is small: which incident is picked (it's in the address, so an incident can be
- * linked to), and the list's search and tab. A journey isn't stored; it's worked out from
- * the incident and the rules as they stand (data/mockData.ts). */
+ * linked to), and the search. A journey isn't stored; it's worked out from the incident and
+ * the rules as they stand (data/mockData.ts).
+ *
+ * The page never loads every incident, because a real feed has far too many: it shows the
+ * latest few, and everything else is found by asking. So it has no totals and no tabs with
+ * counts, which could only describe whatever happened to be loaded. With nothing picked,
+ * the pane is empty and says how to find one. */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -31,16 +36,26 @@ import { Journey } from './components/Journey/Journey';
 import { IncidentsPalette } from './components/Palette/IncidentsPalette';
 import { Stages } from './components/Stages/Stages';
 import { lifecycles } from './data/mockData';
-import { END_LABEL, dayAndTime, inFilter } from './model/lifecycle';
-import type { EndFilter, StationId } from './model/types';
+import { END_LABEL, dayAndTime } from './model/lifecycle';
+import type { StationId } from './model/types';
 import './IncidentsPage.css';
+
+/** How many of the latest incidents are there before anything is asked for. */
+const LATEST = 12;
+/** How long after the last keystroke the search is sent. */
+const SEARCH_WAIT = 220;
 
 export function IncidentsPage({ initialId }: { /** Open on this incident (a link from another page). */ initialId?: string }) {
   const rules = useRulesStore((s) => s.rules);
   const lives = useMemo(() => lifecycles(rules), [rules]);
   const [selectedId, setSelectedId] = useState<string | null>(initialId ?? null);
-  const [filter, setFilter] = useState<EndFilter>('all');
   const [query, setQuery] = useState('');
+  // The search that has been answered. It trails what's typed, the way a request does.
+  const [asked, setAsked] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setAsked(query.trim()), query.trim() ? SEARCH_WAIT : 0);
+    return () => clearTimeout(timer);
+  }, [query]);
   // How the incident on screen was opened. The pointer (or a link) plays its journey; the
   // keyboard shows it at once. `replay` counts presses of "play again".
   const [via, setVia] = useState<'pointer' | 'key'>('pointer');
@@ -53,52 +68,42 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const scrollRef = useRef<HTMLDivElement>(null);
   const tour = useTour(INCIDENTS_TOUR.length, { auto: false, seenKey: 'mn-incidents-tour-seen' });
 
-  // The list: the search first, so the tab counts describe what it found.
-  const list = useMemo(() => {
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    const found = lives.filter((l) => {
+  // The list: the latest few until something is asked for, then whatever the search found.
+  // (Here the search runs over the mock data. In the real app it's a request, and `found`
+  // is the page of rows and the total that come back.)
+  const found = useMemo(() => {
+    if (!asked) return lives.slice(0, LATEST);
+    const words = asked.toLowerCase().split(/\s+/).filter(Boolean);
+    return lives.filter((l) => {
       const haystack = `${l.incident.id} ${l.incident.title} ${l.incident.ci} ${l.rule?.id ?? ''} ${l.rule?.name ?? ''} ${groupById(l.groupId).name}`.toLowerCase();
       return words.every((word) => haystack.includes(word));
     });
-    const count = (f: EndFilter) => found.filter((l) => inFilter(l, f)).length;
-    return {
-      tabs: { all: count('all'), suppressed: count('suppressed'), enriched: count('enriched'), other: count('other') },
-      shown: found.filter((l) => inFilter(l, filter)),
-    };
-  }, [lives, query, filter]);
+  }, [lives, asked]);
 
-  // The page always shows an incident that's in the list, so the two can't disagree: the
-  // picked one if the list still has it, otherwise the list's first.
-  const picked = list.shown.find((l) => l.incident.id === selectedId) ?? null;
-  const life = picked ?? list.shown[0] ?? null;
+  // The incident on the page is fetched by its number, so it doesn't have to be in the list.
+  // With none picked, the pane is empty.
+  const life = lives.find((l) => l.incident.id === selectedId) ?? null;
 
   // Keep the address in step, without adding a Back step for every J and K.
   useEffect(() => {
-    navigate(`#/incidents${picked ? `/${picked.incident.id}` : ''}`, true);
-  }, [picked?.incident.id]);
+    navigate(`#/incidents${life ? `/${life.incident.id}` : ''}`, true);
+  }, [life?.incident.id]);
 
   // A different incident is a different page: start it from the top.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [life?.incident.id]);
 
-  /** Pick an incident from outside the list (a link in a section, the command menu).
-   *  If the list's tab or search would hide it, they give way. */
+  /** Pick an incident from outside the list (a link in a section, the command menu). */
   const select = (id: string) => {
-    const target = lives.find((l) => l.incident.id === id);
-    if (!target) return;
     setVia('pointer');
     setSelectedId(id);
-    if (!list.shown.includes(target)) {
-      setFilter('all');
-      setQuery('');
-    }
   };
 
-  /** Move the selection up or down the list. */
+  /** Move the selection up or down the list. With nothing picked, either way picks the first. */
   const move = (step: number) => {
-    const i = list.shown.findIndex((l) => l.incident.id === life?.incident.id);
-    const next = list.shown[Math.min(list.shown.length - 1, Math.max(0, i + step))];
+    const i = found.findIndex((l) => l.incident.id === life?.incident.id);
+    const next = i < 0 ? found[0] : found[Math.min(found.length - 1, Math.max(0, i + step))];
     if (!next) return;
     setVia('key');
     setSelectedId(next.incident.id);
@@ -125,6 +130,8 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
       k: () => move(-1),
       ArrowUp: () => move(-1),
       '/': () => searchRef.current?.focus(),
+      // Back to the empty pane.
+      Escape: () => setSelectedId(null),
       '[': () => setHideSide((hidden) => !hidden),
       ']': () => setHideList((hidden) => !hidden),
       '?': startTour,
@@ -147,10 +154,9 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
 
       <IncidentSearch
         hidden={hideList}
-        lives={list.shown}
-        counts={list.tabs}
-        filter={filter}
-        onFilter={setFilter}
+        lives={found}
+        asked={asked}
+        searching={query.trim() !== asked}
         query={query}
         onQuery={setQuery}
         selectedId={life?.incident.id ?? null}
@@ -221,7 +227,21 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
               />
             </article>
           ) : (
-            <div className="mn-empty">No incident matches</div>
+            <div className="ic-blank">
+              <h2>Find an incident</h2>
+              <p>
+                Search by its number, its title, the CI it was raised on, the rule it fits or the group it belongs to. Pick one to see its
+                whole journey: where it was stopped, or how it reached a person.
+              </p>
+              <p className="ic-blank-keys">
+                <span>
+                  <kbd>/</kbd> Search
+                </span>
+                <span>
+                  <kbd>J</kbd> <kbd>K</kbd> Step through the list
+                </span>
+              </p>
+            </div>
           )}
         </div>
       </section>
@@ -229,9 +249,8 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
       <IncidentsPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
-        lives={lives}
+        lives={found}
         onSelect={select}
-        onFilter={setFilter}
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}

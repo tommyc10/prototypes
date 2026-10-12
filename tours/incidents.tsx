@@ -20,7 +20,8 @@ export const INCIDENTS_TOUR: TourStep[] = [
     title: 'Find one',
     body: (
       <>
-        Search by number, title, CI, rule or group. The tabs keep one kind of ending. Move with <kbd>J</kbd> <kbd>K</kbd>.
+        The list starts with the latest few. Search by number, title, CI, rule or group to find any other, and move with{' '}
+        <kbd>J</kbd> <kbd>K</kbd>.
       </>
     ),
   },
