@@ -13,3 +13,42 @@
   text-decoration-color: var(--line-3);
   text-underline-offset: 3px;
 }
+
+/* ---------- tightening ----------
+ * Moving the threshold changes three of the four stats and the note under the buttons. With
+ * the pointer they arrive, the way the backtest's numbers do, so it is clear what moved.
+ * Confidence is the first stat and does not change, so it stays still. */
+
+.mn-suggest-arrive {
+  display: contents; /* a wrapper to remount, not a box */
+}
+
+.mn-suggest-arrive[data-animate] .mn-stat:not(:first-child) .mn-stat-value,
+.mn-decide .mn-decide-foot[data-animate] {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.mn-suggest-arrive[data-animate] .mn-stat:nth-child(3) .mn-stat-value {
+  transition-delay: 40ms;
+}
+
+.mn-suggest-arrive[data-animate] .mn-stat:nth-child(4) .mn-stat-value,
+.mn-decide .mn-decide-foot[data-animate] {
+  transition-delay: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-suggest-arrive[data-animate] .mn-stat:not(:first-child) .mn-stat-value,
+  .mn-decide .mn-decide-foot[data-animate] {
+    transition: opacity 150ms ease;
+    @starting-style {
+      transform: none;
+    }
+  }
+}

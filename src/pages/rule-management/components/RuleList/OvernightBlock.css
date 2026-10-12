@@ -10,6 +10,16 @@
   box-shadow:
     inset 0 1px 0 var(--card-edge),
     inset 0 0 0 1px var(--line);
+  /* It leaves from the top, where the list begins. Leaving is quicker than arriving. */
+  transform-origin: top center;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
+.mn-overnight[data-leaving] {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 .mn-overnight-head {
@@ -24,6 +34,12 @@
   background: none;
   font-size: 12px;
   text-align: left;
+  transition: transform 160ms var(--ease-out);
+}
+
+/* A wide control, so it gives a little less than a button does. */
+.mn-overnight-head:active {
+  transform: scale(0.98);
 }
 
 .mn-overnight-head:focus-visible {
@@ -120,6 +136,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mn-overnight {
+    transition: opacity 150ms ease;
+  }
+  .mn-overnight[data-leaving] {
+    transform: none;
+  }
+  .mn-overnight-head {
+    transition: none;
+  }
+  .mn-overnight-head:active {
+    transform: none;
+  }
   .mn-overnight-head svg,
   .mn-overnight-share span {
     transition: none;

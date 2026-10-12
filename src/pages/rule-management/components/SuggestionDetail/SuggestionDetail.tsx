@@ -24,6 +24,7 @@ export function SuggestionDetail({
   rules,
   mode,
   toolbar,
+  arrive,
   onPropose,
   onDismiss,
   onThreshold,
@@ -34,6 +35,8 @@ export function SuggestionDetail({
   rules: Rule[];
   mode: PaneMode;
   toolbar?: ReactNode;
+  /** Not 0 for a moment after the threshold is moved with the pointer: the numbers it changed arrive. */
+  arrive?: number;
   onPropose: () => void;
   onDismiss: () => void;
   /** Move the threshold; `null` puts it back where it was suggested. */
@@ -69,7 +72,10 @@ export function SuggestionDetail({
 
   const sections = (
     <>
-      <Stats rule={rule} />
+      {/* A new `key` remounts it, which is what lets the changed numbers arrive (see the CSS). */}
+      <div className="mn-suggest-arrive" key={arrive} data-animate={arrive ? '' : undefined}>
+        <Stats rule={rule} />
+      </div>
       <Evidence rule={rule} onOpenIncident={onOpenIncident} />
       <section className="mn-sec">
         <h3>
@@ -148,7 +154,7 @@ export function SuggestionDetail({
                     </span>
                   </p>
                 )}
-                <p className="mn-decide-foot">
+                <p className="mn-decide-foot" key={arrive} data-animate={arrive ? '' : undefined}>
                   {threshold === suggested ? (
                     `Seen on ${suggestion.nights} of the last 7 nights.`
                   ) : (

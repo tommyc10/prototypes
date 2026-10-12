@@ -128,3 +128,25 @@
 .mn-hints kbd {
   margin-right: 3px;
 }
+
+/* A rule that has just been proposed from an overnight suggestion travels down into the list
+ * from the block it left, so it is clear where the suggestion went. */
+.mn-row[data-arrived] {
+  transition:
+    background-color 120ms ease,
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-row[data-arrived] {
+    transition: opacity 150ms ease;
+    @starting-style {
+      transform: none;
+    }
+  }
+}

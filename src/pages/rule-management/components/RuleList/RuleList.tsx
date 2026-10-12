@@ -27,6 +27,7 @@ export function RuleList({
   onSelect,
   searchRef,
   pinned,
+  arrivedId,
 }: {
   hidden: boolean;
   /** Every rule, for the group filter's counts. `visible` is what the list shows. */
@@ -41,6 +42,8 @@ export function RuleList({
   onSelect: (id: string) => void;
   searchRef: RefObject<HTMLInputElement | null>;
   pinned?: ReactNode;
+  /** A rule that has just joined the list, proposed from a suggestion with the pointer. */
+  arrivedId?: string | null;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +98,7 @@ export function RuleList({
             aria-selected={rule.id === selectedId}
             className="mn-row"
             data-selected={rule.id === selectedId || undefined}
+            data-arrived={rule.id === arrivedId || undefined}
             onClick={() => onSelect(rule.id)}
           >
             <span className="mn-dot" data-status={rule.status} aria-label={statusLabel(rule)} />

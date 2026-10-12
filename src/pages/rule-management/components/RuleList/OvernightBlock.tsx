@@ -14,6 +14,7 @@ export function OvernightBlock({
   items,
   total,
   collapsed,
+  leaving,
   onToggle,
   selectedId,
   onSelect,
@@ -22,6 +23,8 @@ export function OvernightBlock({
   /** Every incident that came in overnight, for the bar. */
   total: number;
   collapsed: boolean;
+  /** Its last suggestion has just been dealt with: it is fading out, and no longer takes clicks. */
+  leaving?: boolean;
   onToggle: () => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -29,7 +32,7 @@ export function OvernightBlock({
   const inPatterns = items.reduce((n, item) => n + item.match.matched.length, 0);
 
   return (
-    <div className="mn-overnight" data-collapsed={collapsed || undefined} data-tour="overnight">
+    <div className="mn-overnight" data-collapsed={collapsed || undefined} data-leaving={leaving || undefined} inert={leaving} data-tour="overnight">
       {/* A light keeps travelling round the block for as long as something in it is waiting. */}
       <span className="mn-beam" data-active aria-hidden />
       <button className="mn-overnight-head" aria-expanded={!collapsed} onClick={onToggle}>

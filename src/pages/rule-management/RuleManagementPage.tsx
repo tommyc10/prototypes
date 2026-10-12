@@ -46,6 +46,12 @@ import { actionsFor } from './model/policy';
 import { canTighten, proposedFrom } from './model/suggestions';
 import type { RelatedIncident, RuleAction } from './model/types';
 
+/** How long the overnight block takes to fade out; its exit in OvernightBlock.css is the same length. */
+const BLOCK_EXIT_MS = 150;
+
+/** How long an arrival stays marked: long enough to play once, then it is an ordinary row again. */
+const ARRIVE_MS = 600;
+
 export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a link from another page). */ initialRuleId?: string }) {
   const rules = useRulesStore((s) => s.rules);
   const { view, update, visible, counts } = useRuleView(rules);
@@ -54,6 +60,14 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
   const [selectedId, setSelectedId] = useState<string | null>(initialRuleId ?? null);
   const overnight = useSuggestions();
   const [overnightCollapsed, setOvernightCollapsed] = useState(false);
+  // Three small arrivals and departures in the overnight flow. Like the decision form, they
+  // only play when the action came from the pointer: what the keyboard does happens at once.
+  //   arrivedId      the rule a suggestion has just become, so its row can travel into the list
+  //   retuned        set for a moment after a threshold moves, so the changed numbers arrive
+  //   leavingBlock   the block's last contents, kept on screen while it fades out
+  const [arrivedId, setArrivedId] = useState<string | null>(null);
+  const [retuned, setRetuned] = useState(0);
+  const [leavingBlock, setLeavingBlock] = useState<Suggested[] | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [incidentsOpen, setIncidentsOpen] = useState(false);
   // The incident that's open, and the rule it was opened from.
@@ -126,19 +140,28 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
   };
 
   /** After a suggestion is dealt with, step to the next one waiting, or back to the rules. */
-  const leave = ({ suggestion }: Suggested) => {
+  const leave = ({ suggestion }: Suggested, via: 'key' | 'pointer') => {
     const rest = suggestions.filter((item) => item.suggestion.id !== suggestion.id);
+    // The last one: the block fades out with it, rather than vanishing and jolting the rules up.
+    if (via === 'pointer' && rest.length === 0) {
+      setLeavingBlock(suggestions);
+      setTimeout(() => setLeavingBlock(null), BLOCK_EXIT_MS);
+    }
     const next = rest[suggestions.findIndex((item) => item.suggestion.id === suggestion.id)] ?? rest[rest.length - 1];
     setOpened(null);
     setSelectedId(next?.suggestion.id ?? visible[0]?.id ?? null);
   };
 
   /** Turn a suggestion into a proposed rule. It joins the list, waiting for approval. */
-  const propose = (item: Suggested) => {
+  const propose = (item: Suggested, via: 'key' | 'pointer' = 'pointer') => {
     const rule = proposedFrom(item.suggestion, item.rule, item.match, CURRENT_USER, NOW.toISOString());
     useRulesStore.getState().propose(rule);
     overnight.handle(item.suggestion.id);
-    leave(item);
+    leave(item, via);
+    if (via === 'pointer') {
+      setArrivedId(rule.id);
+      setTimeout(() => setArrivedId(null), ARRIVE_MS);
+    }
     toast.custom((id) => (
       <SuggestionToast
         title={`${rule.id} proposed`}
@@ -153,10 +176,10 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
     ));
   };
 
-  const dismiss = (item: Suggested) => {
+  const dismiss = (item: Suggested, via: 'key' | 'pointer' = 'pointer') => {
     const { id } = item.suggestion;
     overnight.handle(id);
-    leave(item);
+    leave(item, via);
     toast.custom((toastId) => (
       <SuggestionToast
         title={`${id} dismissed`}
@@ -176,6 +199,13 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
   const tighten = () => {
     if (!suggested || !canTighten(suggested.suggestion, suggested.match, suggested.threshold)) return;
     overnight.setThreshold(suggested.suggestion, suggested.suggestion.threshold.safe ?? null);
+  };
+
+  /** A threshold moved with the pointer: let the numbers it changed arrive (see SuggestionDetail). */
+  const retune = (item: Suggested, value: number | null) => {
+    overnight.setThreshold(item.suggestion, value);
+    setRetuned(Date.now());
+    setTimeout(() => setRetuned(0), ARRIVE_MS);
   };
 
   /** Jump to the overnight block, opening it if it was folded away. */
@@ -224,8 +254,8 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
       Escape: () => (incident ? setOpened(null) : setIncidentsOpen(false)),
       a: () => act('approve', 'key'),
       // X turns down whatever is selected: a suggestion is dismissed, a proposed rule rejected.
-      x: () => (suggested ? dismiss(suggested) : act('reject', 'key')),
-      p: () => suggested && propose(suggested),
+      x: () => (suggested ? dismiss(suggested, 'key') : act('reject', 'key')),
+      p: () => suggested && propose(suggested, 'key'),
       t: tighten,
       e: () => act('activate', 'key'),
       d: () => act('deactivate', 'key'),
@@ -281,10 +311,12 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
         selectedId={selectedId}
         onSelect={setSelectedId}
         searchRef={searchRef}
+        arrivedId={arrivedId}
         pinned={
-          suggestions.length > 0 && (
+          (leavingBlock ?? suggestions).length > 0 && (
             <OvernightBlock
-              items={suggestions}
+              items={leavingBlock ?? suggestions}
+              leaving={leavingBlock !== null}
               total={NIGHT_TOTAL}
               collapsed={overnightCollapsed}
               onToggle={() => setOvernightCollapsed((collapsed) => !collapsed)}
@@ -332,7 +364,8 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
             }
             onPropose={() => propose(suggested)}
             onDismiss={() => dismiss(suggested)}
-            onThreshold={(value) => overnight.setThreshold(suggested.suggestion, value)}
+            arrive={retuned}
+            onThreshold={(value) => retune(suggested, value)}
             onSelect={setSelectedId}
             onOpenIncident={openIncident}
           />
