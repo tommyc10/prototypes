@@ -21,6 +21,13 @@
  *   burst    enriched and delivered: it reaches the end and the mark blooms, with rays
  *   orbit    with the team now: the mark stays open and a small dot circles it
  *
+ * One more thing can happen on the way. An incident that fits a rule which isn't active is
+ * not stopped at Rules, but it nearly was, and that's worth seeing: the gate there is drawn
+ * open, in two halves the line runs between. When the journey plays the gate starts shut
+ * and parts just as the dot reaches it. It is amber for a proposed rule, red when the
+ * incident was a real one (approving the rule would have hidden it), and grey for a rule
+ * that's been switched off.
+ *
  * It's there to explain, and to be a little satisfying, so it plays when an incident is
  * opened with the pointer or from a link. It never plays for J and K: an incident picked from the keyboard is
  * there at once, because anything slower would lag behind the keys. The motion is all in
@@ -52,6 +59,8 @@ export function Journey({
   const arrival = { bad: 'alarm', through: 'burst', wait: 'orbit', quiet: 'gate' }[tone];
   // How many stretches of line the dot has to cross.
   const stop = stations.findIndex((s) => s.state === 'stopped' || s.state === 'current');
+  // It fits a rule that isn't active: the gate at Rules was open, and it went through.
+  const near = !life.rule || life.rule.status === 'active' ? undefined : life.rule.status === 'inactive' ? 'off' : life.real ? 'risky' : 'waiting';
 
   return (
     <div className="ic-journey-wrap" data-tone={tone} data-tour="ic-journey" style={{ '--stop': stop } as CSSProperties}>
@@ -64,8 +73,15 @@ export function Journey({
         {stations.map((station, i) => {
           const before = stations[i - 1];
           const reached = station.state !== 'unreached';
+          const open = station.id === 'rules' && station.state === 'passed' ? near : undefined;
           return (
-            <li key={station.id} data-state={station.state} data-arrival={i === stop ? arrival : undefined} style={{ '--i': i } as CSSProperties}>
+            <li
+              key={station.id}
+              data-state={station.state}
+              data-arrival={i === stop ? arrival : undefined}
+              data-near={open}
+              style={{ '--i': i } as CSSProperties}
+            >
               {/* The stretch of line that leads here, with how long it took to cross. */}
               {i > 0 && (
                 <span className="ic-leg" data-lit={reached || undefined} aria-hidden>
@@ -80,6 +96,8 @@ export function Journey({
                 </i>
                 {/* The gate that stopped it, just past the mark. It stays shut once the journey has played. */}
                 {i === stop && (arrival === 'gate' || arrival === 'alarm') && <span className="ic-gate" aria-hidden />}
+                {/* The gate that didn't: open, because the rule it fits isn't active. */}
+                {open && <span className="ic-gate-open" aria-hidden />}
                 <span className="ic-station-name">{STATION_LABEL[station.id]}</span>
                 {reached ? (
                   <>

@@ -128,7 +128,7 @@ function lifecycleOf(record: Entry, rules: Rule[]): Lifecycle {
     [
       'rules',
       at.rules,
-      !rule ? 'No rule fits' : rule.status === 'active' ? `Fits ${rule.id}. Suppressed.` : `Fits ${rule.id}, which is ${rule.status}`,
+      !rule ? 'No rule fits' : rule.status === 'active' ? `Fits ${rule.id}. Suppressed.` : `Fits ${rule.id} (${rule.status}). Let through.`,
     ],
     ['duplicates', at.duplicates, end === 'folded' ? `Same as ${foldedInto}. Folded.` : 'Nothing like it is open'],
     [

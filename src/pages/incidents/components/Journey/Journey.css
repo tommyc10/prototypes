@@ -186,6 +186,51 @@
   background: var(--ic-end);
 }
 
+/* The open gate: the same bar in two halves, with the line running between them. The
+ * incident fits a rule that isn't active, so nothing stopped it here. Its colour says what
+ * that rule is: waiting on a decision, a risk to a real incident, or switched off. */
+.ic-journey li[data-near='waiting'] {
+  --ic-near: var(--amber);
+}
+.ic-journey li[data-near='risky'] {
+  --ic-near: var(--red);
+}
+.ic-journey li[data-near='off'] {
+  --ic-near: var(--fg-3);
+}
+
+.ic-gate-open {
+  position: absolute;
+  top: -3px;
+  left: calc(50% + 17px);
+  width: 2.5px;
+  height: 26px;
+}
+
+.ic-gate-open::before,
+.ic-gate-open::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--ic-near);
+}
+
+.ic-gate-open::before {
+  top: 0;
+}
+
+.ic-gate-open::after {
+  bottom: 0;
+}
+
+/* …and a ring of the same colour round the mark it passed. */
+.ic-journey li[data-near] .ic-station i {
+  box-shadow: 0 0 0 1.5px var(--ic-near);
+}
+
 /* The rays and the ring only exist while they're playing: at rest they're invisible. */
 .ic-rays,
 .ic-station i::after {
@@ -206,6 +251,12 @@
   content: '';
   inset: -6px;
   box-shadow: 0 0 0 1.5px var(--ic-end);
+}
+
+.ic-journey li[data-near] .ic-station i::after {
+  content: '';
+  inset: -6px;
+  box-shadow: 0 0 0 1.5px var(--ic-near);
 }
 
 /* With the team now: a small dot circles the open mark, for as long as they have it. */
@@ -316,6 +367,24 @@
   animation-delay: calc(var(--i) * var(--step) + 60ms);
 }
 
+/* --- the open gate: it starts shut, and parts a moment before the dot gets there. The
+ * mark it passes rings once, and the dot carries on. --- */
+
+.ic-journey[data-play] .ic-gate-open::before {
+  animation: ic-part-up 200ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) - 60ms);
+}
+
+.ic-journey[data-play] .ic-gate-open::after {
+  animation: ic-part-down 200ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step) - 60ms);
+}
+
+.ic-journey[data-play] li[data-near] .ic-station i::after {
+  animation: ic-ring 520ms var(--ease-out) both;
+  animation-delay: calc(var(--i) * var(--step));
+}
+
 /* --- alarm: a real incident was stopped. The same thud, then it shakes, and rings twice. --- */
 
 .ic-journey[data-play] li[data-arrival='alarm'] .ic-station i {
@@ -389,6 +458,19 @@
 @keyframes ic-arrive {
   from {
     opacity: 0.25;
+  }
+}
+
+/* The two halves start touching in the middle (a shut gate) and draw apart. */
+@keyframes ic-part-up {
+  from {
+    transform: translateY(5px);
+  }
+}
+
+@keyframes ic-part-down {
+  from {
+    transform: translateY(-5px);
   }
 }
 
@@ -560,7 +642,8 @@
   }
   /* The dot and the gate belong to the line running across. On its side, the line simply fills in. */
   .ic-traveller,
-  .ic-gate {
+  .ic-gate,
+  .ic-gate-open {
     display: none;
   }
 }
