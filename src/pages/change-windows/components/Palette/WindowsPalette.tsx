@@ -3,7 +3,7 @@
  * is shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CircleHelp, Filter, History, Moon, Search, Sun, Siren } from 'lucide-react';
+import { Bell, CircleHelp, Filter, History, Moon, Search, Siren, Sun, Telescope } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import type { ChangeWindow } from '../../model/types';
 import { timing } from '../../model/windows';
@@ -71,9 +71,13 @@ export function WindowsPalette({
             <Filter size={15} />
             Rules
           </Command.Item>
-          <Command.Item value="go to hindcast replay" onSelect={run(() => onNavigate('#/hindcast'))}>
+          <Command.Item value="go to hindcast history root cause" onSelect={run(() => onNavigate('#/hindcast'))}>
             <History size={15} />
             Hindcast
+          </Command.Item>
+          <Command.Item value="go to forecast predictions look ahead" onSelect={run(() => onNavigate('#/forecast'))}>
+            <Telescope size={15} />
+            Forecast
           </Command.Item>
           <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
             <Siren size={15} />

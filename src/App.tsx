@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import { useRoute, type PageId } from './lib/route';
 import { AlertsPage } from './pages/alerts/AlertsPage';
 import { ChangeWindowsPage } from './pages/change-windows/ChangeWindowsPage';
+import { ForecastPage } from './pages/forecast/ForecastPage';
 import { HindcastPage } from './pages/hindcast/HindcastPage';
 import { HomePage } from './pages/home/HomePage';
 import { LoginPage } from './pages/login/LoginPage';
@@ -13,7 +14,7 @@ import { IncidentsPage } from './pages/incidents/IncidentsPage';
 import { RuleManagementPage } from './pages/rule-management/RuleManagementPage';
 import { FeatureBanner } from './components/FeatureBanner/FeatureBanner';
 
-const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', rules: 'Rules', hindcast: 'Hindcast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents' };
+const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', rules: 'Rules', hindcast: 'Hindcast', forecast: 'Forecast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents' };
 
 export function App() {
   const route = useRoute();
@@ -35,7 +36,10 @@ export function App() {
       ) : route.page === 'changes' ? (
         <ChangeWindowsPage initialId={route.parts[0]} />
       ) : route.page === 'hindcast' ? (
-        <HindcastPage serviceId={route.parts[0]} weeks={route.parts[1]} />
+        // The key gives a link from the forecast a fresh page, ringing the pattern it names.
+        <HindcastPage key={route.parts.join('/')} serviceId={route.parts[0]} weeks={route.parts[1]} focus={route.parts[2]} />
+      ) : route.page === 'forecast' ? (
+        <ForecastPage key={route.parts.join('/')} serviceId={route.parts[0]} weeks={route.parts[1]} horizon={route.parts[2]} focus={route.parts[3]} />
       ) : (
         // The key gives a link to another rule a fresh page, opened on that rule.
         <RuleManagementPage key={route.parts[0] ?? ''} initialRuleId={route.parts[0]} />

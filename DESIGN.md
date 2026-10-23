@@ -209,7 +209,7 @@ end says so and says which value wins.
 ## Overview
 
 Imperial Ops is an operations dashboard: alert rules, incidents, change windows, and a
-weekly "hindcast" that replays history against today's rules. The person using it is on
+hindcast and forecast: what past tickets were caused by, and what the next weeks should hold. The person using it is on
 shift, making decisions that hide or surface real pages. The look follows from that:
 
 - **Calm.** Everything is grey until something needs a person. Then it is one colour, once.
@@ -245,7 +245,7 @@ The product is plain CSS. No Tailwind, no CSS-in-JS.
   attribute** (`data-variant="primary"`, `data-active`, `data-selected`, `data-status`),
   and its colours from **tokens** (`var(--l3)`). Never a raw hex in a component.
 - Shared pieces are prefixed `mn-`. Each page has its own prefix for its own pieces:
-  `hc-` Hindcast, `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home.
+  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `lg-` Sign in.
 - Tokens: `src/styles/theme.css`. Shared pieces: `src/styles/ui.css`. Page frame:
   `src/styles/shell.css`. Command palette: `src/styles/palette.css`. OS preferences:
   `src/styles/accessibility.css`. Every other component keeps its CSS beside its `.tsx`.
@@ -450,7 +450,6 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `⌘K` | Command palette |
 | `A` `X` `E` `D` | Approve, reject, activate, deactivate (Rules) |
 | `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
-| `1` to `5` | Jump to a chapter (Hindcast) |
 | `[` `]` | Tuck away the sidebar / the list |
 | `?` | Start the guided tour |
 | `Esc` | Step back one layer |
@@ -626,8 +625,8 @@ the app has drifted from it. Match the scale, not the drift.
   deficiency, green against `tone-2` scores 7.5 (acceptable only with a second cue) and
   `tone-3` is 2.9:1 against the surface. That is why direct labels, a legend, 2px gaps and
   a table view are requirements, not polish.
-- **Per-page chart tokens duplicate each other.** `--al-paged` and `--hc-rule` name
-  the same greys. The system's `tone-1` to `tone-4` replace them.
+- **Per-page chart tokens duplicate each other.** `--al-paged` and friends name the same
+  greys as `tone-1` to `tone-4`, which are now tokens in `theme.css`. New charts use those.
 - **Light-theme chips are raw `#ffffff`** in five component files. The port names it `chip`.
 - **`fg-3` on dark surfaces is 4.0:1** (3.8:1 on a card), under the 4.5:1 that WCAG AA asks
   of small text. It is used for labels and meta, never for sentences; `prefers-contrast:

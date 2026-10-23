@@ -1,0 +1,118 @@
+/* The ticket list: a search box, then rows that scroll inside the panel and fade at the edge. */
+
+.ol-tkts {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+}
+
+.ol-tkts-search {
+  flex: none;
+  height: 30px;
+  background: var(--l2);
+}
+
+.ol-tkts-scroll {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -8px;
+  overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent, #000 8px, #000 calc(100% - 16px), transparent);
+}
+
+.ol-tkt {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  transition: background-color 120ms ease;
+}
+
+.ol-tkt + .ol-tkt {
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ol-tkt:hover {
+    background: var(--tint);
+    box-shadow: none;
+  }
+  .ol-tkt:hover + .ol-tkt {
+    box-shadow: none;
+  }
+}
+
+/* Outcome as a dot: an incident is red, worked is solid grey, cancelled is a hollow ring.
+ * The word on the right says it too. */
+.ol-tkt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tone-2);
+}
+
+.ol-tkt-dot[data-outcome='incident'] {
+  background: var(--red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 14%, transparent);
+}
+
+.ol-tkt-dot[data-outcome='cancelled'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.ol-tkt-main {
+  min-width: 0;
+}
+
+.ol-tkt-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--row-name);
+}
+
+.ol-tkt-meta {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-tkt-meta b {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.ol-tkt-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ol-tkt-side b {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.ol-tkt-side [data-outcome='incident'] {
+  color: var(--danger-fg);
+}
+
+.ol-tkts-end {
+  min-height: 24px;
+  padding: 8px 0 12px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--fg-3);
+}

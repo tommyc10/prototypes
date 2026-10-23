@@ -1,37 +1,28 @@
-/* The tooltip every chart shares. Values lead and labels follow, because by now the reader
- * knows the series and wants the number. Each row is keyed by a short stroke of its colour.
- *
- * It sits above whatever it's inside (which needs `position: relative`); `edge` flips it
- * inwards near the sides of a chart so it's never cut off. Nothing here is only in the
- * tooltip: every figure is also on the page or in the chart's table view. */
+/* The tooltip every chart on the page shares: solid, not glass, because bright marks would
+ * wash through glass. Values lead and labels follow. It's placed in pixels inside whatever
+ * relative box it's in, and flips to the left of the point past the middle so it's never cut off. */
 
-import { num } from '../../../../lib/format';
-import { OUTCOMES, OUTCOME_LABEL } from '../../model/labels';
-import type { Split } from '../../model/types';
+import type { CSSProperties } from 'react';
 
 export interface TipRow {
-  /** Which colour the row's key is drawn in. */
+  /** A CSS colour for the row's key stroke. */
   tone?: string;
   value: string;
   label: string;
 }
 
-export function Tip({ title, rows, foot, edge }: { title: string; rows: TipRow[]; foot?: string; edge?: 'start' | 'end' }) {
+export function Tip({ x, y, flip, title, rows, foot }: { x: number; y: number; flip?: boolean; title: string; rows: TipRow[]; foot?: string }) {
   return (
-    <div className="hc-tip" data-edge={edge} role="presentation">
-      <div className="hc-tip-title">{title}</div>
+    <div className="ol-tip" data-flip={flip || undefined} style={{ '--x': `${x}px`, '--y': `${y}px` } as CSSProperties} role="presentation">
+      <div className="ol-tip-title">{title}</div>
       {rows.map((row) => (
-        <div className="hc-tip-row" key={row.label}>
-          <i data-tone={row.tone} />
+        <div className="ol-tip-row" key={row.label}>
+          <i style={{ background: row.tone ?? 'transparent' }} />
           <b>{row.value}</b>
           <span>{row.label}</span>
         </div>
       ))}
-      {foot && <div className="hc-tip-foot">{foot}</div>}
+      {foot && <div className="ol-tip-foot">{foot}</div>}
     </div>
   );
 }
-
-/** The three rows for a split. */
-export const splitRows = (split: Split): TipRow[] =>
-  OUTCOMES.map((o) => ({ tone: o, value: num(split[o]), label: OUTCOME_LABEL[o] }));

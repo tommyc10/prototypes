@@ -6,7 +6,7 @@
  * day it meets a real feed:
  *
  *   tidy   sixteen windows across eight groups, every field filled in. The ticket numbers
- *          and names match the windows the Hindcast page talks about.
+ *          and names match the windows the rest of the app talks about.
  *   busy   about a hundred and fifty, nearly all with no assignment group, long ticket
  *          titles, a batch running many hours late, facts missing, and nobody counting the
  *          alerts held back. This is the one to design against.

@@ -3,7 +3,7 @@
  * keys; the look is shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun } from 'lucide-react';
+import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun, Telescope } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import { END_SHORT } from '../../model/lifecycle';
 import type { Lifecycle } from '../../model/types';
@@ -74,9 +74,13 @@ export function IncidentsPalette({
             <Filter size={15} />
             Rules
           </Command.Item>
-          <Command.Item value="go to hindcast replay" onSelect={run(() => onNavigate('#/hindcast'))}>
+          <Command.Item value="go to hindcast history root cause" onSelect={run(() => onNavigate('#/hindcast'))}>
             <History size={15} />
             Hindcast
+          </Command.Item>
+          <Command.Item value="go to forecast predictions look ahead" onSelect={run(() => onNavigate('#/forecast'))}>
+            <Telescope size={15} />
+            Forecast
           </Command.Item>
           <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
             <CalendarClock size={15} />

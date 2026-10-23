@@ -4,22 +4,27 @@
  *   #/login                  the sign-in page (a mock; nothing is gated behind it)
  *   #/rules                  the rule list
  *   #/rules/RUL-0428         …opened on one rule
- *   #/hindcast               the hindcast, all services, default lookback
- *   #/hindcast/holonet/12    …one service, 12 completed weeks
+ *   #/hindcast               the look back: tickets, root causes, the patterns that repeat
+ *   #/hindcast/holonet/26    …one service, 26 completed weeks
+ *   #/hindcast/all/26/PAT-04 …ringing one pattern (a prediction on the forecast links here)
+ *   #/forecast               the look ahead, built from the hindcast's patterns
+ *   #/forecast/holonet/26/8  …one service, 26 weeks back, 8 ahead
+ *   #/forecast/all/26/4/PAT-04  …ringing one pattern's prediction
+ *   #/outlook/…              an older address, when the two were one page: opens the same view
  *   #/alerts                 the alert stream
  *   #/changes                the change windows
  *   #/changes/CHG-2398       …opened on one window
  *   #/incidents              every incident's journey
  *   #/incidents/INC-41201    …opened on one incident
  *
- * Six pages don't need a router library. In the real app, swap this for the router's
+ * These pages don't need a router library. In the real app, swap this for the router's
  * own hooks; the pages only ever see `parts`. */
 
 import { useEffect, useState } from 'react';
 
-export type PageId = 'home' | 'login' | 'rules' | 'hindcast' | 'alerts' | 'changes' | 'incidents';
+export type PageId = 'home' | 'login' | 'rules' | 'hindcast' | 'forecast' | 'alerts' | 'changes' | 'incidents';
 
-const PAGES: PageId[] = ['login', 'rules', 'hindcast', 'alerts', 'changes', 'incidents'];
+const PAGES: PageId[] = ['login', 'rules', 'hindcast', 'forecast', 'alerts', 'changes', 'incidents'];
 
 export interface Route {
   page: PageId;
@@ -29,6 +34,8 @@ export interface Route {
 
 function parse(hash: string): Route {
   const [page, ...parts] = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  // The hindcast and forecast were briefly one page at #/outlook/<view>/…; those links still land.
+  if (page === 'outlook') return parts[0] === 'forecast' ? { page: 'forecast', parts: parts.slice(1) } : { page: 'hindcast', parts: parts[0] === 'hindcast' ? parts.slice(1) : parts };
   return { page: PAGES.find((known) => known === page) ?? 'home', parts };
 }
 

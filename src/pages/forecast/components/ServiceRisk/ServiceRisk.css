@@ -1,0 +1,131 @@
+/* Service outlook rows: name, a bar with its range whisker, the figure and its change. */
+
+.ol-risk {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 2px;
+  margin: 0 -8px;
+}
+
+.ol-risk-row {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(40px, 1fr) 40px 52px;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 0;
+  min-height: 24px;
+  max-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--fg-2);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ol-risk-row:active {
+  transform: scale(0.98);
+}
+
+.ol-risk-row:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ol-risk-row[data-selected] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+:root[data-mn-theme='light'] .ol-risk-row[data-selected] {
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ol-risk-row:not([data-selected]):hover {
+    background: var(--tint);
+  }
+}
+
+.ol-risk-name {
+  color: var(--row-name);
+}
+
+.ol-risk-row[data-selected] .ol-risk-name {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ol-risk-track {
+  position: relative;
+  height: 12px;
+}
+
+.ol-risk-bar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  border-radius: 0 2px 2px 0;
+  background: var(--tone-2);
+  transform-origin: left;
+}
+
+.ol-risk[data-picked] .ol-risk-bar {
+  background: var(--tone-3);
+}
+
+.ol-risk-row[data-selected] .ol-risk-bar {
+  background: var(--tone-1);
+}
+
+/* The likely range: a hairline with caps, drawn over the bar's end. */
+.ol-risk-range {
+  position: absolute;
+  top: 50%;
+  height: 8px;
+  margin-top: -4px;
+  border-left: 1px solid var(--fg-2);
+  border-right: 1px solid var(--fg-2);
+}
+
+.ol-risk-range::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--fg-2);
+}
+
+.ol-risk-num {
+  justify-self: end;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.ol-risk-change {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  gap: 1px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.ol-risk-change[data-worse] {
+  color: var(--orange);
+}

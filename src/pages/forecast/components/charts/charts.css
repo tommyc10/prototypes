@@ -1,0 +1,103 @@
+/* The forecast's own charts: tickets a week with its range, and causes before and after.
+ * The marks, tooltip, legend and entrance they use are shared, in
+ * src/pages/hindcast/components/charts/charts.css. */
+
+/* ---------- forecast ---------- */
+
+.ol-fc {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.ol-fc-plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The future: a faint panel behind the weeks that haven't happened. */
+.ol-fc-future {
+  fill: var(--tint);
+}
+
+.ol-fc-today {
+  stroke: var(--line-3);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  shape-rendering: crispEdges;
+}
+
+.ol-fc-today-label {
+  font-weight: 500;
+  fill: var(--fg-2);
+}
+
+.ol-fc-band {
+  fill: color-mix(in srgb, var(--tone-2) 26%, transparent);
+}
+
+/* ---------- causes, before and after ---------- */
+
+.ol-pair {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 2px;
+}
+
+.ol-pair-row {
+  display: grid;
+  grid-template-columns: minmax(0, 120px) minmax(30px, 1fr) 58px;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 0;
+  min-height: 22px;
+  max-height: 38px;
+  font-size: 13px;
+}
+
+.ol-pair-name {
+  color: var(--row-name);
+}
+
+.ol-pair-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ol-pair-bars i {
+  display: block;
+  height: 5px;
+  border-radius: 0 2px 2px 0;
+  transform-origin: left;
+}
+
+.ol-pair-bars i[data-tone='last'] {
+  background: var(--tone-3);
+}
+
+.ol-pair-bars i[data-tone='next'] {
+  background: var(--tone-1);
+}
+
+.ol-pair-num {
+  justify-self: end;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ol-pair-num span {
+  margin-right: 6px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.ol-pair-num span::after {
+  content: ' →';
+}

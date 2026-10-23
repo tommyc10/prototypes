@@ -1,0 +1,140 @@
+/* The top bar: one 52px row. The page's name leads; the scope sits after a rule, and the
+ * meta is pushed to the far end. */
+
+.ol-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  height: 52px;
+  padding: 0 20px 0 14px;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+
+.ol-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 0 4px 0 2px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.ol-title svg {
+  color: var(--fg-3);
+}
+
+.ol-bar-rule {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+}
+
+.ol-service {
+  max-width: 220px;
+  height: 28px;
+  padding: 0 8px 0 10px;
+  gap: 6px;
+  border-radius: 7px;
+}
+
+.ol-service svg {
+  flex: none;
+  color: var(--fg-3);
+}
+
+.ol-service[data-popup-open] {
+  background: var(--l5);
+}
+
+.ol-seg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.ol-seg-label {
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.ol-seg-track {
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ol-seg-track .mn-tab {
+  justify-content: center;
+  min-width: 36px;
+  height: 24px;
+  padding: 0 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-seg-track .mn-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ol-cause-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 24px;
+  padding: 0 8px 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ol-cause-chip svg {
+  color: var(--fg-3);
+}
+
+.ol-cause-chip:active {
+  transform: scale(0.97);
+}
+
+.ol-cause-chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ol-cause-chip:hover {
+    background: var(--l5);
+  }
+}
+
+.ol-bar-meta {
+  margin-left: auto;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@container analysis-bar (max-width: 1000px) {
+  .ol-seg-label,
+  .ol-bar-meta {
+    display: none;
+  }
+}

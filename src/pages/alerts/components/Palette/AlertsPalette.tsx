@@ -3,7 +3,7 @@
  * shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun, Siren } from 'lucide-react';
+import { CalendarClock, CircleHelp, Filter, History, Moon, Search, Siren, Sun, Telescope } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import { FEED_TABS } from '../../model/labels';
 import type { FeedFilter } from '../../model/types';
@@ -80,9 +80,13 @@ export function AlertsPalette({
             <Filter size={15} />
             Rules
           </Command.Item>
-          <Command.Item value="go to hindcast replay" onSelect={run(() => onNavigate('#/hindcast'))}>
+          <Command.Item value="go to hindcast history root cause" onSelect={run(() => onNavigate('#/hindcast'))}>
             <History size={15} />
             Hindcast
+          </Command.Item>
+          <Command.Item value="go to forecast predictions look ahead" onSelect={run(() => onNavigate('#/forecast'))}>
+            <Telescope size={15} />
+            Forecast
           </Command.Item>
           <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
             <CalendarClock size={15} />

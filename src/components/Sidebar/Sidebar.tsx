@@ -3,7 +3,7 @@
  * pinned groups there) comes in as children. */
 
 import type { ReactNode } from 'react';
-import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, LayoutGrid, Moon, Search, Siren, Sun } from 'lucide-react';
+import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, LayoutGrid, Moon, Search, Siren, Sun, Telescope } from 'lucide-react';
 import type { PageId } from '../../lib/route';
 import type { Theme } from '../../hooks/useTheme';
 import './Sidebar.css';
@@ -60,6 +60,9 @@ export function Sidebar({
         </a>
         <a className="mn-nav-item" href="#/hindcast" data-active={page === 'hindcast' || undefined}>
           <History size={16} /> Hindcast
+        </a>
+        <a className="mn-nav-item" href="#/forecast" data-active={page === 'forecast' || undefined}>
+          <Telescope size={16} /> Forecast
         </a>
         <a className="mn-nav-item" href="#/changes" data-active={page === 'changes' || undefined}>
           <CalendarClock size={16} /> Change windows

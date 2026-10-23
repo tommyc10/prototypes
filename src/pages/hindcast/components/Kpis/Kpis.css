@@ -1,0 +1,99 @@
+/* The headline figures: five stat cards in a row, each a label, a number with its shape
+ * beside it, and a quiet comparison underneath. */
+
+.ol-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ol-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 11px 14px 10px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.ol-kpi-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ol-kpi-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ol-kpi-value {
+  flex: none;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A unit or a range after the number: smaller and quieter, so the number leads. */
+.ol-kpi-value small {
+  margin-left: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--fg-3);
+}
+
+.ol-kpi-row .ol-spark {
+  flex: 1;
+  min-width: 40px;
+  max-width: 120px;
+  height: 26px;
+  margin-left: auto;
+}
+
+.ol-kpi-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-kpi-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.ol-kpi-change[data-worse] {
+  color: var(--orange);
+}
+
+@container analysis (max-width: 900px) {
+  .ol-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container analysis (max-width: 560px) {
+  .ol-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

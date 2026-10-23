@@ -1,95 +1,199 @@
-/* The charts: the split bar, the weekly columns, the ranked breakdowns, the heat strip, and
- * the legend, tooltip and table they share. No chart library; every mark is a div.
+/* The charts: everything they share (gridlines, axis text, lines, dots, tooltip, legend), the
+ * hindcast's own charts, and the entrance that draws them. The forecast page imports this file
+ * for the shared pieces and keeps its own charts' layout beside them.
  *
- * Three tones carry the whole page. Caught by a rule is the page's one data colour: it is the
- * good outcome and the thing the report is about, so it is the part you should see first.
- * Caught by a change window and not caught stay grey, strongest to faintest, so the green
- * never has to compete. Every other colour on this page is status (proposed, unsafe). */
+ * One grey ramp carries every series, brightest for what matters most. The only colours are
+ * status: red for an incident, orange for low confidence or a rise worth a look. */
 
-.hc {
-  --hc-rule: var(--green);
-  --hc-window: #8c8c8c;
-  --hc-missed: #4d4d4d;
-  --hc-grid: var(--line);
+/* ---------- shared marks ---------- */
+
+.ol-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
 }
 
-:root[data-mn-theme='light'] .hc {
-  --hc-window: #737373;
-  --hc-missed: #b0b0b0;
+.ol-gridline {
+  stroke: var(--line);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
 }
 
-.hc [data-outcome='rule'],
-.hc [data-tone='rule'] {
-  background: var(--hc-rule);
+.ol-gridline[data-base] {
+  stroke: var(--line-3);
 }
 
-.hc [data-outcome='window'],
-.hc [data-tone='window'] {
-  background: var(--hc-window);
+.ol-axis {
+  font-size: 11px;
+  fill: var(--fg-3);
+  font-variant-numeric: tabular-nums;
 }
 
-.hc [data-outcome='missed'],
-.hc [data-tone='missed'] {
-  background: var(--hc-missed);
+.ol-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-/* Proposed is amber everywhere in the app; here it's what the proposals would add. */
-.hc [data-tone='proposed'] {
-  background: var(--amber);
+.ol-line[data-tone='1'] {
+  stroke: var(--tone-1);
+}
+.ol-line[data-tone='2'] {
+  stroke: var(--tone-2);
+}
+.ol-line[data-tone='3'] {
+  stroke: var(--tone-3);
+  stroke-width: 1.5;
+}
+.ol-line[data-dash='dash'] {
+  stroke-dasharray: 6 5;
+}
+.ol-line[data-dash='dot'] {
+  stroke-dasharray: 1 4;
 }
 
-.hc [data-tone='tuning'] {
-  background: color-mix(in srgb, var(--amber) 42%, var(--hc-missed));
+/* A 2px ring of the card around every dot, so it sits clear of the line under it. */
+.ol-dot {
+  stroke: var(--l3);
+  stroke-width: 2;
 }
 
-/* ---------- split bar ---------- */
-
-.hc-split {
-  width: 100%;
-  height: 10px;
+.ol-dot[data-tone='1'] {
+  fill: var(--tone-1);
+}
+.ol-dot[data-tone='2'] {
+  fill: var(--tone-2);
+}
+.ol-dot[data-tone='3'] {
+  fill: var(--tone-3);
 }
 
-.hc-split[data-size='sm'] {
-  height: 4px;
+.ol-cross {
+  stroke: var(--line-3);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
 }
 
-.hc-split[data-size='lg'] {
-  height: 16px;
+/* Labels on the marks themselves, so the reader doesn't need the key. */
+.ol-direct {
+  font-size: 12px;
+  font-weight: 600;
+  /* A halo of the card behind the text, so a label can sit over a line and still read. */
+  paint-order: stroke;
+  stroke: var(--l3);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  fill: var(--fg);
+  font-variant-numeric: tabular-nums;
 }
 
-.hc-split-fill {
-  display: flex;
-  gap: 2px; /* the surface shows through: that's what separates the segments */
-  height: 100%;
-  min-width: 3px;
+.ol-direct[data-quiet] {
+  font-size: 11px;
+  font-weight: 400;
+  fill: var(--fg-3);
 }
 
-.hc-split-fill span {
-  flex-basis: 0;
-  min-width: 2px;
+/* Div gridlines, for the bar charts: a hairline with its value in the gutter. */
+.ol-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--line);
+  pointer-events: none;
 }
 
-/* Square at the baseline, rounded at the data end. */
-.hc-split-fill span:last-child {
-  border-radius: 0 4px 4px 0;
+.ol-grid-line:first-child {
+  border-top-color: var(--line-3);
 }
 
-/* A whole (part-to-whole) bar is a meter: rounded at both ends. */
-.hc-split[data-whole] .hc-split-fill span:first-child {
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
+.ol-grid-line span {
+  position: absolute;
+  top: -8px;
+  right: calc(100% + 8px);
+  font-size: 11px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+  white-space: nowrap;
 }
 
-.hc-split[data-size='sm'] .hc-split-fill span:last-child {
-  border-radius: 0 2px 2px 0;
+/* ---------- tooltip ---------- */
+
+.ol-tip {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  z-index: 5;
+  transform: translateX(12px);
+  min-width: 176px;
+  max-width: 300px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--fg-2);
+  pointer-events: none;
+}
+
+.ol-tip[data-flip] {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.ol-tip-title {
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ol-tip-row {
+  display: grid;
+  grid-template-columns: 10px auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.ol-tip-row i {
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.ol-tip-row b {
+  min-width: 3ch;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.ol-tip-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ol-tip-foot {
+  margin-top: 6px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  color: var(--fg-3);
 }
 
 /* ---------- legend ---------- */
 
-.hc-legend {
+.ol-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: 4px 14px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -97,304 +201,167 @@
   color: var(--fg-2);
 }
 
-.hc-legend li {
+.ol-legend li {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   white-space: nowrap;
 }
 
-.hc-legend i,
-.hc-swatch {
+.ol-legend i {
   flex: none;
   width: 8px;
   height: 8px;
   border-radius: 2px;
 }
 
-/* ---------- tooltip ---------- */
-
-.hc-tip {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  z-index: 5;
-  transform: translateX(-50%);
-  min-width: 176px;
-  padding: 9px 11px;
-  border-radius: 9px;
-  /* Solid, not glass: it sits on top of the marks, and bright bars would wash through. */
-  background: var(--l4);
-  box-shadow:
-    inset 0 1px 0 var(--glass-edge),
-    0 0 0 1px var(--line-2),
-    var(--shadow-pop);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-align: left;
-  white-space: nowrap;
-  color: var(--fg-2);
-  pointer-events: none;
+.ol-legend i[data-key='line'],
+.ol-legend i[data-key='dash'],
+.ol-legend i[data-key='dot'] {
+  width: 14px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px solid var(--tone-1);
 }
 
-.hc-tip[data-edge='end'] {
-  left: auto;
-  right: 0;
-  transform: none;
+.ol-legend i[data-key='dash'] {
+  border-top: 2px dashed var(--tone-2);
 }
 
-.hc-tip[data-edge='start'] {
-  left: 0;
-  transform: none;
+.ol-legend i[data-key='dot'] {
+  border-top: 2px dotted var(--tone-3);
 }
 
-.hc-tip-title {
-  margin-bottom: 6px;
-  font-weight: 500;
+.ol-legend i[data-key='band'] {
+  background: color-mix(in srgb, var(--tone-2) 26%, transparent);
 }
 
-.hc-tip-row {
-  display: grid;
-  grid-template-columns: 10px auto 1fr;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0;
-}
+/* ---------- weekly volume ---------- */
 
-/* A short stroke of the series colour: at this size a filled box would shout. */
-.hc-tip-row i {
-  width: 10px;
-  height: 2px;
-  border-radius: 2px;
-}
-
-.hc-tip-row b {
-  min-width: 3ch;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  color: var(--fg);
-}
-
-.hc-tip-foot {
-  margin-top: 6px;
-  padding-top: 7px;
-  border-top: 1px solid var(--line);
-  color: var(--fg-3);
-}
-
-/* ---------- a figure: title, table switch, chart ---------- */
-
-.hc-fig {
-  min-width: 0;
-}
-
-.hc-fig h3,
-.hc-h3 {
+.ol-vol {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 14px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
-.hc-fig h3 .mn-subtle,
-.hc-h3 .mn-subtle {
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.hc-fig-toggle {
-  align-self: center;
-  width: 24px;
-  height: 24px;
-  margin: -4px -4px -4px auto;
-  color: var(--fg-3);
-}
-
-.hc-fig-toggle[aria-pressed='true'] {
-  background: var(--l4);
-  color: var(--fg);
-}
-
-.hc-fig-toggle:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
-}
-
-/* Under a chart: its key, set to the right. */
-.hc-fig-foot {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-
-/* ---------- table view ---------- */
-
-.hc-table-wrap {
-  padding: 4px 4px 2px;
-  border-radius: 12px;
-  background: var(--l3);
-  box-shadow: inset 0 0 0 1px var(--line);
-  overflow-x: auto;
-}
-
-.hc-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.hc-table th,
-.hc-table td {
-  padding: 8px 12px;
-  white-space: nowrap;
-}
-
-.hc-table thead th {
-  font-size: 12px;
-  font-weight: 400;
-  text-align: right;
-  color: var(--fg-3);
-}
-
-.hc-table th:first-child {
-  text-align: left;
-}
-
-.hc-table tbody th {
-  font-weight: 400;
-  color: var(--fg);
-}
-
-.hc-table td {
-  text-align: right;
-  color: var(--fg-2);
-}
-
-.hc-table tbody tr {
-  border-top: 1px solid var(--line);
-}
-
-/* ---------- weekly columns ---------- */
-
-.hc-cols {
-  --gutter: 36px; /* room for the axis numbers */
-  padding-top: 6px;
-}
-
-.hc-cols-plot {
+.ol-vol-plot {
   position: relative;
-  height: 200px;
-  margin-left: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+  padding-left: 40px;
 }
 
-/* Gridlines: solid hairlines, one step off the surface. The baseline is a touch stronger. */
-.hc-cols-tick {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 1px solid var(--hc-grid);
+.ol-vol-bars {
+  position: relative;
+  flex: 1.9;
+  min-height: 0;
+  margin-top: 8px;
 }
 
-.hc-cols-tick:first-child {
-  border-top-color: var(--line-3);
-}
-
-.hc-cols-tick span {
-  position: absolute;
-  top: -8px;
-  right: calc(100% + 10px);
-  font-size: 11px;
-  line-height: 14px;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-3);
-}
-
-.hc-cols-bars {
+.ol-cols {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: flex-end;
 }
 
-.hc-col {
+.ol-col {
   position: relative;
-  flex: 1;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  flex: 1;
   height: 100%;
-  padding: 0 1px;
-  outline: none;
 }
 
-/* The whole slot is the hover target, not just the painted bar; a soft band shows which. */
-.hc-col[data-hover]::before {
+/* The week under the pointer: a soft band behind its column. */
+.ol-col[data-hover]::before {
   content: '';
   position: absolute;
-  inset: 0 1px;
+  inset: -8px 0 0;
   border-radius: 6px 6px 0 0;
   background: var(--tint);
 }
 
-.hc-col-stack {
+.ol-col-stack {
   position: relative;
   display: flex;
-  flex-direction: column-reverse; /* rule at the baseline, what was missed on top */
+  flex-direction: column-reverse; /* incidents at the baseline, cancelled on top */
   gap: 2px;
-  width: 62%; /* thin bars: the rest of the slot is air, however many weeks there are */
-  max-width: 24px;
+  width: 64%;
+  max-width: 26px;
   min-height: 2px;
+  transform-origin: bottom;
 }
 
-/* The column's tooltip sits beside it, inside the plot, so it never covers the title above
- * or slides under the sticky bar. Past halfway it flips to the column's left. */
-.hc-col .hc-tip {
-  top: 0;
-  bottom: auto;
-  left: calc(100% + 6px);
-  transform: none;
-}
-
-.hc-col .hc-tip[data-edge='end'] {
-  left: auto;
-  right: calc(100% + 6px);
-}
-
-.hc-col-stack span {
+.ol-col-stack span {
   flex-basis: 0;
   min-height: 2px;
 }
 
-.hc-col-stack span:last-child {
-  border-radius: 4px 4px 0 0;
+.ol-col-stack span:last-child {
+  border-radius: 2px 2px 0 0;
 }
 
-.hc-col:focus-visible .hc-col-stack {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+.ol-vol-sub {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 4px;
 }
 
-.hc-cols-x {
+.ol-vol-sub-label {
+  margin-left: -40px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.ol-vol-sub-plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* One hit slot per week, over both charts. */
+.ol-hits {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 40px;
+  right: 0;
+  display: flex;
+}
+
+.ol-hit {
+  flex: 1;
+  outline: none;
+}
+
+.ol-hit:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+  border-radius: 4px;
+}
+
+.ol-x {
   display: flex;
   height: 16px;
-  margin: 8px 0 0 var(--gutter);
+  margin: 8px 0 0 40px;
   font-size: 11px;
   color: var(--fg-3);
 }
 
-.hc-cols-x span {
+.ol-x span {
   position: relative;
   flex: 1;
 }
 
-/* Centred on its column even when the label is wider than the column. */
-.hc-cols-x em {
+.ol-x em {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -402,77 +369,228 @@
   white-space: nowrap;
 }
 
-/* ---------- ranked breakdown ---------- */
+/* ---------- heatmap ---------- */
 
-.hc-brows {
+.ol-heat {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
 }
 
-.hc-brow {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 200px) minmax(0, 1fr) 40px;
-  align-items: center;
-  gap: 14px;
-  height: 34px;
-  margin: 0 -10px;
-  padding: 0 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
-}
-
-.hc-brow[data-hover] {
-  background: var(--tint);
-}
-
-.hc-brow:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--focus-ring);
-}
-
-.hc-brow-label {
-  color: var(--fg-2);
-}
-
-.hc-brow-val {
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.hc-brow .hc-tip {
-  bottom: calc(100% + 2px);
-  right: 10px;
-}
-
-/* ---------- heat strip ---------- */
-
-.hc-heat {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+.ol-heat-grid {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: 2px;
 }
 
-.hc-heat-cell {
-  position: relative;
-  height: 20px;
-  border-radius: 3px;
-  background: var(--tint);
+.ol-heat-row {
+  display: grid;
+  grid-template-columns: 28px repeat(24, minmax(0, 1fr));
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
 }
 
-.hc-heat-cell::after {
+.ol-heat-day {
+  align-self: center;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.ol-heat-cell {
+  position: relative;
+  min-height: 6px;
+  border-radius: 2px;
+  background: var(--tint);
+  outline: none;
+}
+
+.ol-heat-cell::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--hc-rule);
-  opacity: var(--heat);
+  background: var(--tone-1);
+  opacity: calc(var(--heat) * 0.92);
 }
 
-.hc-heat-cell[data-hover] {
-  outline: 1px solid var(--line-3);
-  outline-offset: 1px;
+.ol-heat-cell[data-hover],
+.ol-heat-cell:focus-visible {
+  box-shadow: 0 0 0 1.5px var(--focus-ring);
+  z-index: 1;
+}
+
+.ol-heat-hours {
+  flex: none;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--fg-3);
+}
+
+.ol-heat-hours span {
+  white-space: nowrap;
+}
+
+.ol-heat-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ol-heat-foot b {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-heat-scale {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.ol-heat-scale i {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--tint);
+}
+
+.ol-heat-scale i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--tone-1);
+  opacity: calc(var(--heat) * 0.92);
+}
+
+/* ---------- small line ---------- */
+
+.ol-spark {
+  display: block;
+  overflow: visible;
+}
+
+.ol-spark-line {
+  fill: none;
+  stroke: var(--tone-2);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ol-spark-line[data-ahead] {
+  stroke: var(--tone-1);
+  stroke-dasharray: 3 3;
+}
+
+/* ---------- the entrance: the page drawing itself ----------
+ *
+ * The full story plays only when the page first arrives ([data-animate='story'] on the grid).
+ * This is a data story, so it's allowed past the usual 300ms: panels rise in 220ms on a 40ms
+ * stagger, bars grow from their baseline, lines are drawn left to right, and the forecast
+ * follows the history out past today. A pointer change of view or scope swaps the panels in
+ * over 180ms ([data-animate='swap']). A key press, ⌘K, and anything that mounts after the
+ * motion has played show at once. Only transform, opacity, filter and clip-path move. */
+
+[data-animate='story'] .ol-panel,
+[data-animate='story'] .ol-kpi {
+  animation: ol-arrive 220ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+[data-animate='story'] .ol-grow {
+  animation: ol-grow-y 560ms var(--ease-out) both;
+  animation-delay: calc(120ms + var(--i, 0) * 9ms);
+}
+
+[data-animate='story'] .ol-grow-x {
+  animation: ol-grow-x 520ms var(--ease-out) both;
+  animation-delay: calc(140ms + var(--i, 0) * 30ms);
+}
+
+[data-animate='story'] .ol-fade {
+  animation: ol-fade 360ms var(--ease-out) both;
+  animation-delay: calc(160ms + var(--i, 0) * 14ms);
+}
+
+[data-animate='story'] .ol-wipe {
+  animation: ol-wipe 900ms var(--ease-in-out) both;
+  animation-delay: 160ms;
+}
+
+[data-animate='story'] .ol-wipe[data-late] {
+  animation-duration: 520ms;
+  animation-delay: 960ms;
+}
+
+/* After a pointer change: the new figures fade in, quickly and all at once. */
+[data-animate='swap'] .ol-panel,
+[data-animate='swap'] .ol-kpi {
+  animation: ol-swap 180ms var(--ease-out) both;
+}
+
+@keyframes ol-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+  }
+}
+
+@keyframes ol-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes ol-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ol-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ol-swap {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes ol-wipe {
+  from {
+    clip-path: inset(-20px 100% -20px 0);
+  }
+  to {
+    clip-path: inset(-20px -80px -20px 0);
+  }
+}
+
+/* Reduced motion: nothing moves. Panels and marks fade in, briefly, and that's all. */
+@media (prefers-reduced-motion: reduce) {
+  [data-animate] .ol-panel,
+  [data-animate] .ol-kpi,
+  [data-animate='story'] .ol-grow,
+  [data-animate='story'] .ol-grow-x,
+  [data-animate='story'] .ol-fade,
+  [data-animate='story'] .ol-wipe {
+    animation: ol-fade 150ms ease both;
+    animation-delay: 0ms;
+  }
 }

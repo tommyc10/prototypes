@@ -1,0 +1,232 @@
+/* The hindcast and forecast pages share this layout: no list column, so the grid gets the
+ * whole width, and it fills the pane's height so nothing needs a scroll on a laptop screen. Each panel's body
+ * takes whatever its cell has left, and the long lists scroll inside their own panels.
+ *
+ * The page lays itself out from its own width (`analysis` is a container): twelve columns when
+ * there's room, six below 900px, one below 700px. Below 900px the grid stops fitting the
+ * height and the pane scrolls instead, with each panel at a fixed height. */
+
+.mn.ol {
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.mn.ol[data-hide-side] {
+  grid-template-columns: 0px minmax(0, 1fr);
+}
+
+.ol-pane {
+  container: analysis-bar / inline-size;
+}
+
+.ol-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container: analysis / inline-size;
+}
+
+.ol-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto auto minmax(0, 1.12fr) minmax(0, 1fr);
+  gap: 10px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 600px;
+  padding: 12px 20px 16px;
+}
+
+.ol-grid > [data-area='lead'],
+.ol-grid > [data-area='kpis'] {
+  grid-column: 1 / -1;
+}
+
+.ol-grid[data-view='hindcast'] > [data-area='volume'] {
+  grid-column: 1 / 8;
+}
+.ol-grid[data-view='hindcast'] > [data-area='causes'] {
+  grid-column: 8 / 13;
+}
+.ol-grid[data-view='hindcast'] > [data-area='tickets'] {
+  grid-column: 1 / 6;
+}
+.ol-grid[data-view='hindcast'] > [data-area='patterns'] {
+  grid-column: 6 / 10;
+}
+.ol-grid[data-view='hindcast'] > [data-area='heat'] {
+  grid-column: 10 / 13;
+}
+
+.ol-grid[data-view='forecast'] > [data-area='outlook'] {
+  grid-column: 1 / 9;
+}
+.ol-grid[data-view='forecast'] > [data-area='services'] {
+  grid-column: 9 / 13;
+}
+.ol-grid[data-view='forecast'] > [data-area='calendar'] {
+  grid-column: 1 / 5;
+}
+.ol-grid[data-view='forecast'] > [data-area='predictions'] {
+  grid-column: 5 / 10;
+}
+.ol-grid[data-view='forecast'] > [data-area='next-causes'] {
+  grid-column: 10 / 13;
+}
+
+/* The sentence that says what the numbers mean. */
+.ol-lead {
+  max-width: 120ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.ol-lead b {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+@container analysis (max-width: 900px) {
+  .ol-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: none;
+    height: auto;
+    min-height: 0;
+  }
+  .ol-grid > .ol-panel {
+    height: 360px;
+  }
+  .ol-grid[data-view] > [data-area='volume'],
+  .ol-grid[data-view] > [data-area='outlook'],
+  .ol-grid[data-view] > [data-area='causes'],
+  .ol-grid[data-view] > [data-area='services'] {
+    grid-column: 1 / -1;
+  }
+  .ol-grid[data-view] > [data-area='tickets'],
+  .ol-grid[data-view] > [data-area='predictions'] {
+    grid-column: 1 / -1;
+    height: 420px;
+  }
+  .ol-grid[data-view] > [data-area='patterns'],
+  .ol-grid[data-view] > [data-area='calendar'] {
+    grid-column: 1 / 4;
+  }
+  .ol-grid[data-view] > [data-area='heat'],
+  .ol-grid[data-view] > [data-area='next-causes'] {
+    grid-column: 4 / -1;
+  }
+}
+
+@container analysis (max-width: 700px) {
+  .ol-grid {
+    padding: 10px 14px 16px;
+  }
+  .ol-grid[data-view] > .ol-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- small pieces the panels share ---------- */
+
+.ol-pill {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ol-pill[data-tone='warn'] {
+  background: color-mix(in srgb, var(--orange) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 22%, transparent);
+  color: var(--orange);
+}
+
+.ol-pill[data-tone='bad'] {
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 22%, transparent);
+  color: var(--danger-fg);
+}
+
+.ol-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.ol-empty {
+  margin: auto;
+  max-width: 34ch;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--fg-3);
+}
+
+.ol-keyhint {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* A card that was just linked to: a ring that holds for a moment, then fades. It tells the
+ * eye where it landed after the view changed under it. Colour only, so it stays with reduced motion. */
+.ol-pat[data-flash],
+.ol-pred[data-flash] {
+  /* Starts as its panel finishes arriving (the 180ms swap), so its strongest moment lands on a settled card. */
+  animation: ol-flash 1600ms var(--ease-out) 180ms backwards;
+}
+
+@keyframes ol-flash {
+  0%,
+  35% {
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 0 0 2px var(--focus-ring);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 0 0 2px transparent;
+  }
+}
+
+/* ---------- the keys, along the bottom of the pane ---------- */
+
+.ol-keys {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: none;
+  height: 32px;
+  padding: 0 20px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ol-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ol-keys kbd + kbd {
+  margin-left: -2px;
+}

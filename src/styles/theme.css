@@ -67,6 +67,10 @@
   --orange-strong: #f7c3a2;
   --hold-fg: #1a0d05;
   --wb-bar-c: #2b2b2b;
+  --tone-1: #ededed;
+  --tone-2: #9a9a9a;
+  --tone-3: #646464;
+  --tone-4: #2b2b2b;
   font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
@@ -135,6 +139,10 @@
   --orange-strong: #9a3f07;
   --hold-fg: #ffffff;
   --wb-bar-c: #dedede;
+  --tone-1: #171717;
+  --tone-2: #737373;
+  --tone-3: #b0b0b0;
+  --tone-4: #dedede;
   color-scheme: light;
 }
 

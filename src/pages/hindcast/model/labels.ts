@@ -1,75 +1,79 @@
-/* The words the page shows for each value, and the few sums the components share. */
+/* Words and small helpers the hindcast and forecast share: cause names, the scope options, dates. */
 
-import type { CategoryKey, Lookback, Outcome, ProposalVerdict, ReasonKey, Split, TuningKind } from './types';
+import { NOW } from '../../../lib/clock';
+import type { CauseKey, Horizon, Lookback, Outcome } from './types';
 
-export const LOOKBACKS: Lookback[] = [4, 8, 12, 26];
-export const DEFAULT_LOOKBACK: Lookback = 8;
+export const DAY = 86_400_000;
+export const WEEK = 7 * DAY;
 
-/** Always in this order: the strongest catch first, what slipped through last. */
-export const OUTCOMES: Outcome[] = ['rule', 'window', 'missed'];
+/** The Monday of the week in progress. The history stops the day before; the forecast starts here. */
+export const TODAY = (() => {
+  const d = new Date(NOW);
+  d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.getTime();
+})();
+
+export const LOOKBACKS: Lookback[] = [12, 26, 52];
+export const HORIZONS: Horizon[] = [4, 8];
+export const DEFAULT_LOOKBACK: Lookback = 26;
+export const DEFAULT_HORIZON: Horizon = 4;
+
+export const CAUSES: CauseKey[] = ['deploy', 'config', 'capacity', 'hardware', 'dependency', 'network', 'certificate', 'unknown'];
+
+export const CAUSE_LABEL: Record<CauseKey, string> = {
+  deploy: 'Bad deploy',
+  config: 'Config change',
+  capacity: 'Capacity',
+  hardware: 'Hardware fault',
+  dependency: 'Upstream dependency',
+  network: 'Network',
+  certificate: 'Expired certificate',
+  unknown: 'No cause found',
+};
 
 export const OUTCOME_LABEL: Record<Outcome, string> = {
-  rule: 'Caught by a rule',
-  window: 'Caught by a change window',
-  missed: 'Not caught',
+  incident: 'Became an incident',
+  worked: 'Worked',
+  cancelled: 'Cancelled',
 };
 
-/** For tight spots: the list's key, the ticket filters. */
-export const OUTCOME_SHORT: Record<Outcome, string> = {
-  rule: 'Rule',
-  window: 'Window',
-  missed: 'Not caught',
-};
+export const OUTCOMES: Outcome[] = ['incident', 'worked', 'cancelled'];
 
-export const REASON_LABEL: Record<ReasonKey, string> = {
-  cleared: 'Cleared before triage',
-  duplicate: 'Duplicate of an open ticket',
-  planned: 'Planned work in progress',
-  known: 'Known issue, no action',
-  drill: 'Test or drill',
-  nofault: 'No fault found',
-};
+export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export const CATEGORY_LABEL: Record<CategoryKey, string> = {
-  thermal: 'Thermal',
-  power: 'Power',
-  sensors: 'Sensors',
-  comms: 'Comms',
-  access: 'Doors and access',
-  environment: 'Environment',
-  mechanical: 'Mechanical',
-  inventory: 'Inventory',
-};
+export const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-export const VERDICT_LABEL: Record<ProposalVerdict, string> = {
-  validated: 'Validated',
-  review: 'Needs review',
-  unsafe: 'Unsafe',
-};
+/** "28 Sept" */
+export const dayMonth = (date: string | number) =>
+  new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 
-export const TUNING_LABEL: Record<TuningKind, string> = {
-  approve: 'Approve',
-  revisit: 'Revisit',
-  widen: 'Widen',
-  extend: 'Extend',
-};
+/** "Wed 30 Sept" */
+export const weekdayDate = (date: string | number) =>
+  new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
-/** The page's chapters, in reading order. The ids are the sections' element ids. */
-export const CHAPTERS = [
-  { id: 'verdict', label: 'Verdict', question: 'What would have happened' },
-  { id: 'sources', label: 'Sources', question: 'Where the noise came from' },
-  { id: 'caught-by', label: 'Caught by', question: 'What would have caught it' },
-  { id: 'tune-next', label: 'Tune next', question: 'What to change' },
-  { id: 'method', label: 'Method', question: 'How to read this' },
-] as const;
+/** "Sept" */
+export const monthName = (date: string | number) => new Date(date).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' });
 
-export type ChapterId = (typeof CHAPTERS)[number]['id'];
+/** Minutes → "45 min", "1h 24m", "2d 3h" */
+export function span(mins: number) {
+  const m = Math.round(mins);
+  if (m < 60) return `${m} min`;
+  if (m < 60 * 24) return `${Math.floor(m / 60)}h ${m % 60}m`;
+  return `${Math.floor(m / 1440)}d ${Math.floor((m % 1440) / 60)}h`;
+}
 
-/** Every cancelled ticket in a split. */
-export const total = (s: Split) => s.rule + s.window + s.missed;
+export const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many);
 
-/** The ones that would never have reached a person. */
-export const caught = (s: Split) => s.rule + s.window;
+/** A round step that gives about `parts` intervals, and the axis top it implies. */
+export function niceAxis(max: number, parts = 3) {
+  const rough = Math.max(1, max / parts);
+  const power = 10 ** Math.floor(Math.log10(rough));
+  const f = rough / power;
+  const step = Math.max(1, (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * power);
+  const top = Math.max(step, Math.ceil(max / step) * step);
+  return { top, ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step) };
+}
 
-/** A share that's safe when there's nothing to divide by. */
-export const share = (part: number, whole: number) => (whole ? part / whole : 0);
+/** Change against a previous figure, as a signed share: 0.12 is up 12%. Null when there's nothing to compare. */
+export const change = (now: number, before: number) => (before > 0 ? (now - before) / before : null);

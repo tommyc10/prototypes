@@ -1,176 +1,241 @@
-/* The hindcast page. This file owns the page's state and wires the pieces together:
+/* The hindcast: every ticket raised, what caused it, when, and the patterns that repeat, on one
+ * screen. This file owns the page's state and wires the pieces together:
  *
- *   Sidebar       navigation (shared with the other pages)
- *   ServiceList   every service, the noisiest first: the service filter and the per-service breakdown
- *   ReportBar     the chapters and the lookback, stuck to the top of the report
- *   the report    five chapters, in reading order: Verdict, Sources, CaughtBy, TuneNext, Method
- *   HindcastPalette / Tour   on top when opened
+ *   Sidebar          navigation (shared with the other pages)
+ *   TopBar           the page's name, and its scope: service and lookback
+ *   the grid         headline figures, tickets week by week, root causes, the tickets
+ *                    themselves, the patterns that repeat, and when tickets arrive
+ *   AnalysisPalette  on top when opened
  *
- * The state is small: which service, how many completed weeks. Both live in the address
- * (#/hindcast/holonet/12), so a hindcast can be linked to. Everything on the page is read
- * from one HindcastReport for that scope (see model/types.ts). */
+ * The patterns are what the forecast page (src/pages/forecast) projects forward. Each card
+ * links to its prediction there, and a prediction links back here, ringing its pattern.
+ *
+ * Scope lives in the address (#/hindcast/holonet/26) and is remembered for the session, so the
+ * forecast opens on the same service and lookback. Every figure is read from model/hindcast.ts. */
 
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { PaneToggles } from '../../components/PaneToggles';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Sidebar } from '../../components/Sidebar/Sidebar';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useTheme } from '../../hooks/useTheme';
+import { num, pct } from '../../lib/format';
 import { navigate } from '../../lib/route';
-import { HINDCAST_TOUR } from '../../../tours/hindcast';
-import { Tour } from '../../../tours/Tour';
-import { tourMode, useTour } from '../../../tours/useTour';
-import { CaughtBy } from './components/CaughtBy/CaughtBy';
-import { Method } from './components/Method/Method';
-import { HindcastPalette } from './components/Palette/HindcastPalette';
-import { ReportBar } from './components/ReportBar/ReportBar';
-import { ServiceList } from './components/ServiceList/ServiceList';
-import { Sources } from './components/Sources/Sources';
-import { TuneNext } from './components/TuneNext/TuneNext';
-import { Verdict } from './components/Verdict/Verdict';
-import { isService } from './data/mockData';
-import { useChapters } from './hooks/useChapters';
-import { useHindcast } from './hooks/useHindcast';
-import { CHAPTERS, DEFAULT_LOOKBACK, LOOKBACKS } from './model/labels';
-import type { Lookback } from './model/types';
+import { CauseList } from './components/CauseList/CauseList';
+import { Heatmap } from './components/charts/Heatmap';
+import { OUTCOME_TONE, VolumeChart, VolumeTable } from './components/charts/VolumeChart';
+import { Kpis, type KpiTile } from './components/Kpis/Kpis';
+import { AnalysisPalette } from './components/Palette/AnalysisPalette';
+import { Panel } from './components/Panel/Panel';
+import { CONFIDENT, PatternList } from './components/PatternList/PatternList';
+import { TicketList } from './components/TicketList/TicketList';
+import { TopBar } from './components/TopBar/TopBar';
+import { TICKETS, serviceName } from './data/mockData';
+import { useEntrance } from './hooks/useEntrance';
+import { asPattern, useScope } from './hooks/useScope';
+import { hindcast as runHindcast } from './model/hindcast';
+import { CAUSE_LABEL, DEFAULT_LOOKBACK, OUTCOME_LABEL, OUTCOMES, TODAY, change, plural, span } from './model/labels';
+import type { CauseKey } from './model/types';
 import './components/charts/charts.css';
-import './HindcastPage.css';
+import './layout.css';
 
-export function HindcastPage({ serviceId: fromAddress, weeks: weeksFromAddress }: { serviceId?: string; weeks?: string }) {
-  const [serviceId, setServiceId] = useState(isService(fromAddress) ? fromAddress! : 'all');
-  const [weeks, setWeeks] = useState<Lookback>(LOOKBACKS.find((w) => String(w) === weeksFromAddress) ?? DEFAULT_LOOKBACK);
+export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAddress, focus }: { serviceId?: string; weeks?: string; focus?: string }) {
+  const [{ serviceId, weeks, horizon }, setScope] = useScope({ serviceId: serviceFromAddress, weeks: weeksFromAddress });
+  const arrivedOn = asPattern(focus);
+  const [cause, setCause] = useState<CauseKey | null>(null);
   const [query, setQuery] = useState('');
+  const [flash, setFlash] = useState<string | null>(arrivedOn);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [hideSide, setHideSide] = useState(false);
-  const [hideList, setHideList] = useState(false);
   const [theme, toggleTheme] = useTheme();
   const searchRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const tour = useTour(HINDCAST_TOUR.length, { auto: false, seenKey: 'mn-hindcast-tour-seen' });
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const report = useHindcast(serviceId, weeks);
-  const chapters = useChapters(scrollRef);
+  const hc = useMemo(() => runHindcast(TICKETS, { serviceId, weeks, cause }), [serviceId, weeks, cause]);
+  const gridKey = `${serviceId}-${weeks}`;
+  // Arriving from a prediction, the reader is mid-task: a quick swap, not the whole story.
+  const [motion, setMotion] = useEntrance(gridKey, arrivedOn ? 'swap' : 'story');
 
-  // Keep the address in step, without adding a Back step for every J and K.
+  // Keep the address in step, without adding a Back step for every change.
   useEffect(() => {
-    navigate(`#/hindcast${serviceId === 'all' && weeks === DEFAULT_LOOKBACK ? '' : `/${serviceId}/${weeks}`}`, true);
+    navigate(`#/hindcast${serviceId !== 'all' || weeks !== DEFAULT_LOOKBACK ? `/${serviceId}/${weeks}` : ''}`, true);
   }, [serviceId, weeks]);
 
-  // A different service is a different report: start it from the top.
-  const selectService = (id: string) => {
-    setServiceId(id);
-    scrollRef.current?.scrollTo({ top: 0 });
+  // A flashed card is scrolled into its list, and the flash lets go once it has played.
+  useEffect(() => {
+    if (!flash) return;
+    const card = listRef.current?.querySelector<HTMLElement>(`[data-pattern="${flash}"]`);
+    if (card) card.parentElement!.scrollTop = card.offsetTop - card.parentElement!.offsetTop - 4;
+    const t = setTimeout(() => setFlash(null), 1800);
+    return () => clearTimeout(t);
+  }, [flash]);
+
+  /** Change the scope. From the pointer the page swaps in quickly; from a key it's instant. */
+  const rescope = (patch: Parameters<typeof setScope>[0], pointer: boolean) => {
+    setMotion(pointer ? 'swap' : null);
+    setScope(patch);
   };
 
-  // Match on the service's name and unit, so "death star" finds every service in that unit.
-  const q = query.trim().toLowerCase();
-  const shown = report.services.filter((s) => `${s.name} ${s.unit}`.toLowerCase().includes(q));
+  /** Open a pattern's prediction on the forecast page, in the same scope. */
+  const toForecast = (patternId: string) => navigate(`#/forecast/${serviceId}/${weeks}/${horizon}/${patternId}`);
 
-  /** Move the selection up or down the list. "All services" is the row above the first service. */
-  const move = (step: number) => {
-    // A service nobody cancelled a ticket for has no report, so J and K step over it.
-    const ids = [...(q ? [] : ['all']), ...shown.filter((s) => s.cancelled > 0).map((s) => s.id)];
-    const next = ids[Math.min(ids.length - 1, Math.max(0, ids.indexOf(serviceId) + step))];
-    if (next && next !== serviceId) selectService(next);
+  const step = (by: number) => {
+    const keys = hc.causes.map((c) => c.key);
+    const at = cause ? keys.indexOf(cause) : by > 0 ? -1 : keys.length;
+    setCause(keys[Math.max(0, Math.min(keys.length - 1, at + by))] ?? null);
   };
-
-  const startTour = () => {
-    setHideSide(false);
-    setHideList(false);
-    setPaletteOpen(false);
-    setQuery('');
-    scrollRef.current?.scrollTo({ top: 0 });
-    tour.start();
-  };
-
-  const openRule = (ruleId: string) => navigate(`#/rules/${ruleId}`);
 
   useKeyboardShortcuts({
-    tourOpen: tour.open,
+    tourOpen: false,
     paletteOpen,
     onTogglePalette: () => setPaletteOpen((open) => !open),
     keys: {
-      j: () => move(1),
-      ArrowDown: () => move(1),
-      k: () => move(-1),
-      ArrowUp: () => move(-1),
+      j: () => step(1),
+      ArrowDown: () => step(1),
+      k: () => step(-1),
+      ArrowUp: () => step(-1),
       '/': () => searchRef.current?.focus(),
+      // Esc lets go, one thing at a time: the search, then the cause.
+      Escape: () => (query ? setQuery('') : setCause(null)),
       '[': () => setHideSide((hidden) => !hidden),
-      ']': () => setHideList((hidden) => !hidden),
-      '?': startTour,
-      ...Object.fromEntries(CHAPTERS.map((chapter, i) => [String(i + 1), () => chapters.jump(chapter.id, 'key')])),
     },
   });
 
+  const weeksWord = `${weeks} weeks`;
+  const against = `vs previous ${weeksWord}`;
+  const k = hc.kpis;
+  const top = hc.causes[0];
+  const confident = hc.patterns.filter((p) => p.confidence >= CONFIDENT).length;
+  const scopeName = serviceId === 'all' ? 'across every service' : `for ${serviceName(serviceId)}`;
+
+  const tiles: KpiTile[] = [
+    { label: 'Tickets', value: num(k.tickets.value), change: change(k.tickets.value, k.tickets.previous), better: 'down', against, series: k.tickets.series },
+    {
+      label: 'Became incidents',
+      value: (
+        <>
+          {num(k.incidents.value)}
+          <small>{pct(k.tickets.value ? k.incidents.value / k.tickets.value : 0)}</small>
+        </>
+      ),
+      change: change(k.incidents.value, k.incidents.previous),
+      better: 'down',
+      against,
+      series: k.incidents.series,
+    },
+    { label: 'Median time to resolve', value: span(k.medianMins.value), change: change(k.medianMins.value, k.medianMins.previous), better: 'down', against, series: k.medianMins.series },
+    { label: 'Repeat tickets', value: pct(k.repeatShare.value), note: 'Same CI and cause within 3 days', change: null },
+    { label: 'Root cause found', value: pct(k.foundShare.value), note: 'Tickets with a cause on record', change: null },
+  ];
+
   return (
-    <div className="mn hc" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
-      <Sidebar
-        hidden={hideSide}
-        page="hindcast"
-        onOpenPalette={() => setPaletteOpen(true)}
-        onStartTour={startTour}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
+    <div className="mn ol" data-hide-side={hideSide || undefined}>
+      <Sidebar hidden={hideSide} page="hindcast" onOpenPalette={() => setPaletteOpen(true)} theme={theme} onToggleTheme={toggleTheme} />
 
-      <ServiceList
-        hidden={hideList}
-        report={report}
-        shown={shown}
-        query={query}
-        onQuery={setQuery}
-        selectedId={serviceId}
-        onSelect={selectService}
-        searchRef={searchRef}
-      />
+      <section className="mn-detail ol-pane">
+        <TopBar
+          page="hindcast"
+          serviceId={serviceId}
+          onService={(id) => rescope({ serviceId: id }, true)}
+          weeks={weeks}
+          onWeeks={(w) => rescope({ weeks: w }, true)}
+          cause={cause}
+          onClearCause={() => setCause(null)}
+          hideSide={hideSide}
+          onToggleSide={() => setHideSide((hidden) => !hidden)}
+          today={new Date(TODAY).toISOString()}
+        />
 
-      <section className="mn-detail">
-        <div className="hc-scroll" ref={scrollRef}>
-          <ReportBar
-            toolbar={
-              <PaneToggles
-                hideSide={hideSide}
-                hideList={hideList}
-                onToggleSide={() => setHideSide((hidden) => !hidden)}
-                onToggleList={() => setHideList((hidden) => !hidden)}
-                listLabel="Service list"
-              />
-            }
-            active={chapters.active}
-            scrolled={chapters.scrolled}
-            onJump={(id) => chapters.jump(id, 'pointer')}
-            weeks={weeks}
-            onWeeks={setWeeks}
-          />
-          <article className="hc-report" aria-label={`Hindcast: ${report.title}`}>
-            <Verdict report={report} />
-            <Sources report={report} onSelectService={selectService} />
-            <CaughtBy report={report} onOpenRule={openRule} />
-            <TuneNext report={report} onOpenRule={openRule} />
-            <Method report={report} />
-          </article>
+        <div className="ol-scroll">
+          <div className="ol-grid" data-view="hindcast" data-animate={motion ?? undefined} key={gridKey}>
+            <p className="ol-lead" data-area="lead">
+              {cause ? (
+                <>
+                  <b>{CAUSE_LABEL[cause]}</b> caused <b>{num(k.tickets.value)}</b> {plural(k.tickets.value, 'ticket')} {scopeName} in the last {weeksWord}, and{' '}
+                  <b>{num(k.incidents.value)}</b> of them became incidents. Median fix: <b>{span(k.medianMins.value)}</b>.
+                </>
+              ) : (
+                <>
+                  <b>{num(k.tickets.value)}</b> tickets {scopeName} in the last {weeksWord}, and <b>{num(k.incidents.value)}</b> became incidents.{' '}
+                  {top && top.count > 0 && (
+                    <>
+                      <b>{top.label}</b> caused the most, {pct(top.share)}.{' '}
+                    </>
+                  )}
+                  <b>{confident}</b> {plural(confident, 'pattern repeats', 'patterns repeat')} reliably enough to forecast.
+                </>
+              )}
+            </p>
+
+            <Kpis tiles={tiles} />
+
+            <Panel
+              area="volume"
+              index={5}
+              title="Tickets, week by week"
+              meta={cause ? CAUSE_LABEL[cause] : undefined}
+              actions={
+                <ul className="ol-legend" aria-label="Key">
+                  {OUTCOMES.map((o) => (
+                    <li key={o}>
+                      <i style={{ background: OUTCOME_TONE[o] }} />
+                      {OUTCOME_LABEL[o]}
+                    </li>
+                  ))}
+                </ul>
+              }
+              table={<VolumeTable weeks={hc.weeks} />}
+            >
+              <VolumeChart weeks={hc.weeks} />
+            </Panel>
+
+            <Panel area="causes" index={6} title="Root causes" meta="Pick one to narrow the page" actions={<span className="ol-keyhint"><kbd>J</kbd><kbd>K</kbd></span>}>
+              <CauseList causes={hc.causes} selected={cause} onSelect={setCause} />
+            </Panel>
+
+            <Panel area="tickets" index={7} title="Tickets" meta={`${num(hc.tickets.length)} · newest first`}>
+              <TicketList tickets={hc.tickets} query={query} onQuery={setQuery} searchRef={searchRef} />
+            </Panel>
+
+            <Panel area="patterns" index={8} title="What repeats" meta="These become the forecast">
+              <PatternList ref={listRef} patterns={hc.patterns} flashId={flash} onForecast={toForecast} />
+            </Panel>
+
+            <Panel area="heat" index={9} title="When they arrive" meta="Weekday by hour">
+              <Heatmap heat={hc.heat} max={hc.heatMax} />
+            </Panel>
+          </div>
         </div>
+
+        <footer className="ol-keys" aria-label="Keyboard shortcuts">
+          <span>
+            <kbd>J</kbd>
+            <kbd>K</kbd> Root cause
+          </span>
+          <span>
+            <kbd>/</kbd> Search tickets
+          </span>
+          <span>
+            <kbd>Esc</kbd> Clear
+          </span>
+          <span>
+            <kbd>[</kbd> Sidebar
+          </span>
+          <span>
+            <kbd>⌘K</kbd> Commands
+          </span>
+        </footer>
       </section>
 
-      <HindcastPalette
+      <AnalysisPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
-        services={report.services.filter((s) => s.cancelled > 0)}
-        onService={selectService}
-        onWeeks={setWeeks}
-        onChapter={(id) => chapters.jump(id, 'key')}
+        page="hindcast"
+        onService={(id) => rescope({ serviceId: id }, false)}
+        onWeeks={(w) => rescope({ weeks: w }, false)}
+        onCause={setCause}
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}
-        onStartTour={startTour}
       />
-
-      {/* Rendered into <body>, outside the page, which is inert while the tour shows. */}
-      {tour.open &&
-        createPortal(
-          <Tour steps={HINDCAST_TOUR} index={tour.index} onIndex={tour.go} onDone={tour.finish} lite={tourMode()} />,
-          document.body,
-        )}
     </div>
   );
 }

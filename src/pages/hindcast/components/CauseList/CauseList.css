@@ -1,0 +1,144 @@
+/* The root cause list: rows that share the panel's height, each a bar and four figures. */
+
+.ol-causes {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  gap: 2px;
+  margin: 0 -8px;
+}
+
+.ol-cause {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(40px, 1fr) 52px 72px 72px 56px;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 0;
+  min-height: 24px;
+  max-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--fg-2);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ol-cause:active:not(.ol-cause-head) {
+  transform: scale(0.98);
+}
+
+.ol-cause:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ol-cause[data-selected] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+:root[data-mn-theme='light'] .ol-cause[data-selected] {
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ol-cause:not(.ol-cause-head):not([data-selected]):hover {
+    background: var(--tint);
+  }
+}
+
+.ol-cause-head {
+  flex: none;
+  min-height: 20px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-cause-head > span:nth-child(n + 3),
+.ol-cause-num,
+.ol-cause-inc,
+.ol-cause-mins,
+.ol-cause-change {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ol-cause-name {
+  color: var(--row-name);
+}
+
+.ol-cause[data-selected] .ol-cause-name {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ol-cause-track {
+  height: 8px;
+  border-radius: 2px;
+  background: var(--tint);
+  overflow: hidden;
+}
+
+.ol-cause-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tone-2);
+  transform-origin: left;
+  transition:
+    transform 240ms var(--ease-out),
+    background-color 150ms ease;
+}
+
+/* With one picked, it's the bright bar and the rest step back. */
+.ol-causes[data-picked] .ol-cause-fill {
+  background: var(--tone-3);
+}
+
+.ol-cause[data-selected] .ol-cause-fill {
+  background: var(--tone-1);
+}
+
+.ol-cause-num {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ol-cause-inc small {
+  margin-left: 5px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.ol-cause-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--fg-3);
+}
+
+.ol-cause-change[data-worse] {
+  color: var(--orange);
+}
+
+@container analysis (max-width: 1400px) {
+  .ol-cause {
+    grid-template-columns: minmax(0, 140px) minmax(30px, 1fr) 48px 64px 52px;
+  }
+  .ol-cause-mins {
+    display: none;
+  }
+}

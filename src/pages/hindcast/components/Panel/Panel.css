@@ -1,0 +1,181 @@
+/* A panel: a card that fills its grid cell. Its body takes whatever height is left, so a
+ * chart inside can size itself to the room instead of to a fixed number. */
+
+.ol-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 14px 14px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.ol-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 24px;
+  margin-bottom: 10px;
+}
+
+.ol-panel-head h2 {
+  flex: none;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+
+.ol-panel-meta {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ol-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+}
+
+.ol-panel-toggle {
+  width: 24px;
+  height: 24px;
+  margin-right: -4px;
+  color: var(--fg-3);
+}
+
+.ol-panel-toggle[aria-pressed='true'] {
+  background: var(--l4);
+  color: var(--fg);
+}
+
+.ol-panel-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.ol-panel-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Whichever view is showing fills the body, so a chart can still size itself to it. */
+.ol-panel-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* After the reader switches between chart and table, the new view fades in through a
+ * slight blur, so the swap reads as one change rather than two views overlapping. */
+.ol-panel-body[data-swapped] > .ol-panel-view {
+  transition:
+    opacity 180ms var(--ease-out),
+    filter 180ms var(--ease-out);
+}
+
+@starting-style {
+  .ol-panel-body[data-swapped] > .ol-panel-view {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+/* The two icons share one cell and cross over: the one not in use shrinks a little and fades. */
+.ol-panel-toggle svg {
+  grid-area: 1 / 1;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
+.ol-panel-toggle[aria-pressed='false'] .ol-toggle-chart,
+.ol-panel-toggle[aria-pressed='true'] .ol-toggle-table {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ol-panel-body[data-swapped] > .ol-panel-view {
+    transition: opacity 150ms ease;
+  }
+  @starting-style {
+    .ol-panel-body[data-swapped] > .ol-panel-view {
+      filter: none;
+    }
+  }
+  .ol-panel-toggle svg {
+    transition: opacity 150ms ease;
+  }
+  .ol-panel-toggle[aria-pressed='false'] .ol-toggle-chart,
+  .ol-panel-toggle[aria-pressed='true'] .ol-toggle-table {
+    transform: none;
+  }
+}
+
+/* ---------- table view ---------- */
+
+.ol-table-wrap {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -6px;
+  overflow: auto;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+}
+
+.ol-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-table th,
+.ol-table td {
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+.ol-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--l3);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: right;
+  color: var(--fg-3);
+}
+
+.ol-table th:first-child {
+  text-align: left;
+}
+
+.ol-table tbody th {
+  font-weight: 400;
+  color: var(--fg);
+}
+
+.ol-table td {
+  text-align: right;
+  color: var(--fg-2);
+}
+
+.ol-table tbody tr {
+  border-top: 1px solid var(--line);
+}

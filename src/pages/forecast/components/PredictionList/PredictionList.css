@@ -1,0 +1,131 @@
+/* Prediction rows: a date block, what's due and what to do, then how likely. */
+
+.ol-preds {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 6px;
+  margin: 0 -4px;
+  padding: 0 4px 12px;
+  overflow-y: auto;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+}
+
+.ol-pred {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 10px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow 150ms ease;
+}
+
+.ol-pred[data-lit] {
+  box-shadow: inset 0 0 0 1px var(--line-3);
+}
+
+.ol-pred-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  border-radius: 7px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--fg-3);
+}
+
+.ol-pred-date b {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.ol-pred-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ol-pred-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--fg);
+}
+
+.ol-pred-meta {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-pred-action {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+
+.ol-pred-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 92px;
+}
+
+.ol-pred-odds {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ol-pred-odds b {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-pred-meter {
+  width: 72px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--tint-2);
+  overflow: hidden;
+}
+
+.ol-pred-meter i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--fg);
+  transform-origin: left;
+}
+
+.ol-pred-tickets {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-pred-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 11px;
+}
+
+@container analysis (max-width: 1400px) {
+  .ol-pred-action {
+    display: none;
+  }
+}
