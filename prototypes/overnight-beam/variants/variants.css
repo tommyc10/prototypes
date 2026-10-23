@@ -1,0 +1,171 @@
+/* Throwaway. The ring every variant draws on: the card's own outline, masked to 1px,
+ * exactly as .mn-beam does it. What runs along it is each variant's own. */
+
+.pb-ring {
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.pb-ring > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 24px;
+  offset-path: border-box;
+  offset-anchor: 100% 50%;
+  offset-rotate: auto;
+}
+
+/* ---------- Tally: one light per suggestion, as long as its share of the night ---------- */
+
+@property --pb-t {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --pb-phase {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+.pb-tally {
+  animation: pb-tally-lap 9s linear infinite;
+}
+
+@keyframes pb-tally-lap {
+  to {
+    --pb-t: 100%;
+  }
+}
+
+.pb-tally-streak {
+  width: max(28px, calc(var(--pb-share) * var(--pb-ring) * 0.5));
+  offset-distance: calc(var(--pb-t) + var(--pb-phase));
+  transform-origin: 100% 50%;
+  /* The rest close ranks when one goes: moving from A to B, so in-out. */
+  transition:
+    --pb-phase 900ms cubic-bezier(0.77, 0, 0.175, 1),
+    transform 600ms var(--ease-out),
+    opacity 600ms var(--ease-out);
+}
+
+.pb-tally-streak::before,
+.pb-tally-streak::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transition: opacity 150ms ease;
+}
+
+.pb-tally-streak::before {
+  background: linear-gradient(to right, transparent, var(--line-3) 55%, var(--fg-2));
+}
+
+/* The selected suggestion's light is the bright one, as its segment in the bar is. */
+.pb-tally-streak::after {
+  background: linear-gradient(to right, transparent, var(--line-3) 45%, var(--fg));
+  opacity: 0;
+}
+
+.pb-tally-streak[data-on]::before {
+  opacity: 0;
+}
+
+.pb-tally-streak[data-on]::after {
+  opacity: 1;
+}
+
+/* Dealt with: it drains back into its own head and goes out. */
+.pb-tally-streak[data-gone] {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+/* ---------- Ping: still, until the count sends a light round both ways ---------- */
+
+.pb-ping-streak {
+  width: 120px;
+  opacity: 0;
+  background: linear-gradient(to right, transparent, var(--line-3) 55%, var(--fg));
+}
+
+/* Travelling anticlockwise, so it faces the other way along the path. */
+.pb-ping-streak[data-ccw] {
+  offset-rotate: reverse;
+}
+
+.pb-ping-bloom {
+  width: 160px;
+  offset-anchor: 50% 50%;
+  opacity: 0;
+  background: linear-gradient(to right, transparent, var(--fg) 50%, transparent);
+}
+
+/* ---------- Follow: the light goes to the suggestion you are deciding on ---------- */
+
+.pb-follow-light {
+  width: 160px;
+  transform-origin: 100% 50%;
+  transform: scaleX(var(--pb-scale, 1));
+  transition: transform 420ms var(--ease-out);
+}
+
+.pb-follow-light::before,
+.pb-follow-light::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transition: opacity 300ms var(--ease-out);
+}
+
+.pb-follow-light::before {
+  background: linear-gradient(to right, transparent, var(--line-3) 55%, var(--fg));
+}
+
+/* Parked, it is a rail the height of the row: bright through the middle, soft at both ends. */
+.pb-follow-light::after {
+  background: linear-gradient(to right, transparent, var(--fg) 25% 75%, transparent);
+  opacity: 0;
+}
+
+.pb-follow-light[data-parked]::before {
+  opacity: 0;
+}
+
+.pb-follow-light[data-parked]::after {
+  opacity: 1;
+}
+
+.pb-follow-light[data-echo] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pb-tally {
+    animation: none;
+  }
+  .pb-tally-streak,
+  .pb-follow-light,
+  .pb-follow-light::before,
+  .pb-follow-light::after {
+    transition: none;
+  }
+  .pb-tally-streak[data-gone] {
+    transform: none;
+    transition: opacity 150ms ease;
+  }
+}

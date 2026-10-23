@@ -1,0 +1,332 @@
+/* Throwaway. Three ways the page waits. Each borrows the page's own classes, so whatever
+ * it draws sits exactly where the real thing lands, and each is scoped by its root class. */
+
+/* ---------- held constant across variants ---------- */
+
+/* Opened from a link: the header was waiting too, so it lands with the verdict, in place. */
+.ic-page[data-arrive][data-from-link][aria-busy='false'] :is(.ic-head h2, .ic-meta) {
+  animation: pl-focus 220ms var(--ease-out) both;
+}
+
+/* The page's title bar holds a 28px title's height; a narrow pane sets the title at 23px,
+ * so the bar there is 6.4px too tall and the page jumps up when the title lands. */
+@container incident (max-width: 760px) {
+  .pl .ic-head > .ic-bar[data-size='title'] {
+    margin: 1.8px 0 9.8px;
+  }
+}
+
+.pl-bar {
+  display: inline-block;
+  flex: none;
+  max-width: 100%;
+  border-radius: 4px;
+  background: var(--tint);
+  vertical-align: middle;
+}
+
+/* Breathing is constant and symmetric, so in-out. */
+@keyframes pl-breathe {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pl-focus {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+@keyframes pl-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+}
+
+/* ---------- Keep ---------- */
+
+/* The rows a search will replace sit back and lose their colour. The selected one stays at
+ * full strength: the pane beside it still shows it, so it isn't stale. */
+.pl-keep .ic-row[data-stale]:not([data-selected]) {
+  opacity: 0.5;
+  filter: grayscale(1);
+  transition:
+    background-color 120ms ease,
+    opacity 150ms ease,
+    filter 150ms ease;
+}
+
+@starting-style {
+  .pl-keep .ic-row[data-stale]:not([data-selected]) {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+.pl-keep .pl-saying {
+  color: var(--fg-3);
+}
+
+/* With nothing drawn, the sentences are the only sign of life, so they breathe. */
+.pl-keep :is(.ic-list-says[data-waiting], .pl-saying, .ic-verdict[data-waiting]) {
+  animation: pl-breathe 1600ms ease-in-out infinite;
+}
+
+/* The answer lands where the old rows were: the dim lifts. */
+.pl-keep .ic-rows[data-arrive='search'] .ic-row:not([data-selected]) {
+  animation: pl-undim 150ms var(--ease-out) both;
+}
+
+.pl-keep .ic-rows[data-arrive='cold'] .ic-row {
+  animation: pl-fade 150ms var(--ease-out) both;
+}
+
+@keyframes pl-undim {
+  from {
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+}
+
+/* ---------- Outline ---------- */
+
+.pl-outline :is(.pl-bar, .ic-bar) {
+  animation: pl-breathe 1600ms ease-in-out infinite;
+}
+
+.pl-skel {
+  pointer-events: none;
+}
+
+.pl-skel > i {
+  background: var(--tint);
+}
+
+/* A flex row is as tall as its tallest item, and a bar is shorter than a line of text, so
+ * the line's height is held here: 12px at 1.5, as the id and ending are. */
+.pl-skel .ic-row-sub {
+  align-items: center;
+  height: 1.5em;
+}
+
+.pl-badge {
+  width: 132px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+/* Each line of the verdict as tall as a line of the verdict. A wide pane fits 168 of the
+ * 190 verdicts on one line; a narrow one (a 1280px window) wraps 131 of them onto two. */
+.pl-lines > span {
+  display: flex;
+  align-items: center;
+  height: 1.4em;
+}
+
+.pl-lines > span + span {
+  display: none;
+}
+
+@container incident (max-width: 760px) {
+  .pl-lines > span + span {
+    display: flex;
+  }
+}
+
+/* The shapes were the real size, so what replaces them comes into focus where they were. */
+.pl-outline .ic-rows[data-arrive] .ic-row,
+.pl-outline .ic-page[data-arrive] .ic-verdict:not([data-waiting]) {
+  animation: pl-focus 220ms var(--ease-out) both;
+}
+
+/* ---------- Scan ---------- */
+
+.pl-scan {
+  /* One pass of the light down the list alone. */
+  --pl-pass: 1200ms;
+  --pl-ring: pl-ring-short;
+}
+
+/* Down the list (12 marks × 30ms), then along the journey's line (5 × 220ms), then a rest. */
+.pl-scan[data-coupled] {
+  --pl-pass: 2000ms;
+  --pl-ring: pl-ring-long;
+}
+
+/* The rows a search will replace: their words sit back, and their marks go hollow, because
+ * the ending each one showed may not be in the answer. */
+.pl-scan .ic-row[data-stale] > :not(i) {
+  opacity: 0.5;
+  transition: opacity 150ms ease;
+}
+
+@starting-style {
+  .pl-scan .ic-row[data-stale] > :not(i) {
+    opacity: 1;
+  }
+}
+
+.pl-scan .ic-row[data-stale] .ic-row-end {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.pl-scan .ic-row:is([data-stale], .pl-mark) > i {
+  position: relative;
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--line-3);
+}
+
+.pl-mark {
+  pointer-events: none;
+}
+
+/* Each mark rings as the light passes it, top to bottom. Past the fold they ring together. */
+.pl-scan .ic-row:is([data-stale], .pl-mark) > i::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px var(--fg-3);
+  opacity: 0;
+  animation: var(--pl-ring) var(--pl-pass) var(--ease-out) infinite backwards;
+  animation-delay: calc(min(var(--i), 16) * 30ms);
+}
+
+/* Both waiting: the journey's light starts where the list's ends. */
+.pl-scan[data-coupled] .ic-journey-wrap[data-waiting] .ic-traveller {
+  animation: pl-travel 2000ms linear 360ms infinite backwards;
+}
+
+.pl-scan[data-coupled] .ic-journey-wrap[data-waiting] .ic-leg[data-lit]::before {
+  animation: pl-leg 2000ms linear infinite backwards;
+  animation-delay: calc(360ms + (var(--i) - 1) * 220ms);
+}
+
+.pl-scan[data-coupled] .ic-journey-wrap[data-waiting] .ic-station i::after {
+  animation: pl-ring-long 2000ms var(--ease-out) infinite backwards;
+  animation-delay: calc(360ms + var(--i) * 220ms);
+}
+
+@container incident (max-width: 760px) {
+  .pl-scan[data-coupled] .ic-journey-wrap[data-waiting] .ic-leg[data-lit]::before {
+    transform: scaleY(0);
+    animation-name: pl-leg-down;
+  }
+}
+
+/* The answer lands in the order the light ran. */
+.pl-scan .ic-rows[data-arrive] .ic-row {
+  animation: pl-rise 220ms var(--ease-out) both;
+  animation-delay: calc(min(var(--i), 12) * 30ms);
+}
+
+/* Keyframe stops are fractions of the pass; a ring lasts 450ms whichever pass it's in. */
+@keyframes pl-ring-short {
+  0% {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  1.5% {
+    opacity: 0.9;
+  }
+  37.5%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes pl-ring-long {
+  0% {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  1% {
+    opacity: 0.9;
+  }
+  22.5%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* The journey's own waiting pass (Journey.css), stretched from 1600ms to 2000ms: the dot
+ * still takes 1100ms to cross, each stretch 220ms to light and 720ms to let go. */
+@keyframes pl-travel {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  2.5% {
+    opacity: 1;
+  }
+  55% {
+    transform: none;
+    opacity: 1;
+  }
+  64%,
+  100% {
+    transform: none;
+    opacity: 0;
+  }
+}
+
+@keyframes pl-leg {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  11% {
+    transform: none;
+    opacity: 1;
+  }
+  36%,
+  100% {
+    transform: none;
+    opacity: 0;
+  }
+}
+
+@keyframes pl-leg-down {
+  0% {
+    transform: scaleY(0);
+    opacity: 1;
+  }
+  11% {
+    transform: none;
+    opacity: 1;
+  }
+  36%,
+  100% {
+    transform: none;
+    opacity: 0;
+  }
+}
+
+/* ---------- less motion ----------
+ * Nothing travels, rings or rises. Keep and Outline already only breathe and fade. Scan's
+ * light goes out, and its sentence breathes instead (the page's verdict already does). */
+@media (prefers-reduced-motion: reduce) {
+  .pl-scan .ic-row:is([data-stale], .pl-mark) > i::after {
+    animation: none;
+  }
+  .pl-scan .ic-list-says[data-waiting] {
+    animation: pl-breathe 1600ms ease-in-out infinite;
+  }
+  .pl-scan .ic-rows[data-arrive] .ic-row {
+    animation-name: pl-fade;
+    animation-delay: 0s;
+  }
+}
