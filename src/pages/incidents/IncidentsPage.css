@@ -130,6 +130,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
+  min-height: 1.5em; /* a line of text tall, even while it holds only grey bars */
   font-size: 13px;
   color: var(--fg-2);
 }
@@ -163,6 +164,76 @@
 
 .ic-verdict[data-tone='bad'] {
   color: var(--red);
+}
+
+/* ---------- while the journey is on its way ---------- */
+
+/* A grey bar where fetched words will land, in the tint used for empty tracks. */
+.ic-bar {
+  display: inline-block;
+  flex: none;
+  max-width: 100%;
+  border-radius: 4px;
+  background: var(--tint);
+}
+
+.ic-head > .ic-bar[data-size='title'] {
+  display: block;
+  width: min(520px, 70%);
+  height: 24px;
+  margin: 5px 0 13px; /* the height of a one-line title */
+}
+
+.ic-meta .ic-bar[data-size='meta'] {
+  width: 120px;
+  height: 10px;
+}
+
+/* In the verdict's place, what's being fetched: quieter than any verdict. */
+.ic-verdict[data-waiting] {
+  color: var(--fg-3);
+}
+
+/* Arriving after a pointer pick: the verdict and the sections rise in as the journey plays.
+ * Only what replaces the waiting state animates; the heading was there all along. */
+.ic-page[data-arrive] .ic-verdict:not([data-waiting]),
+.ic-page[data-arrive] .ic-stages {
+  animation: ic-rise 220ms var(--ease-out) both;
+}
+
+.ic-page[data-arrive] .ic-stages {
+  animation-delay: 80ms;
+}
+
+@keyframes ic-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ic-page[data-arrive] .ic-verdict:not([data-waiting]),
+  .ic-page[data-arrive] .ic-stages {
+    animation-name: ic-fade;
+  }
+  /* The line holds still, so the sentence carries the waiting: it breathes. */
+  .ic-verdict[data-waiting] {
+    animation: ic-breathe 1600ms ease-in-out infinite;
+  }
+}
+
+@keyframes ic-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ic-breathe {
+  50% {
+    opacity: 0.5;
+  }
 }
 
 @container incident (max-width: 760px) {

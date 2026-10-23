@@ -36,7 +36,7 @@
 
 import type { CSSProperties } from 'react';
 import { RotateCcw } from 'lucide-react';
-import { STATION_LABEL, clockFace, took } from '../../model/lifecycle';
+import { STATIONS, STATION_LABEL, clockFace, took } from '../../model/lifecycle';
 import type { Lifecycle, StationId } from '../../model/types';
 import './Journey.css';
 
@@ -111,6 +111,31 @@ export function Journey({
             </li>
           );
         })}
+      </ol>
+    </div>
+  );
+}
+
+/** The line while the incident's journey is being fetched. Every incident meets the same six
+ * checkpoints, so the line can be drawn before anything about this one is known: empty, with
+ * the dot running it end to end and each mark ringing as it passes, until the real journey
+ * arrives and takes its place. Grey bars hold the room each checkpoint's words will need. */
+export function JourneyWaiting() {
+  return (
+    <div className="ic-journey-wrap" data-waiting data-tour="ic-journey" aria-hidden style={{ '--stop': STATIONS.length - 1 } as CSSProperties}>
+      <span className="ic-traveller" />
+      <ol className="ic-journey">
+        {STATIONS.map((station, i) => (
+          <li key={station} data-state="unreached" style={{ '--i': i } as CSSProperties}>
+            {i > 0 && <span className="ic-leg" data-lit />}
+            <div className="ic-station">
+              <i />
+              <span className="ic-station-name">{STATION_LABEL[station]}</span>
+              <span className="ic-bar" data-size="verdict" />
+              <span className="ic-bar" data-size="time" />
+            </div>
+          </li>
+        ))}
       </ol>
     </div>
   );

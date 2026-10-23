@@ -427,6 +427,14 @@ colour (what the rule caught, in green); every other series is a grey from the t
   uses and no others: the backtest well while the rule engine is working, and the overnight
   block for as long as it has suggestions waiting. It always marks a state that ends, and it
   travels slowly (5 to 9 seconds a lap). Never on a button, never as decoration.
+- **Waiting for something fetched** shows at once what is already known and holds a grey
+  `tint` bar where each fetched word will land; the sentence where the answer goes says what
+  is being fetched, in `fg-3`. The incident journey is the first: its line is drawn empty and
+  its own dot runs it end to end (1.6s a pass), each mark ringing as it passes. That light is
+  the journey's, not the beam. Waiting is a state, not an entrance, so it looks the same from
+  the keyboard; only the arrival differs (a pointer pick rises in over 220ms and plays the
+  journey, a key shows it at once). Reduced motion: the line holds still and the sentence
+  breathes.
 - **Theme switch** dissolves through the View Transitions API over 200ms.
 
 ## Interaction patterns
@@ -627,5 +635,6 @@ the app has drifted from it. Match the scale, not the drift.
 - **`primary-hover` is the only hover with its own token.** Every other hover is a rung.
 - **z-index is ad hoc** (1, 2, 5, 10, 50, 51, 100). The values in `elevation.z-index` are
   the ones in use; do not add new ones between them.
-- **No form library and no loading skeletons** exist in the product yet. The port's
-  `Field` and `Skeleton` are styled to fit, but have no shipped precedent to match.
+- **No form library, and one loading skeleton.** The incident page's waiting journey (see
+  Motion) is the only shipped loading state. The port's `Field` and `Skeleton` are styled to
+  fit, but nothing has checked the port's `Skeleton` against those bars.

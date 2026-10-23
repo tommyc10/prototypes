@@ -2,6 +2,9 @@
 
 import type { End, EndFilter, Lifecycle, StationId } from './types';
 
+/** The checkpoints, in the order every incident meets them. */
+export const STATIONS: StationId[] = ['raised', 'windows', 'rules', 'duplicates', 'enrichment', 'delivered'];
+
 export const STATION_LABEL: Record<StationId, string> = {
   raised: 'Raised',
   windows: 'Change windows',

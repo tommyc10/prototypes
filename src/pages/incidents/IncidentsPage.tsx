@@ -13,6 +13,11 @@
  * linked to), and the search. A journey isn't stored; it's worked out from the incident and
  * the rules as they stand (data/mockData.ts).
  *
+ * A picked incident's journey is fetched by its number, and while it's on its way the pane
+ * shows what the list row already knew (the number, title, CI, when it was raised and how it
+ * ended) with the journey line waiting under it. Only the last pick is ever shown: stepping
+ * on before a journey arrives drops it.
+ *
  * The page never loads every incident, because a real feed has far too many: it shows the
  * latest few, and everything else is found by asking. So it has no totals and no tabs with
  * counts, which could only describe whatever happened to be loaded. With nothing picked,
@@ -32,18 +37,21 @@ import { tourMode, useTour } from '../../../tours/useTour';
 import { groupById } from '../rule-management/data/mockData';
 import { useRulesStore } from '../rule-management/hooks/useRulesStore';
 import { IncidentSearch } from './components/IncidentSearch/IncidentSearch';
-import { Journey } from './components/Journey/Journey';
+import { Journey, JourneyWaiting } from './components/Journey/Journey';
 import { IncidentsPalette } from './components/Palette/IncidentsPalette';
 import { Stages } from './components/Stages/Stages';
 import { lifecycles } from './data/mockData';
 import { END_LABEL, dayAndTime } from './model/lifecycle';
-import type { StationId } from './model/types';
+import type { Lifecycle, StationId } from './model/types';
 import './IncidentsPage.css';
 
 /** How many of the latest incidents are there before anything is asked for. */
 const LATEST = 12;
 /** How long after the last keystroke the search is sent. */
 const SEARCH_WAIT = 220;
+/** How long an incident's journey takes to arrive once it's picked. Fake, like the data: it
+ * stands in for the request, so the waiting state can be seen. */
+const STORY_WAIT = 700;
 
 export function IncidentsPage({ initialId }: { /** Open on this incident (a link from another page). */ initialId?: string }) {
   const rules = useRulesStore((s) => s.rules);
@@ -80,19 +88,32 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
     });
   }, [lives, asked]);
 
+  // The journeys that have arrived. One fetched once shows at once when it's picked again.
+  const [fetched, setFetched] = useState<ReadonlySet<string>>(() => new Set());
+  const waiting = selectedId !== null && !fetched.has(selectedId);
+  // A new pick clears the timer, so a journey that arrives late is never shown.
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setTimeout(() => setFetched((ids) => new Set(ids).add(selectedId)), STORY_WAIT);
+    return () => clearTimeout(timer);
+  }, [selectedId, waiting]);
+
   // The incident on the page is fetched by its number, so it doesn't have to be in the list.
-  // With none picked, the pane is empty.
-  const life = lives.find((l) => l.incident.id === selectedId) ?? null;
+  // With none picked, or a number that doesn't exist, the pane is empty.
+  const life = waiting ? null : (lives.find((l) => l.incident.id === selectedId) ?? null);
+  // What's known before it arrives: its row, if it's in the list (not when it came from a link).
+  const known: Pick<Lifecycle, 'incident' | 'end' | 'real'> | undefined = life ?? found.find((l) => l.incident.id === selectedId);
+  const shownId = waiting || life ? selectedId : null;
 
   // Keep the address in step, without adding a Back step for every J and K.
   useEffect(() => {
-    navigate(`#/incidents${life ? `/${life.incident.id}` : ''}`, true);
-  }, [life?.incident.id]);
+    navigate(`#/incidents${shownId ? `/${shownId}` : ''}`, true);
+  }, [shownId]);
 
   // A different incident is a different page: start it from the top.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
-  }, [life?.incident.id]);
+  }, [shownId]);
 
   /** Pick an incident from outside the list (a link in a section, the command menu). */
   const select = (id: string) => {
@@ -102,7 +123,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
 
   /** Move the selection up or down the list. With nothing picked, either way picks the first. */
   const move = (step: number) => {
-    const i = found.findIndex((l) => l.incident.id === life?.incident.id);
+    const i = found.findIndex((l) => l.incident.id === shownId);
     const next = i < 0 ? found[0] : found[Math.min(found.length - 1, Math.max(0, i + step))];
     if (!next) return;
     setVia('key');
@@ -139,7 +160,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   });
 
   const group = life && groupById(life.groupId);
-  const tone = !life ? undefined : life.end === 'suppressed' && life.real ? 'bad' : life.end === 'enriching' ? 'wait' : life.end === 'delivered' ? 'through' : undefined;
+  const tone = !known ? undefined : known.end === 'suppressed' && known.real ? 'bad' : known.end === 'enriching' ? 'wait' : known.end === 'delivered' ? 'through' : undefined;
 
   return (
     <div className="mn ic" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
@@ -159,7 +180,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
         searching={query.trim() !== asked}
         query={query}
         onQuery={setQuery}
-        selectedId={life?.incident.id ?? null}
+        selectedId={shownId}
         onSelect={(id) => {
           setVia('pointer');
           setSelectedId(id);
@@ -177,54 +198,69 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
               onToggleList={() => setHideList((hidden) => !hidden)}
               listLabel="Incident list"
             />
-            {life && (
-              <>
-                <span className="mn-mono mn-subtle">{life.incident.id}</span>
-                <span className="ic-badge" data-tone={tone}>
-                  {END_LABEL[life.end]}
-                </span>
-              </>
+            {shownId && <span className="mn-mono mn-subtle">{shownId}</span>}
+            {known && (
+              <span className="ic-badge" data-tone={tone}>
+                {END_LABEL[known.end]}
+              </span>
             )}
           </div>
 
-          {life && group ? (
-            <article className="ic-page" aria-label={`The journey of ${life.incident.id}`}>
+          {shownId ? (
+            // A journey that arrives after a pointer pick rises in; from the keyboard it's simply there.
+            <article className="ic-page" aria-label={`The journey of ${shownId}`} aria-busy={waiting} data-arrive={via === 'pointer' || undefined}>
               <header className="ic-head" data-tour="ic-head">
-                <h2>{life.incident.title}</h2>
+                {known ? <h2>{known.incident.title}</h2> : <span className="ic-bar" data-size="title" />}
                 <div className="ic-meta">
                   <Server size={14} />
-                  <span className="mn-mono">{life.incident.ci}</span>
-                  <span className="mn-subtle">
-                    · {group.name} · {group.unit}
-                  </span>
+                  {known ? <span className="mn-mono">{known.incident.ci}</span> : <span className="ic-bar" data-size="meta" />}
+                  {group ? (
+                    <span className="mn-subtle">
+                      · {group.name} · {group.unit}
+                    </span>
+                  ) : (
+                    <span className="ic-bar" data-size="meta" />
+                  )}
                   <span className="ic-sep" />
-                  Raised {dayAndTime(new Date(life.incident.openedAt).getTime())}
+                  {known ? `Raised ${dayAndTime(new Date(known.incident.openedAt).getTime())}` : <span className="ic-bar" data-size="meta" />}
                 </div>
-                {/* The whole journey, as one sentence. */}
-                <p className="ic-verdict" data-tone={tone}>
-                  {life.summary}
-                </p>
+                {/* The whole journey, as one sentence. Until it arrives, what's being fetched. */}
+                {life ? (
+                  <p className="ic-verdict" data-tone={tone}>
+                    {life.summary}
+                  </p>
+                ) : (
+                  <p className="ic-verdict" data-waiting role="status">
+                    Fetching the journey of {shownId}…
+                  </p>
+                )}
               </header>
 
-              {/* `key` gives each incident (and each "play again") a fresh journey, so it plays from the start. */}
-              <Journey
-                key={`${life.incident.id}-${replay}`}
-                life={life}
-                play={via === 'pointer'}
-                onJump={jump}
-                onReplay={() => {
-                  setVia('pointer');
-                  setReplay((n) => n + 1);
-                }}
-              />
+              {!life ? (
+                <JourneyWaiting />
+              ) : (
+                <>
+                  {/* `key` gives each incident (and each "play again") a fresh journey, so it plays from the start. */}
+                  <Journey
+                    key={`${life.incident.id}-${replay}`}
+                    life={life}
+                    play={via === 'pointer'}
+                    onJump={jump}
+                    onReplay={() => {
+                      setVia('pointer');
+                      setReplay((n) => n + 1);
+                    }}
+                  />
 
-              <Stages
-                life={life}
-                activeRules={rules.filter((r) => r.status === 'active').length}
-                onOpenRule={(id) => navigate(`#/rules/${id}`)}
-                onOpenWindow={(id) => navigate(`#/changes/${id}`)}
-                onOpenIncident={select}
-              />
+                  <Stages
+                    life={life}
+                    activeRules={rules.filter((r) => r.status === 'active').length}
+                    onOpenRule={(id) => navigate(`#/rules/${id}`)}
+                    onOpenWindow={(id) => navigate(`#/changes/${id}`)}
+                    onOpenIncident={select}
+                  />
+                </>
+              )}
             </article>
           ) : (
             <div className="ic-blank">

@@ -55,7 +55,9 @@
   padding: 9px 10px 9px 12px;
   border-radius: 9px;
   cursor: default;
-  transition: background-color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    opacity 150ms ease;
 }
 
 .ic-row + .ic-row {

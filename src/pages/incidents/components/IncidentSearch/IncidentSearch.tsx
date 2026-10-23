@@ -58,7 +58,7 @@ export function IncidentSearch({
   const shown = Math.min(limit, lives.length);
   // What the rows are, in words. Never a total of everything: only of what was asked for.
   const says = searching
-    ? 'Searching…'
+    ? `Searching for “${query.trim()}”…`
     : !asked
       ? `The ${lives.length} latest. Search to find any other.`
       : !lives.length
@@ -79,7 +79,7 @@ export function IncidentSearch({
           <input ref={searchRef} value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Find an incident, CI or rule" autoFocus />
           <kbd>/</kbd>
         </label>
-        <p className="ic-list-says" aria-live="polite">
+        <p className="ic-list-says mn-truncate" aria-live="polite">
           {says}
         </p>
       </header>
