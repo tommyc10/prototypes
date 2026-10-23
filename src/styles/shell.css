@@ -16,6 +16,20 @@
   transition: grid-template-columns 240ms var(--ease-out);
 }
 
+/* The announcement takes its own row; panes keep the remaining viewport height. */
+.mn.mn-app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  transition: none;
+}
+
+.mn-app > .mn {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
 .mn[data-hide-side] {
   grid-template-columns: 0px var(--mn-list-w) 1fr;
 }

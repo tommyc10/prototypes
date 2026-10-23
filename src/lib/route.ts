@@ -1,6 +1,7 @@
 /* Which page is showing. The address after the # says so:
  *
  *   #/                       home (also what any address it doesn't know opens)
+ *   #/login                  the sign-in page (a mock; nothing is gated behind it)
  *   #/rules                  the rule list
  *   #/rules/RUL-0428         …opened on one rule
  *   #/hindcast               the hindcast, all services, default lookback
@@ -16,9 +17,9 @@
 
 import { useEffect, useState } from 'react';
 
-export type PageId = 'home' | 'rules' | 'hindcast' | 'alerts' | 'changes' | 'incidents';
+export type PageId = 'home' | 'login' | 'rules' | 'hindcast' | 'alerts' | 'changes' | 'incidents';
 
-const PAGES: PageId[] = ['rules', 'hindcast', 'alerts', 'changes', 'incidents'];
+const PAGES: PageId[] = ['login', 'rules', 'hindcast', 'alerts', 'changes', 'incidents'];
 
 export interface Route {
   page: PageId;
