@@ -1,13 +1,20 @@
-/* Throwaway prototype: three ways the whole incidents page can wait, list and pane
- * together, behind a picker. Open http://localhost:5188/prototypes/page-loading/ with the
- * dev server running. Nothing in src/ imports from here; delete the folder once a
- * direction is chosen.
+/* Throwaway prototype: six ways the incidents page can wait, the list and the pane as one,
+ * behind a picker. Open http://localhost:5188/prototypes/incidents-loading/ with the dev
+ * server running. Nothing in src/ imports from here; delete the folder once a direction is
+ * chosen.
  *
- * Scenarios (top right, or a key): S search, P pick, C cold open, E nothing found.
- * Keys: R run it again, H hold every wait open, 1 2 3 variant, J K step, / search, T theme,
+ * The problem it explored: the pane used to wait by drawing the journey's own line with its
+ * own dot running it, so a slow fetch looked like a journey that broke. Sheen won, and is now
+ * the product's (mn-skel in src/styles/ui.css); this stays to compare the others against it. And the list and the
+ * pane waited in two different ways, at two different times. Every variant here waits in one
+ * way across both columns, and none of them draws anything that a real journey draws.
+ *
+ * Scenarios (top right, or a key): S search, P pick, C cold open (both wait), E nothing found.
+ * G Together: on a cold open, the list and the pane land at the same moment (on by default).
+ * Keys: R run it again, H hold every wait open, 1–6 variant, J K step, / search, T theme,
  * [ ] tuck the columns away.
- * Address: ?v=1..3 variant, ?s=search|pick|cold|empty, ?hold=1, ?theme=light, ?bare=1 (no
- * prototype chrome, for screenshots). #/incidents/INC-41201 opens cold on that incident. */
+ * Address: ?v=1..6 variant, ?s=search|pick|cold|empty, ?hold=1, ?apart=1, ?theme=light,
+ * ?bare=1 (no prototype chrome, for screenshots). #/incidents/INC-41201 opens cold on it. */
 
 import { StrictMode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -33,12 +40,15 @@ import { Stages } from '../../src/pages/incidents/components/Stages/Stages';
 import { lifecycles } from '../../src/pages/incidents/data/mockData';
 import { END_LABEL, dayAndTime } from '../../src/pages/incidents/model/lifecycle';
 import type { Lifecycle } from '../../src/pages/incidents/model/types';
-import { IncidentRow, LATEST, PAGE, readySays, type ListWait, type Row, type Variant } from './shared';
-import { keep } from './variants/Keep';
-import { outline } from './variants/Outline';
-import { scan } from './variants/Scan';
+import { IncidentRow, LATEST, PAGE, readySays, useBlockClock, type ListWait, type Row, type Variant } from './shared';
+import { sheen } from './variants/Sheen';
+import { wave } from './variants/Wave';
+import { unison } from './variants/Unison';
+import { thread } from './variants/Thread';
+import { veil } from './variants/Veil';
+import { mark } from './variants/Mark';
 
-const VARIANTS: Variant[] = [keep, outline, scan];
+const VARIANTS: Variant[] = [sheen, wave, unison, thread, veil, mark];
 
 type Scenario = 'search' | 'pick' | 'cold' | 'empty';
 const SCENARIOS: { id: Scenario; key: string; label: string }[] = [
@@ -50,10 +60,10 @@ const SCENARIOS: { id: Scenario; key: string; label: string }[] = [
 
 /** After the last keystroke, before the search is sent. The page's own value. */
 const SEARCH_WAIT = 220;
-/** A search's round trip. Fake, like the data. */
-const FETCH_WAIT = 600;
-/** An incident's journey's round trip. The page's own value. */
-const STORY_WAIT = 700;
+/** A search's round trip. Fake, like the data, and a little slow so the wait can be seen. */
+const FETCH_WAIT = 900;
+/** An incident's journey's round trip. */
+const STORY_WAIT = 1100;
 /** The scripted scenarios start after a beat, so the state before is seen. */
 const START = 600;
 const KEY_GAP = 70;
@@ -73,7 +83,7 @@ function search(lives: Lifecycle[], asked: string) {
   });
 }
 
-function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenario; hold: boolean }) {
+function Page({ variant, scenario, hold, together }: { variant: Variant; scenario: Scenario; hold: boolean; together: boolean }) {
   const rules = useRulesStore((s) => s.rules);
   const lives = useMemo(() => lifecycles(rules), [rules]);
   const cold = scenario === 'cold';
@@ -104,6 +114,8 @@ function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenari
   const searchRef = useRef<HTMLInputElement>(null);
   const rowsRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useBlockClock(rootRef, variant.period ?? 2400);
 
   const found = useMemo(() => (listReady ? search(lives, asked) : []), [lives, asked, listReady]);
   const shown = Math.min(limit, found.length);
@@ -124,7 +136,9 @@ function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenari
   useEffect(() => {
     if (!listReady) {
       if (hold) return;
-      const timer = setTimeout(() => land(''), FETCH_WAIT);
+      // Together: on a cold open the list holds its rows until the journey is in too, so the
+      // two columns land as one page instead of one after the other.
+      const timer = setTimeout(() => land(''), together && cold ? STORY_WAIT : FETCH_WAIT);
       return () => clearTimeout(timer);
     }
     if (q === asked) return;
@@ -135,7 +149,7 @@ function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenari
       clearTimeout(sent);
       clearTimeout(answer);
     };
-  }, [q, asked, listReady, hold]);
+  }, [q, asked, listReady, hold, together]);
 
   // The journey's request. A new pick clears the timer, so a late journey is never shown.
   const detailWaiting = selectedId !== null && !fetched.has(selectedId);
@@ -214,11 +228,26 @@ function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenari
   }, [fromLink, detailWaiting, known]);
   const group = life && groupById(life.groupId);
   const tone = !known ? undefined : known.end === 'suppressed' && known.real ? 'bad' : known.end === 'enriching' ? 'wait' : known.end === 'delivered' ? 'through' : undefined;
-  const { ListWaiting, DetailWaiting } = variant;
+  const { ListWaiting, DetailWaiting, Overlay } = variant;
+  // Where each column starts, for the page-level pieces (the shell's widths: 240 and 380).
+  const listLeft = hideSide ? 0 : 240;
+  const detailLeft = listLeft + (hideList ? 0 : 380);
+  const listBusy = listWait !== null && !hideList;
+  const overlaySays =
+    listBusy && detailWaiting
+      ? `Fetching the ${LATEST} latest, and ${selectedId}…`
+      : listBusy
+        ? variant.says(listWait!)
+        : detailWaiting
+          ? `Fetching the journey of ${selectedId}…`
+          : '';
 
   return (
     <div
-      className={`mn ic pl ${variant.className}`}
+      ref={rootRef}
+      className={`mn ic pl ld ${variant.className}`}
+      data-list-waiting={listBusy || undefined}
+      data-detail-waiting={detailWaiting || undefined}
       data-hide-side={hideSide || undefined}
       data-hide-list={hideList || undefined}
       data-coupled={coupled || undefined}
@@ -348,6 +377,8 @@ function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenari
         </div>
       </section>
 
+      {Overlay && <Overlay list={listBusy} detail={detailWaiting} says={overlaySays} listLeft={listLeft} detailLeft={detailLeft} />}
+
       <p className="pl-announce" role="status">
         {announce}
       </p>
@@ -355,7 +386,21 @@ function Page({ variant, scenario, hold }: { variant: Variant; scenario: Scenari
   );
 }
 
-function ScenarioBar({ current, hold, onPick, onHold }: { current: Scenario; hold: boolean; onPick: (s: Scenario) => void; onHold: () => void }) {
+function ScenarioBar({
+  current,
+  hold,
+  together,
+  onPick,
+  onHold,
+  onTogether,
+}: {
+  current: Scenario;
+  hold: boolean;
+  together: boolean;
+  onPick: (s: Scenario) => void;
+  onHold: () => void;
+  onTogether: () => void;
+}) {
   return (
     <nav className="proto-picker pl-scenarios" aria-label="Prototype scenarios">
       {SCENARIOS.map((s) => (
@@ -366,6 +411,15 @@ function ScenarioBar({ current, hold, onPick, onHold }: { current: Scenario; hol
       <span className="proto-picker-divider" aria-hidden="true" />
       <button className="proto-picker-item" data-active={hold || undefined} aria-pressed={hold} onClick={onHold}>
         Hold <span className="pl-key">H</span>
+      </button>
+      <button
+        className="proto-picker-item"
+        data-active={together || undefined}
+        aria-pressed={together}
+        onClick={onTogether}
+        title="On a cold open, the list and the pane land at the same moment"
+      >
+        Together <span className="pl-key">G</span>
       </button>
     </nav>
   );
@@ -405,6 +459,7 @@ function Picker({ current, onPick, onReplay }: { current: number; onPick: (i: nu
           data-active={i === current || undefined}
           aria-current={i === current ? 'true' : undefined}
           onClick={() => onPick(i)}
+          title={v.idea}
         >
           {v.name}
         </button>
@@ -424,6 +479,7 @@ function App() {
   });
   const [scenario, setScenario] = useState<Scenario>(() => (linked ? 'cold' : (SCENARIOS.find((s) => s.id === params.get('s'))?.id ?? 'search')));
   const [hold, setHold] = useState(params.has('hold'));
+  const [together, setTogether] = useState(!params.has('apart'));
   const [mount, setMount] = useState(0);
 
   const remember = (key: string, value: string) => {
@@ -456,6 +512,10 @@ function App() {
       else if (e.key === 'ArrowLeft') pickVariant((current - 1 + VARIANTS.length) % VARIANTS.length);
       else if (k === 'r') replay();
       else if (k === 'h') setHold((h) => !h);
+      else if (k === 'g') {
+        setTogether((t) => !t);
+        replay();
+      }
       else if (s) pickScenario(s.id);
     };
     document.addEventListener('keydown', onKey);
@@ -464,10 +524,20 @@ function App() {
 
   return (
     <>
-      <Page key={`${current}-${scenario}-${mount}`} variant={VARIANTS[current]} scenario={scenario} hold={hold} />
+      <Page key={`${current}-${scenario}-${mount}`} variant={VARIANTS[current]} scenario={scenario} hold={hold} together={together} />
       {!params.has('bare') && (
         <>
-          <ScenarioBar current={scenario} hold={hold} onPick={pickScenario} onHold={() => setHold((h) => !h)} />
+          <ScenarioBar
+            current={scenario}
+            hold={hold}
+            together={together}
+            onPick={pickScenario}
+            onHold={() => setHold((h) => !h)}
+            onTogether={() => {
+              setTogether((t) => !t);
+              replay();
+            }}
+          />
           <Picker current={current} onPick={pickVariant} onReplay={replay} />
         </>
       )}

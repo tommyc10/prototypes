@@ -33,9 +33,25 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* While a newer search is on its way, the rows it will replace sit back. */
-.ic-rows[data-searching] .ic-row {
-  opacity: 0.5;
+/* A row to come (see RowShape): exactly a real row's height, a title line and a sub line. */
+.ic-row-shape {
+  cursor: default;
+}
+
+.ic-row-shape .ic-row-title {
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+.ic-row-shape .ic-row-sub {
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.ic-row-shape > .mn-skel:first-child {
+  background: var(--tint-2);
 }
 
 .ic-rows {

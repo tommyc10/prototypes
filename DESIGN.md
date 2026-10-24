@@ -53,6 +53,7 @@ colors:
       card-edge: "rgba(255,255,255,0.03)" # lit top edge on cards
       tint: "rgba(255,255,255,0.06)" # hover wash, key caps, empty tracks
       tint-2: "rgba(255,255,255,0.07)" # menu highlight, meter track
+      sheen: "rgba(255,255,255,0.13)" # the band of light that crosses a waiting page
       well: "rgba(0,0,0,0.35)" # sunken: text fields
       well-2: "rgba(0,0,0,0.3)" # sunken: metric wells, segmented tracks
       scrim: "rgba(0,0,0,0.3)" # behind the command palette
@@ -72,7 +73,7 @@ colors:
     text: { fg: "#171717", fg-2: "#525252", fg-3: "#737373", row-name: "#262626" }
     status: { green: "#1f9d55", amber: "#d4940f", orange: "#c2570c", red: "#d42a31", orange-wash: "rgba(194,87,12,0.07)", red-wash: "rgba(212,42,49,0.06)", danger-fg: "#c8232a", red-text: "#9f1d22", red-strong: "#7f1116", orange-strong: "#9a3f07" }
     accent: { primary: "#171717", primary-fg: "#ffffff", primary-hover: "#333333" }
-    material: { glass: "rgba(255,255,255,0.8)", glass-menu: "rgba(255,255,255,0.88)", glass-palette: "rgba(255,255,255,0.6)", glass-toast: "rgba(255,255,255,0.9)", glass-edge: "rgba(255,255,255,0.9)", card-edge: "rgba(255,255,255,0.8)", tint: "rgba(0,0,0,0.04)", tint-2: "rgba(0,0,0,0.05)", well: "rgba(255,255,255,0.9)", well-2: "rgba(0,0,0,0.025)", scrim: "rgba(0,0,0,0.08)", overlay: "rgba(0,0,0,0.2)" }
+    material: { glass: "rgba(255,255,255,0.8)", glass-menu: "rgba(255,255,255,0.88)", glass-palette: "rgba(255,255,255,0.6)", glass-toast: "rgba(255,255,255,0.9)", glass-edge: "rgba(255,255,255,0.9)", card-edge: "rgba(255,255,255,0.8)", tint: "rgba(0,0,0,0.04)", tint-2: "rgba(0,0,0,0.05)", sheen: "rgba(255,255,255,0.85)", well: "rgba(255,255,255,0.9)", well-2: "rgba(0,0,0,0.025)", scrim: "rgba(0,0,0,0.08)", overlay: "rgba(0,0,0,0.2)" }
     focus: { focus-ring: "rgba(0,0,0,0.4)", focus-glow: "rgba(0,0,0,0.05)", selection: "rgba(0,0,0,0.12)" }
     chart: { tone-1: "#171717", tone-2: "#737373", tone-3: "#b0b0b0", tone-4: "#dedede" }
 
@@ -193,6 +194,7 @@ components:
   command-palette: { width: 620px, top: 16vh, radius: 3xl, material: glass-palette, search: 52px, item: "38px, radius 8px, 14px/500" }
   action-bar: { radius: 3xl, padding: "10px 10px 10px 18px", material: glass, shadow: shadow-float, position: "absolute, 24px from the pane's sides, 80px from its bottom" }
   hold-button: { height: 32px, radius: 8px, fill: "orange 10%", edge: "inset ring orange 45%", fill-on-hold: "orange, revealed left to right over 2s linear" }
+  skeleton: { class: mn-skel, line: "tint, radius xs, cut to the words it stands for", card: "fg 2.5% + inset ring line, radius 2xl", stale: "data-sheen-stale: 55% opacity, takes the band", band: "sheen, 2.4s linear, crosses the window then rests", clock: "useSheen on the page root" }
 ---
 
 # Imperial Ops design system
@@ -413,9 +415,11 @@ colour (what the rule caught, in green); every other series is a grey from the t
   so the interface feels like it answered immediately.
 - **Durations by size:** 120ms row hover, 150ms colour, 160ms press, 200ms panels, 220ms
   the decision form, 240ms shell columns. Interface transitions stay under 320ms; only data
-  stories (the incident journey, a chart drawing itself) run longer.
-- **Only `transform`, `opacity`, `filter` and colour animate.** The one exception is the
-  shell's `grid-template-columns`.
+  stories (the incident journey, a chart drawing itself, a chart morphing to new figures)
+  run longer. A page that draws itself in does so once per load, not on every visit.
+- **Only `transform`, `opacity`, `filter` and colour animate.** Two exceptions: the shell's
+  `grid-template-columns`, and a chart morphing to new figures, which re-draws its marks
+  each frame from the in-between figures (see Charts).
 - **Press:** `scale(0.97)` on `:active`. **Hover** only inside
   `@media (hover: hover) and (pointer: fine)`.
 - **Arriving:** `@starting-style { opacity: 0; transform: translateY(8px) scale(0.99);
@@ -423,18 +427,33 @@ colour (what the rule caught, in green); every other series is a grey from the t
 - **Keyboard-opened things appear instantly;** pointer-opened things animate. The decision
   form gets `data-animate` only when opened with the mouse.
 - **Reduced motion:** movement is removed, a short opacity fade may stay.
-- **The beam** (`mn-beam`) is a 1px grey light that travels round an element's edge. It has two
-  uses and no others: the backtest well while the rule engine is working, and the overnight
-  block for as long as it has suggestions waiting. It always marks a state that ends, and it
-  travels slowly (5 to 9 seconds a lap). Never on a button, never as decoration.
-- **Waiting for something fetched** shows at once what is already known and holds a grey
-  `tint` bar where each fetched word will land; the sentence where the answer goes says what
-  is being fetched, in `fg-3`. The incident journey is the first: its line is drawn empty and
-  its own dot runs it end to end (1.6s a pass), each mark ringing as it passes. That light is
-  the journey's, not the beam. Waiting is a state, not an entrance, so it looks the same from
-  the keyboard; only the arrival differs (a pointer pick rises in over 220ms and plays the
-  journey, a key shows it at once). Reduced motion: the line holds still and the sentence
-  breathes.
+- **The beam** (`mn-beam`) is a 1px grey light that travels round an element's edge. It has one
+  use: the backtest well while the rule engine is working. It always marks a state that ends,
+  and it travels slowly (5 to 9 seconds a lap). Never on a button, never as decoration.
+- **The overnight block breathes** with the Border beam package (`border-beam`,
+  libraries.dev/beam): `size="pulse-inner"`, `colorVariant="mono"`, `theme` from the app's
+  theme, `active` until its last suggestion is dealt with. On light it also takes
+  `brightness={0.45}` and `glowSize={1.4}`: the default brightness washes mono's greys out
+  to white on a light card. It waits on a decision, so it
+  breathes in place rather than travels, and it's grey because colour here means status. The
+  beam's wrapper is the block's outer box, so the glow leaves with it. Reduced motion: the
+  package shows no glow at all; the heading ("Found overnight 3") carries the state.
+- **Waiting for something fetched sheens.** What's already known shows at once; a soft
+  shape (`mn-skel`) stands wherever fetched content will land, cut to that content's size so
+  nothing jumps when it arrives; and one band of light (`sheen`) crosses the window every
+  2.4s, linear, then rests. Every shape on the page carries a slice of the same band, kept in
+  step by one clock (`useSheen` on the page root), so a list and a pane waiting side by side
+  read as one page loading, not two. Content about to be replaced (old rows during a search)
+  keeps its place, sits back to 55% (`data-sheen-stale`) and takes the same light. The shapes
+  follow the layout of what will land, in that component's own grid and spacing, and as many
+  of them as will land (an incident's sections are drawn from how it ended, which its list row
+  already knows), so the content fills the shapes it replaces instead of pushing the page about. When two
+  columns wait together they also land together. A shape is never a real component's own
+  parts: drawing a journey's line or dot while it loads made a slow fetch look like a journey
+  that broke. Screen readers hear what's being fetched (`mn-sr`). Waiting is a state, not an
+  entrance, so it looks the same from the keyboard; only the arrival differs (a pointer pick
+  rises in over 220ms, a key shows it at once). Reduced motion: the band stops and the shapes
+  breathe.
 - **Theme switch** dissolves through the View Transitions API over 200ms.
 
 ## Interaction patterns
@@ -487,6 +506,14 @@ No chart library. Bars are divs, lines are SVG, everything is drawn with the sam
 - Bars have 2px top corners. The current period is `fg`, the past is `tone-4`.
 - Tooltips are the solid tooltip recipe, and list every series with tabular figures.
 - A chart offers a table view of the same numbers.
+- **When the figures change, the chart morphs, it doesn't redraw.** Changing a scope (a
+  service, a lookback, a horizon) keeps every panel mounted and tweens each chart from the
+  figures it showed to the new ones over 420ms on the in-out curve: bars grow and shrink,
+  lines reshape, axes glide, numbers count, ranked rows slide to their new place, and colour
+  scales fade. Series line up by key, so a longer lookback slides older weeks in rather than
+  replacing every bar. A change made from the keyboard (J/K, ⌘K) lands at once instead. Never
+  remount a chart to show new figures, and never fade the page out and back in: that's a
+  flash. (Hindcast and Forecast: `hooks/useTween.ts`, `hooks/useFlip.ts`.)
 - The ramp carries an *order* (caught, partly caught, missed), not unrelated categories.
   Three series at most; beyond that, split into small charts.
 
@@ -634,6 +661,6 @@ the app has drifted from it. Match the scale, not the drift.
 - **`primary-hover` is the only hover with its own token.** Every other hover is a rung.
 - **z-index is ad hoc** (1, 2, 5, 10, 50, 51, 100). The values in `elevation.z-index` are
   the ones in use; do not add new ones between them.
-- **No form library, and one loading skeleton.** The incident page's waiting journey (see
-  Motion) is the only shipped loading state. The port's `Field` and `Skeleton` are styled to
-  fit, but nothing has checked the port's `Skeleton` against those bars.
+- **No form library, and one loading state.** Sheen (`mn-skel`, see Motion) is the loading
+  state, shipped on the Incidents page. The port's `Field` and `Skeleton` are styled to fit,
+  but nothing has checked the port's `Skeleton` against the sheen's shapes and band.

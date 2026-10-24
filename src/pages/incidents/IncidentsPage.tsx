@@ -13,10 +13,23 @@
  * linked to), and the search. A journey isn't stored; it's worked out from the incident and
  * the rules as they stand (data/mockData.ts).
  *
- * A picked incident's journey is fetched by its number, and while it's on its way the pane
- * shows what the list row already knew (the number, title, CI, when it was raised and how it
- * ended) with the journey line waiting under it. Only the last pick is ever shown: stepping
- * on before a journey arrives drops it.
+ * Waiting looks the same everywhere on the page: it sheens (see mn-skel in styles/ui.css and
+ * hooks/useSheen.ts). One band of light crosses the window and passes over every shape at
+ * once, so when the list and the pane wait together they read as one page loading.
+ *
+ *   the list   on opening, a shape for each of the latest few while they load; during a
+ *              search, the rows already there stay, sit back and take the same light
+ *   the pane   a picked incident's journey is fetched by its number, and while it's on its
+ *              way the pane shows what the list row already knew (the number, title, CI, when
+ *              it was raised and how it ended), and below it the journey and its sections as
+ *              shapes in their own layout (JourneySkeleton, StagesSkeleton): as many sections
+ *              as the ending says it reached, so what lands fills the shapes it replaces.
+ *              Never the journey's line or dot: a waiting journey must not look like one that
+ *              stopped. Only the last pick is ever shown: stepping on before a journey
+ *              arrives drops it.
+ *
+ * Opened by a link, both wait, and the list holds its rows until the journey is in too, so
+ * the page lands once.
  *
  * The page never loads every incident, because a real feed has far too many: it shows the
  * latest few, and everything else is found by asking. So it has no totals and no tabs with
@@ -29,6 +42,7 @@ import { Server } from 'lucide-react';
 import { PaneToggles } from '../../components/PaneToggles';
 import { Sidebar } from '../../components/Sidebar/Sidebar';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useSheen } from '../../hooks/useSheen';
 import { useTheme } from '../../hooks/useTheme';
 import { navigate } from '../../lib/route';
 import { INCIDENTS_TOUR } from '../../../tours/incidents';
@@ -37,9 +51,9 @@ import { tourMode, useTour } from '../../../tours/useTour';
 import { groupById } from '../rule-management/data/mockData';
 import { useRulesStore } from '../rule-management/hooks/useRulesStore';
 import { IncidentSearch } from './components/IncidentSearch/IncidentSearch';
-import { Journey, JourneyWaiting } from './components/Journey/Journey';
+import { Journey, JourneySkeleton } from './components/Journey/Journey';
 import { IncidentsPalette } from './components/Palette/IncidentsPalette';
-import { Stages } from './components/Stages/Stages';
+import { Stages, StagesSkeleton } from './components/Stages/Stages';
 import { lifecycles } from './data/mockData';
 import { END_LABEL, dayAndTime } from './model/lifecycle';
 import type { Lifecycle, StationId } from './model/types';
@@ -49,6 +63,9 @@ import './IncidentsPage.css';
 const LATEST = 12;
 /** How long after the last keystroke the search is sent. */
 const SEARCH_WAIT = 220;
+/** How long the list's rows take to arrive, the latest few or a search's. Fake, like the data:
+ * it stands in for the request, so the waiting state can be seen. */
+const LIST_WAIT = 600;
 /** How long an incident's journey takes to arrive once it's picked. Fake, like the data: it
  * stands in for the request, so the waiting state can be seen. */
 const STORY_WAIT = 700;
@@ -58,10 +75,19 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const lives = useMemo(() => lifecycles(rules), [rules]);
   const [selectedId, setSelectedId] = useState<string | null>(initialId ?? null);
   const [query, setQuery] = useState('');
-  // The search that has been answered. It trails what's typed, the way a request does.
+  // The latest few, fetched once when the page opens. Opened by a link, they wait for the
+  // linked journey too, so the list and the pane land together.
+  const [listReady, setListReady] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setListReady(true), initialId ? STORY_WAIT : LIST_WAIT);
+    return () => clearTimeout(timer);
+  }, []);
+  // The search that has been answered. It trails what's typed, the way a request does: sent
+  // a moment after the last keystroke, then answered. Clearing it goes straight back to the
+  // latest few, which are already here.
   const [asked, setAsked] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => setAsked(query.trim()), query.trim() ? SEARCH_WAIT : 0);
+    const timer = setTimeout(() => setAsked(query.trim()), query.trim() ? SEARCH_WAIT + LIST_WAIT : 0);
     return () => clearTimeout(timer);
   }, [query]);
   // How the incident on screen was opened. The pointer (or a link) plays its journey; the
@@ -74,19 +100,22 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const [theme, toggleTheme] = useTheme();
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useSheen(rootRef);
   const tour = useTour(INCIDENTS_TOUR.length, { auto: false, seenKey: 'mn-incidents-tour-seen' });
 
   // The list: the latest few until something is asked for, then whatever the search found.
   // (Here the search runs over the mock data. In the real app it's a request, and `found`
   // is the page of rows and the total that come back.)
   const found = useMemo(() => {
+    if (!listReady) return [];
     if (!asked) return lives.slice(0, LATEST);
     const words = asked.toLowerCase().split(/\s+/).filter(Boolean);
     return lives.filter((l) => {
       const haystack = `${l.incident.id} ${l.incident.title} ${l.incident.ci} ${l.rule?.id ?? ''} ${l.rule?.name ?? ''} ${groupById(l.groupId).name}`.toLowerCase();
       return words.every((word) => haystack.includes(word));
     });
-  }, [lives, asked]);
+  }, [lives, asked, listReady]);
 
   // The journeys that have arrived. One fetched once shows at once when it's picked again.
   const [fetched, setFetched] = useState<ReadonlySet<string>>(() => new Set());
@@ -102,7 +131,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   // With none picked, or a number that doesn't exist, the pane is empty.
   const life = waiting ? null : (lives.find((l) => l.incident.id === selectedId) ?? null);
   // What's known before it arrives: its row, if it's in the list (not when it came from a link).
-  const known: Pick<Lifecycle, 'incident' | 'end' | 'real'> | undefined = life ?? found.find((l) => l.incident.id === selectedId);
+  const known: Pick<Lifecycle, 'incident' | 'end' | 'real' | 'groupId' | 'rule'> | undefined = life ?? found.find((l) => l.incident.id === selectedId);
   const shownId = waiting || life ? selectedId : null;
 
   // Keep the address in step, without adding a Back step for every J and K.
@@ -159,11 +188,11 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
     },
   });
 
-  const group = life && groupById(life.groupId);
+  const group = known && groupById(known.groupId);
   const tone = !known ? undefined : known.end === 'suppressed' && known.real ? 'bad' : known.end === 'enriching' ? 'wait' : known.end === 'delivered' ? 'through' : undefined;
 
   return (
-    <div className="mn ic" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
+    <div className="mn ic" ref={rootRef} inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
       <Sidebar
         hidden={hideSide}
         page="incidents"
@@ -175,6 +204,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
 
       <IncidentSearch
         hidden={hideList}
+        loading={listReady ? null : { count: LATEST }}
         lives={found}
         asked={asked}
         searching={query.trim() !== asked}
@@ -199,10 +229,12 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
               listLabel="Incident list"
             />
             {shownId && <span className="mn-mono mn-subtle">{shownId}</span>}
-            {known && (
+            {known ? (
               <span className="ic-badge" data-tone={tone}>
                 {END_LABEL[known.end]}
               </span>
+            ) : (
+              waiting && <span className="mn-skel ic-badge-shape" data-shape="pill" aria-hidden />
             )}
           </div>
 
@@ -210,34 +242,46 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
             // A journey that arrives after a pointer pick rises in; from the keyboard it's simply there.
             <article className="ic-page" aria-label={`The journey of ${shownId}`} aria-busy={waiting} data-arrive={via === 'pointer' || undefined}>
               <header className="ic-head" data-tour="ic-head">
-                {known ? <h2>{known.incident.title}</h2> : <span className="ic-bar" data-size="title" />}
+                {known ? <h2>{known.incident.title}</h2> : <span className="mn-skel ic-shape-title" aria-hidden />}
                 <div className="ic-meta">
                   <Server size={14} />
-                  {known ? <span className="mn-mono">{known.incident.ci}</span> : <span className="ic-bar" data-size="meta" />}
-                  {group ? (
-                    <span className="mn-subtle">
-                      · {group.name} · {group.unit}
-                    </span>
+                  {known ? (
+                    <>
+                      <span className="mn-mono">{known.incident.ci}</span>
+                      {group && (
+                        <span className="mn-subtle">
+                          · {group.name} · {group.unit}
+                        </span>
+                      )}
+                      <span className="ic-sep" />
+                      Raised {dayAndTime(new Date(known.incident.openedAt).getTime())}
+                    </>
                   ) : (
-                    <span className="ic-bar" data-size="meta" />
+                    <span className="mn-skel ic-shape-meta" aria-hidden />
                   )}
-                  <span className="ic-sep" />
-                  {known ? `Raised ${dayAndTime(new Date(known.incident.openedAt).getTime())}` : <span className="ic-bar" data-size="meta" />}
                 </div>
-                {/* The whole journey, as one sentence. Until it arrives, what's being fetched. */}
+                {/* The whole journey, as one sentence. Until it arrives, two lines of shape, and
+                    the words a screen reader hears. */}
                 {life ? (
                   <p className="ic-verdict" data-tone={tone}>
                     {life.summary}
                   </p>
                 ) : (
-                  <p className="ic-verdict" data-waiting role="status">
-                    Fetching the journey of {shownId}…
+                  <p className="ic-verdict ic-shape-lines" data-waiting role="status">
+                    <span className="mn-sr">Fetching the journey of {shownId}…</span>
+                    <span className="mn-skel" style={{ width: '92%' }} aria-hidden />
+                    <span className="mn-skel ic-shape-more" style={{ width: '56%' }} aria-hidden />
                   </p>
                 )}
               </header>
 
               {!life ? (
-                <JourneyWaiting />
+                // The journey and its sections as shapes in their own layout. How far it got comes
+                // from its ending, when the list row knows it; opened by its number alone, four.
+                <>
+                  <JourneySkeleton />
+                  <StagesSkeleton end={known?.end} rule={known ? Boolean(known.rule) : undefined} real={known?.real} />
+                </>
               ) : (
                 <>
                   {/* `key` gives each incident (and each "play again") a fresh journey, so it plays from the start. */}

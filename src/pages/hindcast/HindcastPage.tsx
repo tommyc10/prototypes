@@ -22,7 +22,7 @@ import { navigate } from '../../lib/route';
 import { CauseList } from './components/CauseList/CauseList';
 import { Heatmap } from './components/charts/Heatmap';
 import { OUTCOME_TONE, VolumeChart, VolumeTable } from './components/charts/VolumeChart';
-import { Kpis, type KpiTile } from './components/Kpis/Kpis';
+import { Counting, Kpis, type KpiTile } from './components/Kpis/Kpis';
 import { AnalysisPalette } from './components/Palette/AnalysisPalette';
 import { Panel } from './components/Panel/Panel';
 import { CONFIDENT, PatternList } from './components/PatternList/PatternList';
@@ -30,6 +30,7 @@ import { TicketList } from './components/TicketList/TicketList';
 import { TopBar } from './components/TopBar/TopBar';
 import { TICKETS, serviceName } from './data/mockData';
 import { useEntrance } from './hooks/useEntrance';
+import { snapNextChange } from './hooks/useTween';
 import { asPattern, useScope } from './hooks/useScope';
 import { hindcast as runHindcast } from './model/hindcast';
 import { CAUSE_LABEL, DEFAULT_LOOKBACK, OUTCOME_LABEL, OUTCOMES, TODAY, change, plural, span } from './model/labels';
@@ -50,9 +51,8 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
   const listRef = useRef<HTMLDivElement>(null);
 
   const hc = useMemo(() => runHindcast(TICKETS, { serviceId, weeks, cause }), [serviceId, weeks, cause]);
-  const gridKey = `${serviceId}-${weeks}`;
-  // Arriving from a prediction, the reader is mid-task: a quick swap, not the whole story.
-  const [motion, setMotion] = useEntrance(gridKey, arrivedOn ? 'swap' : 'story');
+  // Arriving from a prediction, the reader is mid-task: no story, just the page and its ring.
+  const motion = useEntrance(!arrivedOn);
 
   // Keep the address in step, without adding a Back step for every change.
   useEffect(() => {
@@ -64,20 +64,18 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
     if (!flash) return;
     const card = listRef.current?.querySelector<HTMLElement>(`[data-pattern="${flash}"]`);
     if (card) card.parentElement!.scrollTop = card.offsetTop - card.parentElement!.offsetTop - 4;
-    const t = setTimeout(() => setFlash(null), 1800);
+    const t = setTimeout(() => setFlash(null), 1600);
     return () => clearTimeout(t);
   }, [flash]);
 
-  /** Change the scope. From the pointer the page swaps in quickly; from a key it's instant. */
-  const rescope = (patch: Parameters<typeof setScope>[0], pointer: boolean) => {
-    setMotion(pointer ? 'swap' : null);
-    setScope(patch);
-  };
+  /** Change the scope. Every panel stays where it is and its figures morph to the new ones. */
+  const rescope = (patch: Parameters<typeof setScope>[0]) => setScope(patch);
 
   /** Open a pattern's prediction on the forecast page, in the same scope. */
   const toForecast = (patternId: string) => navigate(`#/forecast/${serviceId}/${weeks}/${horizon}/${patternId}`);
 
   const step = (by: number) => {
+    snapNextChange();
     const keys = hc.causes.map((c) => c.key);
     const at = cause ? keys.indexOf(cause) : by > 0 ? -1 : keys.length;
     setCause(keys[Math.max(0, Math.min(keys.length - 1, at + by))] ?? null);
@@ -94,7 +92,11 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
       ArrowUp: () => step(-1),
       '/': () => searchRef.current?.focus(),
       // Esc lets go, one thing at a time: the search, then the cause.
-      Escape: () => (query ? setQuery('') : setCause(null)),
+      Escape: () => {
+        snapNextChange();
+        if (query) setQuery('');
+        else setCause(null);
+      },
       '[': () => setHideSide((hidden) => !hidden),
     },
   });
@@ -105,25 +107,32 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
   const top = hc.causes[0];
   const confident = hc.patterns.filter((p) => p.confidence >= CONFIDENT).length;
   const scopeName = serviceId === 'all' ? 'across every service' : `for ${serviceName(serviceId)}`;
+  // The headline figures count to their new values when the scope changes, with the charts.
+  const count = (n: number, show: (v: number) => string) => <Counting numbers={{ n }} render={(v) => show(v.n)} />;
 
   const tiles: KpiTile[] = [
-    { label: 'Tickets', value: num(k.tickets.value), change: change(k.tickets.value, k.tickets.previous), better: 'down', against, series: k.tickets.series },
+    { label: 'Tickets', value: count(k.tickets.value, (v) => num(Math.round(v))), change: change(k.tickets.value, k.tickets.previous), better: 'down', against, series: k.tickets.series },
     {
       label: 'Became incidents',
       value: (
-        <>
-          {num(k.incidents.value)}
-          <small>{pct(k.tickets.value ? k.incidents.value / k.tickets.value : 0)}</small>
-        </>
+        <Counting
+          numbers={{ incidents: k.incidents.value, tickets: k.tickets.value }}
+          render={(v) => (
+            <>
+              {num(Math.round(v.incidents))}
+              <small>{pct(v.tickets ? v.incidents / v.tickets : 0)}</small>
+            </>
+          )}
+        />
       ),
       change: change(k.incidents.value, k.incidents.previous),
       better: 'down',
       against,
       series: k.incidents.series,
     },
-    { label: 'Median time to resolve', value: span(k.medianMins.value), change: change(k.medianMins.value, k.medianMins.previous), better: 'down', against, series: k.medianMins.series },
-    { label: 'Repeat tickets', value: pct(k.repeatShare.value), note: 'Same CI and cause within 3 days', change: null },
-    { label: 'Root cause found', value: pct(k.foundShare.value), note: 'Tickets with a cause on record', change: null },
+    { label: 'Median time to resolve', value: count(k.medianMins.value, span), change: change(k.medianMins.value, k.medianMins.previous), better: 'down', against, series: k.medianMins.series },
+    { label: 'Repeat tickets', value: count(k.repeatShare.value, pct), note: 'Same CI and cause within 3 days', change: null },
+    { label: 'Root cause found', value: count(k.foundShare.value, pct), note: 'Tickets with a cause on record', change: null },
   ];
 
   return (
@@ -134,9 +143,9 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
         <TopBar
           page="hindcast"
           serviceId={serviceId}
-          onService={(id) => rescope({ serviceId: id }, true)}
+          onService={(id) => rescope({ serviceId: id })}
           weeks={weeks}
-          onWeeks={(w) => rescope({ weeks: w }, true)}
+          onWeeks={(w) => rescope({ weeks: w })}
           cause={cause}
           onClearCause={() => setCause(null)}
           hideSide={hideSide}
@@ -145,7 +154,7 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
         />
 
         <div className="ol-scroll">
-          <div className="ol-grid" data-view="hindcast" data-animate={motion ?? undefined} key={gridKey}>
+          <div className="ol-grid" data-view="hindcast" data-animate={motion ?? undefined}>
             <p className="ol-lead" data-area="lead">
               {cause ? (
                 <>
@@ -229,9 +238,18 @@ export function HindcastPage({ serviceId: serviceFromAddress, weeks: weeksFromAd
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         page="hindcast"
-        onService={(id) => rescope({ serviceId: id }, false)}
-        onWeeks={(w) => rescope({ weeks: w }, false)}
-        onCause={setCause}
+        onService={(id) => {
+          snapNextChange();
+          rescope({ serviceId: id });
+        }}
+        onWeeks={(w) => {
+          snapNextChange();
+          rescope({ weeks: w });
+        }}
+        onCause={(c) => {
+          snapNextChange();
+          setCause(c);
+        }}
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}

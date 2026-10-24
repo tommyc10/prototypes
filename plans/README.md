@@ -9,6 +9,9 @@ tree as of 23 Oct 2026. Each plan quotes the code it expects and says to stop if
 Since then the page has been split in two: `src/pages/outlook/` is now `src/pages/hindcast/` (with the shared
 pieces) and `src/pages/forecast/`. The plans' paths describe the code as it was when they were done.
 
+Later still, 001's 180ms `swap` fade on a scope change was removed: it flashed. A scope change now
+keeps every panel mounted and morphs the charts (`hooks/useTween.ts`), and the story plays once per load.
+
 | # | Plan | Severity | Status |
 | --- | --- | --- | --- |
 | 001 | [Play the outlook's entrance once, and swap quickly after](001-one-shot-entrance.md) | HIGH | DONE |

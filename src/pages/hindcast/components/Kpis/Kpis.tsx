@@ -5,6 +5,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { pct } from '../../../../lib/format';
+import { useTweenedNumbers } from '../../hooks/useTween';
 import { Sparkline } from '../charts/Sparkline';
 import './Kpis.css';
 
@@ -22,6 +23,12 @@ export interface KpiTile {
   series?: number[];
   /** Where the series turns from history into forecast. */
   split?: number;
+}
+
+/** A figure that counts to its new value when the scope changes. It keeps its own state, so
+ *  only the figure re-renders each frame of the count, never the page around it. */
+export function Counting<T extends Record<string, number>>({ numbers, render }: { numbers: T; render: (shown: T) => ReactNode }) {
+  return <>{render(useTweenedNumbers(numbers))}</>;
 }
 
 export function Kpis({ tiles }: { tiles: KpiTile[] }) {

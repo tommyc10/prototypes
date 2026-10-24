@@ -47,7 +47,10 @@
   box-shadow: inset 0 0 0 1px var(--line);
   outline: none;
   overflow: hidden;
-  transition: box-shadow 120ms ease;
+  /* A new scope fades each day to its new shade, on the chart morph's duration. */
+  transition:
+    background-color 420ms ease,
+    box-shadow 120ms ease;
 }
 
 .ol-cal-day[data-level='1'] {

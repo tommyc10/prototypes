@@ -71,6 +71,8 @@
   --tone-2: #9a9a9a;
   --tone-3: #646464;
   --tone-4: #2b2b2b;
+  /* the band of light that crosses a waiting page (see mn-skel in ui.css) */
+  --sheen: rgba(255, 255, 255, 0.13);
   font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
@@ -143,6 +145,7 @@
   --tone-2: #737373;
   --tone-3: #b0b0b0;
   --tone-4: #dedede;
+  --sheen: rgba(255, 255, 255, 0.85);
   color-scheme: light;
 }
 

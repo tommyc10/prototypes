@@ -9,6 +9,9 @@ export function useSize<T extends HTMLElement>() {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Measured before the first paint, so a chart never shows a frame of nothing.
+    const box = el.getBoundingClientRect();
+    setSize({ width: Math.round(box.width), height: Math.round(box.height) });
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       setSize((s) => (s.width === Math.round(width) && s.height === Math.round(height) ? s : { width: Math.round(width), height: Math.round(height) }));

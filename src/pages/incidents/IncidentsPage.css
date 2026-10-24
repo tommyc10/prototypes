@@ -166,32 +166,56 @@
   color: var(--red);
 }
 
-/* ---------- while the journey is on its way ---------- */
+/* ---------- while the journey is on its way ----------
+ * Shapes (mn-skel, styles/ui.css) where the words will land, each cut to the size of what
+ * replaces it, so nothing jumps when the journey arrives. The journey's and the sections'
+ * shapes live beside them (JourneySkeleton in Journey.css, StagesSkeleton in Stages.css). */
 
-/* A grey bar where fetched words will land, in the tint used for empty tracks. */
-.ic-bar {
+/* A word-sized shape inside a line of text: it sits in the text's own line box, so the line
+   keeps its real height. */
+.ic-skel-text {
   display: inline-block;
-  flex: none;
-  max-width: 100%;
-  border-radius: 4px;
-  background: var(--tint);
+  height: 0.72em;
+  vertical-align: middle;
 }
 
-.ic-head > .ic-bar[data-size='title'] {
-  display: block;
+.ic-shape-title {
   width: min(520px, 70%);
   height: 24px;
   margin: 5px 0 13px; /* the height of a one-line title */
 }
 
-.ic-meta .ic-bar[data-size='meta'] {
-  width: 120px;
+.ic-shape-meta {
+  width: min(320px, 60%);
   height: 10px;
 }
 
-/* In the verdict's place, what's being fetched: quieter than any verdict. */
-.ic-verdict[data-waiting] {
-  color: var(--fg-3);
+/* The verdict, at its 17px type's 1.62 line height: one line on a wide pane, two on a narrow
+ * one, as most verdicts take (measured over every mock incident). */
+.ic-shape-lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.ic-shape-lines .mn-skel {
+  height: 12px;
+  margin: calc((1.62em - 12px) / 2) 0;
+}
+
+.ic-shape-lines .ic-shape-more {
+  display: none;
+}
+
+@container incident (max-width: 760px) {
+  .ic-shape-lines .ic-shape-more {
+    display: block;
+  }
+}
+
+/* The ending's badge, before it's known: its height, an average ending's width. */
+.ic-badge-shape {
+  width: 78px;
+  height: 22px;
 }
 
 /* Arriving after a pointer pick: the verdict and the sections rise in as the journey plays.
@@ -218,10 +242,6 @@
   .ic-page[data-arrive] .ic-stages {
     animation-name: ic-fade;
   }
-  /* The line holds still, so the sentence carries the waiting: it breathes. */
-  .ic-verdict[data-waiting] {
-    animation: ic-breathe 1600ms ease-in-out infinite;
-  }
 }
 
 @keyframes ic-fade {
@@ -230,11 +250,6 @@
   }
 }
 
-@keyframes ic-breathe {
-  50% {
-    opacity: 0.5;
-  }
-}
 
 @container incident (max-width: 760px) {
   .ic-top {

@@ -1,12 +1,20 @@
 /* What last night's refresh found, pinned above the rules: one row per pattern no rule covers
  * yet. The bar under the heading is last night's incidents; each lit segment is one pattern's
- * share of them. A light travels round its edge while it is there, and the block goes away
- * once every suggestion is proposed or dismissed. */
+ * share of them. While it's there, a grey glow breathes inside its edge (the Border beam
+ * package, pulse-inner, mono: it waits on a decision, so it breathes rather than travels),
+ * and the block goes away once every suggestion is proposed or dismissed. */
 
+import { BorderBeam } from 'border-beam';
 import { ChevronDown } from 'lucide-react';
+import type { Theme } from '../../../../hooks/useTheme';
 import { pct } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
 import type { Suggested } from '../../hooks/useSuggestions';
+
+/* On a light card the package's mono greys are pushed towards white by its default glow
+ * brightness (1.3) and disappear. Turned down and a little wider, they read as a soft grey
+ * glow, as quiet as mono is on dark. (Both are the package's own props, tuned by eye.) */
+const LIGHT_TUNING = { brightness: 0.45, glowSize: 1.4 };
 import { isLowConfidence } from '../../model/policy';
 import './OvernightBlock.css';
 
@@ -18,6 +26,7 @@ export function OvernightBlock({
   onToggle,
   selectedId,
   onSelect,
+  theme,
 }: {
   items: Suggested[];
   /** Every incident that came in overnight, for the bar. */
@@ -28,13 +37,25 @@ export function OvernightBlock({
   onToggle: () => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** The beam is tuned for the surface it sits on. */
+  theme: Theme;
 }) {
   const inPatterns = items.reduce((n, item) => n + item.match.matched.length, 0);
 
   return (
-    <div className="mn-overnight" data-collapsed={collapsed || undefined} data-leaving={leaving || undefined} inert={leaving} data-tour="overnight">
-      {/* A light keeps travelling round the block for as long as something in it is waiting. */}
-      <span className="mn-beam" data-active aria-hidden />
+    // The beam's wrapper is the block's outer box: it takes the block's place in the list and its
+    // exit, so the glow fades out with it. Its corner radius is read from the card inside.
+    <BorderBeam
+      size="pulse-inner"
+      colorVariant="mono"
+      theme={theme}
+      {...(theme === 'light' ? LIGHT_TUNING : {})}
+      active={!leaving}
+      className="mn-overnight-beam"
+      data-leaving={leaving || undefined}
+      data-tour="overnight"
+    >
+    <div className="mn-overnight" data-collapsed={collapsed || undefined} inert={leaving}>
       <button className="mn-overnight-head" aria-expanded={!collapsed} onClick={onToggle}>
         <ChevronDown size={13} />
         <span className="mn-overnight-title">
@@ -88,5 +109,6 @@ export function OvernightBlock({
           );
         })}
     </div>
+    </BorderBeam>
   );
 }

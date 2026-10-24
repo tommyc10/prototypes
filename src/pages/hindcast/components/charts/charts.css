@@ -416,6 +416,8 @@
   border-radius: inherit;
   background: var(--tone-1);
   opacity: calc(var(--heat) * 0.92);
+  /* A new scope fades each cell to its new shade, on the chart morph's duration. */
+  transition: opacity 420ms ease;
 }
 
 .ol-heat-cell[data-hover],
@@ -499,9 +501,10 @@
  * The full story plays only when the page first arrives ([data-animate='story'] on the grid).
  * This is a data story, so it's allowed past the usual 300ms: panels rise in 220ms on a 40ms
  * stagger, bars grow from their baseline, lines are drawn left to right, and the forecast
- * follows the history out past today. A pointer change of view or scope swaps the panels in
- * over 180ms ([data-animate='swap']). A key press, ⌘K, and anything that mounts after the
- * motion has played show at once. Only transform, opacity, filter and clip-path move. */
+ * follows the history out past today. It plays once per load (hooks/useEntrance). After
+ * that, changing the scope keeps every panel in place and morphs its figures (hooks/useTween),
+ * and moving between the hindcast and the forecast shows the other page at once. Only
+ * transform, opacity, filter and clip-path move here. */
 
 [data-animate='story'] .ol-panel,
 [data-animate='story'] .ol-kpi {
@@ -534,12 +537,6 @@
   animation-delay: 960ms;
 }
 
-/* After a pointer change: the new figures fade in, quickly and all at once. */
-[data-animate='swap'] .ol-panel,
-[data-animate='swap'] .ol-kpi {
-  animation: ol-swap 180ms var(--ease-out) both;
-}
-
 @keyframes ol-arrive {
   from {
     opacity: 0;
@@ -566,13 +563,6 @@
   }
 }
 
-@keyframes ol-swap {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-  }
-}
-
 @keyframes ol-wipe {
   from {
     clip-path: inset(-20px 100% -20px 0);
@@ -584,8 +574,8 @@
 
 /* Reduced motion: nothing moves. Panels and marks fade in, briefly, and that's all. */
 @media (prefers-reduced-motion: reduce) {
-  [data-animate] .ol-panel,
-  [data-animate] .ol-kpi,
+  [data-animate='story'] .ol-panel,
+  [data-animate='story'] .ol-kpi,
   [data-animate='story'] .ol-grow,
   [data-animate='story'] .ol-grow-x,
   [data-animate='story'] .ol-fade,

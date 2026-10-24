@@ -98,9 +98,8 @@
   border-radius: 2px;
   background: var(--tone-2);
   transform-origin: left;
-  transition:
-    transform 240ms var(--ease-out),
-    background-color 150ms ease;
+  /* Its length morphs with the figures (hooks/useTween), so only its colour transitions. */
+  transition: background-color 150ms ease;
 }
 
 /* With one picked, it's the bright bar and the rest step back. */

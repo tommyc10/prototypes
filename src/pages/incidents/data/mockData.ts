@@ -15,6 +15,7 @@ import { SAMPLES } from '../../change-windows/data/mockData';
 import { RULES, groupById, incidentDetail, serviceGroupById } from '../../rule-management/data/mockData';
 import type { RelatedIncident, Rule } from '../../rule-management/model/types';
 import type { End, EnrichedField, Lifecycle, Station, Step } from '../model/types';
+import { REACHED } from '../model/lifecycle';
 
 const MINUTE = 60_000;
 
@@ -121,7 +122,7 @@ function lifecycleOf(record: Entry, rules: Rule[]): Lifecycle {
   const delivered = at.enrichment + enrichTook;
   const closed = raised + Math.max(incident.minutesOpen * MINUTE, enrichTook + 6 * MINUTE);
 
-  const stopAt = { held: 1, suppressed: 2, folded: 3, noise: 4, enriching: 4, delivered: 5 }[end];
+  const stopAt = REACHED[end] - 1;
   const verdicts: [Station['id'], number, string][] = [
     ['raised', raised, `By a monitor, at P${raisedAt}`],
     ['windows', at.windows, window ? `Inside ${window.id}. Held.` : 'No planned work covers it'],

@@ -3,11 +3,14 @@
  * forecast said a week before each, so the reader can judge it by its record.
  *
  * Drawn in real pixels in three stacked layers, so the entrance can draw the history first
- * and let the forecast follow it out past today. */
+ * and let the forecast follow it out past today. When the scope changes it morphs instead of
+ * redrawing: the lines and the range reshape, the axis glides, and weeks open or close on
+ * either side of today (hooks/useTween). */
 
 import { useState, type PointerEvent } from 'react';
 import { num } from '../../../../lib/format';
 import { useSize } from '../../../hindcast/hooks/useSize';
+import { slots, useTweenedNumbers, useTweenedSeries } from '../../../hindcast/hooks/useTween';
 import { dayMonth, monthName, niceAxis } from '../../../hindcast/model/labels';
 import type { AheadPoint, HistoryPoint } from '../../model/types';
 import { labelled } from '../../../hindcast/components/charts/VolumeChart';
@@ -18,38 +21,55 @@ const M = { left: 40, right: 72, top: 18, bottom: 24 };
 export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahead: AheadPoint[] }) {
   const [ref, size] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const n = history.length + ahead.length;
-  const { top, ticks } = niceAxis(Math.max(...history.map((h) => h.actual), ...ahead.map((a) => a.high)) * 1.05, 4);
+  // The figures on screen morph when the scope changes: weeks line up by their start, so a
+  // longer lookback slides older weeks in and a longer horizon opens weeks out past today.
+  const hist = useTweenedSeries(history.map((p) => ({ key: p.start, values: { actual: p.actual, predicted: p.predicted ?? Number.NaN } })));
+  const fut = useTweenedSeries(ahead.map((a) => ({ key: a.start, values: { expected: a.expected, low: a.low, high: a.high } })));
+  const axis = niceAxis(Math.max(...history.map((p) => p.actual), ...ahead.map((a) => a.high)) * 1.05, 4);
+  const { top } = useTweenedNumbers({ top: axis.top });
+  const ticks = axis.ticks.filter((t) => t <= top * 1.001);
+  const keys = [...hist.map((f) => f.key), ...fut.map((f) => f.key)];
+  const place = slots([...hist, ...fut]);
+  const n = keys.length;
   const w = size.width - M.left - M.right;
   const h = size.height - M.top - M.bottom;
-  const x = (i: number) => M.left + (i / (n - 1)) * w;
+  const x = (i: number) => M.left + place[i].centre * w;
   const y = (v: number) => M.top + h - (v / top) * h;
   const pts = (xs: [number, number][]) => xs.map(([i, v]) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' L');
 
-  const lastI = history.length - 1;
-  const last = history[lastI];
-  const actual = `M${pts(history.map((p, i) => [i, p.actual]))}`;
-  const tried = history.map((p, i) => [i, p.predicted] as const).filter((p): p is [number, number] => p[1] !== null);
+  const lastI = hist.length - 1;
+  const last = hist[lastI].values;
+  const actual = `M${pts(hist.map((f, i) => [i, f.values.actual]))}`;
+  const tried = hist.map((f, i) => [i, f.values.predicted] as [number, number]).filter(([, v]) => !Number.isNaN(v));
   const predictedPath = tried.length > 1 ? `M${pts(tried)}` : '';
-  const forecastPath = `M${pts([[lastI, last.actual], ...ahead.map((a, j) => [history.length + j, a.expected] as [number, number])])}`;
-  const band = `M${pts([[lastI, last.actual], ...ahead.map((a, j) => [history.length + j, a.high] as [number, number])])} L${pts(
-    [...ahead.map((a, j) => [history.length + j, a.low] as [number, number])].reverse().concat([[lastI, last.actual]]),
+  const future = fut.map((f, j) => [hist.length + j, f.values] as const);
+  const forecastPath = `M${pts([[lastI, last.actual], ...future.map(([i, v]) => [i, v.expected] as [number, number])])}`;
+  const band = `M${pts([[lastI, last.actual], ...future.map(([i, v]) => [i, v.high] as [number, number])])} L${pts(
+    [...future.map(([i, v]) => [i, v.low] as [number, number])].reverse().concat([[lastI, last.actual]]),
   )} Z`;
-  const today = x(lastI + 0.5);
-  const end = ahead[ahead.length - 1];
-  const starts = [...history.map((p) => p.start), ...ahead.map((a) => a.start)];
-  const show = labelled(starts);
+  // Today sits where the history's weeks end.
+  const histShare = hist.reduce((t, f) => t + f.presence, 0) / Math.max(0.0001, [...hist, ...fut].reduce((t, f) => t + f.presence, 0));
+  const today = M.left + histShare * w;
+  const end = fut[fut.length - 1].values;
+  const show = labelled(keys);
+  const fade = (i: number) => (i < hist.length ? hist[i] : fut[i - hist.length]).presence;
 
   const onMove = (e: PointerEvent<HTMLDivElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
-    const i = Math.round(((e.clientX - box.left - M.left) / w) * (n - 1));
-    setHover(Math.max(0, Math.min(n - 1, i)));
+    const at = (e.clientX - box.left - M.left) / w;
+    let best = 0;
+    place.forEach((slot, i) => {
+      if (Math.abs(slot.centre - at) < Math.abs(place[best].centre - at)) best = i;
+    });
+    setHover(best);
   };
 
+  // The tooltip reads the real figures, never the in-between ones.
   const tip = (() => {
-    if (hover === null) return null;
-    if (hover < history.length) {
-      const p = history[hover];
+    if (hover === null || hover >= n) return null;
+    const key = keys[hover];
+    const p = history.find((q) => q.start === key);
+    if (p) {
       return {
         title: `Week of ${dayMonth(p.start)}`,
         rows: [
@@ -57,10 +77,12 @@ export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahe
           ...(p.predicted !== null ? [{ tone: 'var(--tone-3)', value: num(p.predicted), label: 'Forecast a week before' }] : []),
         ],
         foot: p.predicted !== null ? `Off by ${num(Math.abs(p.actual - p.predicted))}` : undefined,
-        v: p.actual,
+        v: hist[hover]?.values.actual ?? p.actual,
+        past: true,
       };
     }
-    const a = ahead[hover - history.length];
+    const a = ahead.find((q) => q.start === key);
+    if (!a) return null;
     return {
       title: `Week of ${dayMonth(a.start)}`,
       rows: [
@@ -68,7 +90,8 @@ export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahe
         { tone: 'var(--tone-4)', value: `${num(a.low)}–${num(a.high)}`, label: 'Likely range' },
       ],
       foot: 'Forecast',
-      v: a.expected,
+      v: fut[hover - hist.length]?.values.expected ?? a.expected,
+      past: false,
     };
   })();
 
@@ -93,10 +116,10 @@ export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahe
               <text className="ol-axis ol-fc-today-label" x={today + 6} y={M.top + 2}>
                 Today
               </text>
-              {starts.map((s, i) =>
+              {keys.map((k, i) =>
                 show[i] ? (
-                  <text key={s} className="ol-axis" x={x(i)} y={size.height - 6} textAnchor="middle">
-                    {n <= 14 ? dayMonth(s) : monthName(s)}
+                  <text key={k} className="ol-axis" x={x(i)} y={size.height - 6} textAnchor="middle" opacity={fade(i)}>
+                    {history.length + ahead.length <= 14 ? dayMonth(k) : monthName(k)}
                   </text>
                 ) : null,
               )}
@@ -110,7 +133,7 @@ export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahe
               <path d={actual} className="ol-line" data-tone="1" />
               <circle cx={x(lastI)} cy={y(last.actual)} r={4} className="ol-dot" data-tone="1" />
               <text className="ol-direct" x={x(lastI) - 8} y={y(last.actual) - 12} textAnchor="end">
-                {num(last.actual)} last week
+                {num(history[history.length - 1].actual)} last week
               </text>
             </svg>
 
@@ -119,10 +142,10 @@ export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahe
               <path d={forecastPath} className="ol-line" data-tone="2" data-dash="dash" />
               <circle cx={x(n - 1)} cy={y(end.expected)} r={3.5} className="ol-dot" data-tone="2" />
               <text className="ol-direct" x={x(n - 1) + 10} y={y(end.expected) - 2}>
-                {num(end.expected)}
+                {num(Math.round(end.expected))}
               </text>
               <text className="ol-direct" data-quiet x={x(n - 1) + 10} y={y(end.expected) + 13}>
-                {num(end.low)}–{num(end.high)}
+                {num(Math.round(end.low))}–{num(Math.round(end.high))}
               </text>
             </svg>
 
@@ -130,9 +153,9 @@ export function ForecastChart({ history, ahead }: { history: HistoryPoint[]; ahe
               <>
                 <svg className="ol-svg" width={size.width} height={size.height} aria-hidden>
                   <line className="ol-cross" x1={x(hover)} x2={x(hover)} y1={M.top - 8} y2={M.top + h} />
-                  <circle cx={x(hover)} cy={y(tip.v)} r={4.5} className="ol-dot" data-tone={hover < history.length ? '1' : '2'} data-ring />
+                  <circle cx={x(hover)} cy={y(tip.v)} r={4.5} className="ol-dot" data-tone={tip.past ? '1' : '2'} data-ring />
                 </svg>
-                <Tip x={x(hover)} y={M.top} flip={hover > n * 0.6} title={tip.title} rows={tip.rows} foot={tip.foot} />
+                <Tip x={x(hover)} y={M.top} flip={place[hover].centre > 0.6} title={tip.title} rows={tip.rows} foot={tip.foot} />
               </>
             )}
           </>

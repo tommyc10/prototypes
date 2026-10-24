@@ -1,0 +1,611 @@
+/* Throwaway: the four home screens. The words reuse the home page's own classes (hm-),
+ * from src/pages/home/HomePage.css; everything here is prefixed hs-. */
+
+.hs-pane {
+  overflow: hidden auto;
+}
+
+.hs-pane > :last-child {
+  flex: 1;
+  min-height: 0;
+  animation: hs-arrive 220ms var(--ease-out) backwards;
+}
+
+@keyframes hs-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.hs-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hs-keys {
+  margin-top: 0;
+}
+
+/* ---------- 1 Sieve ---------- */
+
+.hs-sieve {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 640px);
+  justify-content: center;
+  align-items: center;
+  gap: 80px;
+  padding: 56px 56px 48px;
+}
+
+.hs-sieve-words {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.hs-sieve-machine {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.hs-sieve-box {
+  position: relative;
+}
+
+.hs-shelf {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-3);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.hs-shelf-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hs-shelf-count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.hs-shelf[data-hover] {
+  color: var(--fg);
+}
+
+.hs-shelf:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hs-sieve-floor {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.hs-sieve-floor .hm-lead {
+  max-width: 40ch;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.hs-sieve-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--fg-2);
+}
+
+.hs-sieve-note i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+@container home (max-width: 860px) {
+  .hs-sieve {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 48px;
+    padding: 56px 24px 32px;
+  }
+}
+
+/* ---------- 2 Dial ---------- */
+
+.hs-dial {
+  display: grid;
+  grid-template-rows: auto minmax(420px, 1fr) auto;
+  padding: 48px 48px 32px;
+}
+
+.hs-dial-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 32px;
+}
+
+.hs-dial-legend {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.hs-dial-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hs-dial-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.hs-dial-legend i[data-k='paged'] {
+  background: var(--fg);
+}
+
+.hs-dial-legend i[data-k='folded'] {
+  background: var(--tone-2);
+}
+
+.hs-dial-legend i[data-k='hidden'] {
+  background: var(--tone-3);
+}
+
+.hs-dial-face {
+  position: relative;
+  min-height: 0;
+}
+
+.hs-dial-centre {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hs-dial-centre a {
+  pointer-events: auto;
+}
+
+.hs-dial-centre p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-3);
+}
+
+.hs-dial-centre b {
+  font-weight: 600;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.hs-dial-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* The tooltip recipe: solid, with the glass edge. */
+.hs-tip {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 12px;
+  color: var(--fg-2);
+  white-space: nowrap;
+  transform: translate(14px, 14px);
+  pointer-events: none;
+}
+
+.hs-tip b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+/* ---------- 3 Stack ---------- */
+
+.hs-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  padding: 48px 48px 40px;
+}
+
+.hs-stack-top {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.hs-stack-figure {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.hs-stack-figure .hm-lead {
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.hs-pile {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 304px;
+  margin-top: 42px; /* the pile's edges peek above the top card */
+  touch-action: pan-y;
+}
+
+.hs-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+  transform-origin: 50% 0;
+  transition:
+    transform 320ms var(--ease-out),
+    opacity 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+  user-select: none;
+}
+
+.hs-card[data-top] {
+  cursor: grab;
+}
+
+/* Picked up, it floats: the one moment it gets a shadow. */
+.hs-card[data-dragging] {
+  cursor: grabbing;
+  transition: none;
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+}
+
+.hs-card[data-empty] {
+  display: grid;
+  place-items: center;
+  color: var(--fg-3);
+}
+
+.hs-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: 18px 20px 16px;
+  transition: opacity 150ms ease;
+}
+
+.hs-card:not([data-top]) .hs-card-inner {
+  opacity: 0;
+}
+
+.hs-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.hs-card-id {
+  margin-left: auto;
+}
+
+.hs-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hs-pill[data-tone='red'] {
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 22%, transparent);
+  color: var(--red);
+}
+
+.hs-pill[data-tone='orange'] {
+  background: color-mix(in srgb, var(--orange) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 22%, transparent);
+  color: var(--orange);
+}
+
+.hs-pill[data-tone='amber'] {
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--amber) 22%, transparent);
+  color: var(--amber);
+}
+
+.hs-card-title {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.hs-card-why {
+  margin: 0;
+  color: var(--fg-2);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.hs-card-hour {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0 0;
+}
+
+.hs-card-hour figcaption {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hs-card-hour figcaption b {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.hs-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 52px;
+  box-shadow: inset 0 -1px 0 var(--line-3);
+}
+
+.hs-bars span {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--tone-4);
+  overflow: hidden;
+}
+
+.hs-bars i {
+  width: 100%;
+  background: var(--fg);
+}
+
+.hs-bars-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.hs-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+}
+
+.hs-card-meta {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--fg-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hs-stack-keys {
+  align-items: center;
+}
+
+.hs-stack-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+/* ---------- 4 Ridge ---------- */
+
+.hs-ridge {
+  display: grid;
+  grid-template-rows: auto minmax(360px, 1fr) auto;
+  gap: 8px;
+  padding: 48px 48px 28px;
+}
+
+.hs-ridge-head {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.hs-ridge-figure {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.hs-ridge-figure .hm-lead {
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.hs-ridge-field {
+  position: relative;
+  min-height: 0;
+  cursor: pointer;
+}
+
+.hs-ridge-row {
+  position: absolute;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 20px;
+  pointer-events: none;
+}
+
+.hs-ridge-name {
+  max-width: 156px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-3);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 150ms ease;
+}
+
+.hs-ridge-name:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hs-ridge-row[data-on] .hs-ridge-name {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.hs-ridge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 80px;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hs-ridge-row[data-on] .hs-ridge-count {
+  color: var(--fg);
+}
+
+.hs-ridge-count i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.hs-ridge-caption {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hs-ridge-caption b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.hs-ridge-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+}
+
+.hs-ridge-foot .hm-need,
+.hs-dial-foot .hm-need {
+  padding-top: 20px;
+}
+
+@container home (max-width: 860px) {
+  .hs-dial,
+  .hs-stack,
+  .hs-ridge {
+    padding: 56px 24px 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-pane > :last-child {
+    animation: none;
+  }
+  .hs-card,
+  .hs-card-inner {
+    transition: opacity 150ms ease;
+  }
+}

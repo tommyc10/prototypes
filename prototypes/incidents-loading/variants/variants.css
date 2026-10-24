@@ -1,0 +1,421 @@
+/* Throwaway: the seven ways to wait. The shapes first (shared by Sheen, Wave, Unison, Thread
+ * and Veil), then each variant's light, each scoped by its class on the page root.
+ *
+ * Every light runs on one clock (useBlockClock in shared.tsx): each shape knows where it sits
+ * on screen (--bx, --by) and how far into the cycle the page is (--clock), so the list and the
+ * pane move as one surface. Only transform and opacity animate, plus filter on the veil. */
+
+/* ---------- the shapes ---------- */
+
+.ld-block {
+  position: relative;
+  display: block;
+  flex: none;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--tint);
+}
+
+.ld-skel {
+  cursor: default;
+}
+
+/* A shape row is exactly a real row's height: a title line and a sub line. */
+.ld-skel .ic-row-title {
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+.ld-skel .ic-row-sub {
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.ld-skel > .ld-dot {
+  background: var(--tint-2);
+}
+
+.ld-detail .ld-title {
+  margin: 5px 0 13px; /* a one-line title's height */
+}
+
+.ld-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.ld-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.ld-cards-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* Cards are lighter than bars and carry a hairline, so they read as "a panel is coming",
+ * not as a grey block of content. */
+.ld-card {
+  background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ld-badge {
+  display: inline-block;
+}
+
+/* Waiting rows sit back, so it's clear they may not be the answer. */
+.ld .ic-row[data-stale] {
+  position: relative;
+  overflow: hidden;
+  opacity: 0.55;
+}
+
+/* ---------- Sheen: one band of light across the page ---------- */
+
+/* Every shape carries a window-wide slice of the same band, pinned to the window's left edge
+ * (left: -bx), so wherever the shape is, its slice of the band is in the same place on screen. */
+.ld-sheen .ld-block::after,
+.ld-sheen .ic-row[data-stale]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * var(--bx, 0px));
+  width: 100vw;
+  background: linear-gradient(90deg, transparent 32%, color-mix(in srgb, var(--fg) 7%, transparent) 42%, color-mix(in srgb, var(--fg) 13%, transparent) 50%, color-mix(in srgb, var(--fg) 7%, transparent) 58%, transparent 68%);
+  transform: translateX(-70%);
+  animation: ld-sweep 2400ms linear infinite;
+  animation-delay: var(--clock, 0ms);
+  pointer-events: none;
+}
+
+/* Rows already carry text, so their slice is softer. */
+.ld-sheen .ic-row[data-stale]::after {
+  background: linear-gradient(90deg, transparent 32%, color-mix(in srgb, var(--fg) 5%, transparent) 42%, color-mix(in srgb, var(--fg) 10%, transparent) 50%, color-mix(in srgb, var(--fg) 5%, transparent) 58%, transparent 68%);
+}
+
+/* Constant motion, so linear: the band crosses at a steady pace, then rests a beat. */
+@keyframes ld-sweep {
+  0% {
+    transform: translateX(-62%);
+  }
+  68%,
+  100% {
+    transform: translateX(62%);
+  }
+}
+
+/* ---------- Wave: a ripple from the top of the list to the far corner ---------- */
+
+.ld-wave .ld-block {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  animation: ld-ripple 2600ms ease-in-out infinite;
+  /* Later the further right and down it sits: 0.5ms a pixel, so the wave crosses a laptop
+   * screen in about a second and a quarter, then rests. */
+  animation-delay: calc(var(--clock, 0ms) + (var(--bxn, 0) + var(--byn, 0)) * 0.5ms);
+}
+
+.ld-wave .ld-card {
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.ld-wave .ic-row[data-stale] {
+  animation: ld-ripple-row 2600ms ease-in-out infinite;
+  animation-delay: calc(var(--clock, 0ms) + (var(--bxn, 0) + var(--byn, 0)) * 0.5ms);
+}
+
+@keyframes ld-ripple {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  14% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes ld-ripple-row {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  14% {
+    opacity: 0.75;
+  }
+  34% {
+    opacity: 0.4;
+  }
+}
+
+/* ---------- Unison: everything breathes on one clock ---------- */
+
+.ld-unison .ld-block {
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  animation: ld-breathe 1800ms ease-in-out infinite;
+  animation-delay: var(--clock, 0ms);
+}
+
+.ld-unison .ld-card {
+  background: color-mix(in srgb, var(--fg) 3.5%, transparent);
+}
+
+.ld-unison .ic-row[data-stale] {
+  animation: ld-breathe-row 1800ms ease-in-out infinite;
+  animation-delay: var(--clock, 0ms);
+}
+
+@keyframes ld-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes ld-breathe-row {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ---------- Thread: one hairline, nothing else moves ---------- */
+
+.ld-thread-track {
+  position: fixed;
+  top: 0;
+  z-index: 10;
+  height: 2px;
+  pointer-events: none;
+}
+
+/* Brighter at its leading edge, so it reads as something travelling. */
+.ld-thread-bar {
+  display: block;
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--fg) 35%, transparent), var(--fg-2) 85%, var(--fg));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* ---------- Veil: frosted, with one capsule ---------- */
+
+.ld-veil .ic-rows > *,
+.ld-veil .ld-detail .ld-lines,
+.ld-veil .ld-detail .ld-cards,
+.ld-veil .ld-detail .ld-title,
+.ld-veil .ld-detail .ic-meta .ld-block {
+  transition:
+    filter 200ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+}
+
+.ld-veil[data-list-waiting] .ic-rows > * {
+  filter: blur(3px);
+  opacity: 0.45;
+}
+
+.ld-veil[data-detail-waiting] .ld-detail .ld-lines,
+.ld-veil[data-detail-waiting] .ld-detail .ld-cards,
+.ld-veil[data-detail-waiting] .ld-detail .ld-title,
+.ld-veil[data-detail-waiting] .ld-detail .ic-meta .ld-block {
+  filter: blur(6px);
+  opacity: 0.6;
+}
+
+.ld-veil-region,
+.ld-mark-region {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ld-veil-region {
+  align-items: flex-start;
+  padding-top: 132px;
+}
+
+.ld-capsule {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(420px, calc(100% - 48px));
+  height: 36px;
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-2);
+  /* Only if the wait passes 150ms: a quick answer never flashes it. */
+  animation: ld-capsule-in 200ms var(--ease-out) 150ms both;
+}
+
+@keyframes ld-capsule-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.ld-spinner {
+  flex: none;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: ld-spin 800ms linear infinite;
+}
+
+.ld-spinner circle {
+  stroke: var(--line-3);
+}
+
+.ld-spinner path {
+  stroke: var(--fg);
+}
+
+@keyframes ld-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Mark: one calm object ---------- */
+
+.ld-mark-region {
+  align-items: center;
+}
+
+.ld-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 320px;
+  padding: 0 24px;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--fg-3);
+  animation: ld-mark-in 240ms var(--ease-out) 150ms both;
+}
+
+@keyframes ld-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.ld-mark svg {
+  overflow: visible;
+}
+
+.ld-mark-track {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 2;
+}
+
+/* A quarter of the ring, turning: ease-in-out, so it gathers and settles like something
+ * deliberate rather than a spinner. */
+.ld-mark-arc {
+  fill: none;
+  stroke: var(--fg-2);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 27 80;
+  transform-origin: 24px 24px;
+  animation: ld-orbit 1400ms cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+
+.ld-mark-dot {
+  fill: var(--fg);
+  transform-origin: 24px 24px;
+  animation: ld-dot 1400ms ease-in-out infinite;
+}
+
+@keyframes ld-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ld-dot {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------- reduced motion: nothing travels; the shapes hold still, the words carry it ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ld-sheen .ld-block::after,
+  .ld-sheen .ic-row[data-stale]::after {
+    display: none;
+  }
+  .ld-wave .ld-block,
+  .ld-wave .ic-row[data-stale],
+  .ld-unison .ld-block,
+  .ld-unison .ic-row[data-stale] {
+    animation: none;
+  }
+  .ld-capsule,
+  .ld-mark {
+    animation: ld-fade 150ms ease both;
+  }
+  .ld-spinner,
+  .ld-mark-arc {
+    animation: none;
+  }
+  .ld-mark-dot {
+    animation: ld-dot-still 1600ms ease-in-out infinite;
+  }
+}
+
+@keyframes ld-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ld-dot-still {
+  50% {
+    opacity: 0.5;
+  }
+}

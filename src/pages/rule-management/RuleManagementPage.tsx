@@ -59,7 +59,9 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
   // A rule's id, or an overnight suggestion's: both are rows in the same list.
   const [selectedId, setSelectedId] = useState<string | null>(initialRuleId ?? null);
   const overnight = useSuggestions();
-  const [overnightCollapsed, setOvernightCollapsed] = useState(false);
+  // Folded to its heading at first, so a busy night doesn't push the rules down the list. O, the
+  // heading, an undo or a link to one of its suggestions opens it.
+  const [overnightCollapsed, setOvernightCollapsed] = useState(() => !overnight.open.some((item) => item.suggestion.id === initialRuleId));
   // Three small arrivals and departures in the overnight flow. Like the decision form, they
   // only play when the action came from the pointer: what the keyboard does happens at once.
   //   arrivedId      the rule a suggestion has just become, so its row can travel into the list
@@ -322,6 +324,7 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
               onToggle={() => setOvernightCollapsed((collapsed) => !collapsed)}
               selectedId={selectedId}
               onSelect={setSelectedId}
+              theme={theme}
             />
           )
         }

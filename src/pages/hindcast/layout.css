@@ -187,8 +187,7 @@
  * eye where it landed after the view changed under it. Colour only, so it stays with reduced motion. */
 .ol-pat[data-flash],
 .ol-pred[data-flash] {
-  /* Starts as its panel finishes arriving (the 180ms swap), so its strongest moment lands on a settled card. */
-  animation: ol-flash 1600ms var(--ease-out) 180ms backwards;
+  animation: ol-flash 1600ms var(--ease-out);
 }
 
 @keyframes ol-flash {
@@ -229,4 +228,12 @@
 
 .ol-keys kbd + kbd {
   margin-left: -2px;
+}
+
+/* A change from the keyboard lands at once: its colour fades are skipped too (snapNextChange
+ * in hooks/useTween sets [data-snap] on <html> for that one change). */
+[data-snap] .ol-heat-cell::after,
+[data-snap] .ol-cal-day,
+[data-snap] .ol-pred-meter i {
+  transition: none !important;
 }

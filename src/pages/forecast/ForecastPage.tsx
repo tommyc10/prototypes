@@ -20,12 +20,13 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useTheme } from '../../hooks/useTheme';
 import { num, pct } from '../../lib/format';
 import { navigate } from '../../lib/route';
-import { Kpis, type KpiTile } from '../hindcast/components/Kpis/Kpis';
+import { Counting, Kpis, type KpiTile } from '../hindcast/components/Kpis/Kpis';
 import { AnalysisPalette } from '../hindcast/components/Palette/AnalysisPalette';
 import { Panel } from '../hindcast/components/Panel/Panel';
 import { TopBar } from '../hindcast/components/TopBar/TopBar';
 import { TICKETS, serviceName } from '../hindcast/data/mockData';
 import { useEntrance } from '../hindcast/hooks/useEntrance';
+import { snapNextChange } from '../hindcast/hooks/useTween';
 import { asPattern, useScope } from '../hindcast/hooks/useScope';
 import { DEFAULT_HORIZON, DEFAULT_LOOKBACK, TODAY, change, dayMonth, plural, weekdayDate } from '../hindcast/model/labels';
 import { CauseOutlook, CauseOutlookTable } from './components/charts/CauseOutlook';
@@ -62,9 +63,8 @@ export function ForecastPage({
   const listRef = useRef<HTMLDivElement>(null);
 
   const fc = useMemo(() => runForecast(TICKETS, { serviceId, weeks, horizon }), [serviceId, weeks, horizon]);
-  const gridKey = `${serviceId}-${weeks}-${horizon}`;
-  // Arriving from a pattern, the reader is mid-task: a quick swap, not the whole story.
-  const [motion, setMotion] = useEntrance(gridKey, arrivedOn ? 'swap' : 'story');
+  // Arriving from a pattern, the reader is mid-task: no story, just the page and its ring.
+  const motion = useEntrance(!arrivedOn);
 
   // Keep the address in step, without adding a Back step for every change.
   useEffect(() => {
@@ -77,15 +77,12 @@ export function ForecastPage({
     if (!flash) return;
     const card = listRef.current?.querySelector<HTMLElement>(`[data-pattern="${flash}"]`);
     if (card) card.parentElement!.scrollTop = card.offsetTop - card.parentElement!.offsetTop - 4;
-    const t = setTimeout(() => setFlash(null), 1800);
+    const t = setTimeout(() => setFlash(null), 1600);
     return () => clearTimeout(t);
   }, [flash]);
 
-  /** Change the scope. From the pointer the page swaps in quickly; from a key it's instant. */
-  const rescope = (patch: Parameters<typeof setScope>[0], pointer: boolean) => {
-    setMotion(pointer ? 'swap' : null);
-    setScope(patch);
-  };
+  /** Change the scope. Every panel stays where it is and its figures morph to the new ones. */
+  const rescope = (patch: Parameters<typeof setScope>[0]) => setScope(patch);
 
   /** Open a prediction's pattern, and its evidence, on the hindcast page. */
   const toHindcast = (patternId: string) => navigate(`#/hindcast/${serviceId}/${weeks}/${patternId}`);
@@ -116,17 +113,26 @@ export function ForecastPage({
   const t = fc.totals;
   const moved = change(t.expected, t.previous);
   const scopeName = serviceId === 'all' ? 'across every service' : `for ${serviceName(serviceId)}`;
+  // The headline figures count to their new values when the scope changes, with the charts.
+  const due = fc.predictions.reduce((n, p) => n + p.dates.length, 0);
+  const round = (v: number) => num(Math.round(v));
+  const count = (n: number, show: (v: number) => string) => <Counting numbers={{ n }} render={(v) => show(v.n)} />;
 
   const tiles: KpiTile[] = [
     {
       label: `Tickets, next ${horizon} weeks`,
       value: (
-        <>
-          {num(t.expected)}
-          <small>
-            {num(t.low)}–{num(t.high)}
-          </small>
-        </>
+        <Counting
+          numbers={{ expected: t.expected, low: t.low, high: t.high }}
+          render={(v) => (
+            <>
+              {round(v.expected)}
+              <small>
+                {round(v.low)}–{round(v.high)}
+              </small>
+            </>
+          )}
+        />
       ),
       change: moved,
       better: 'down',
@@ -134,14 +140,14 @@ export function ForecastPage({
       series: [...fc.history.slice(-8).map((p) => p.actual), ...fc.ahead.map((a) => a.expected)],
       split: Math.min(8, fc.history.length),
     },
-    { label: 'Expected incidents', value: num(t.incidents), change: change(t.incidents, t.previousIncidents), better: 'down', against: `vs last ${horizon} weeks` },
+    { label: 'Expected incidents', value: count(t.incidents, round), change: change(t.incidents, t.previousIncidents), better: 'down', against: `vs last ${horizon} weeks` },
     {
       label: 'Predictions due',
-      value: num(fc.predictions.reduce((n, p) => n + p.dates.length, 0)),
+      value: count(due, round),
       note: `From ${fc.predictions.length} ${plural(fc.predictions.length, 'pattern')} in the hindcast`,
     },
     { label: 'Busiest day', value: weekdayDate(fc.peak.date), note: `About ${num(fc.peak.expected)} tickets expected` },
-    { label: 'Forecast accuracy', value: pct(fc.accuracy), note: 'A week ahead, last 8 weeks' },
+    { label: 'Forecast accuracy', value: count(fc.accuracy, pct), note: 'A week ahead, last 8 weeks' },
   ];
 
   return (
@@ -152,18 +158,18 @@ export function ForecastPage({
         <TopBar
           page="forecast"
           serviceId={serviceId}
-          onService={(id) => rescope({ serviceId: id }, true)}
+          onService={(id) => rescope({ serviceId: id })}
           weeks={weeks}
-          onWeeks={(w) => rescope({ weeks: w }, true)}
+          onWeeks={(w) => rescope({ weeks: w })}
           horizon={horizon}
-          onHorizon={(h) => rescope({ horizon: h }, true)}
+          onHorizon={(h) => rescope({ horizon: h })}
           hideSide={hideSide}
           onToggleSide={() => setHideSide((hidden) => !hidden)}
           today={new Date(TODAY).toISOString()}
         />
 
         <div className="ol-scroll">
-          <div className="ol-grid" data-view="forecast" data-animate={motion ?? undefined} key={gridKey}>
+          <div className="ol-grid" data-view="forecast" data-animate={motion ?? undefined}>
             <p className="ol-lead" data-area="lead">
               Expect about <b>{num(t.expected)}</b> tickets {scopeName} in the next {horizon} weeks, likely between {num(t.low)} and {num(t.high)}
               {moved !== null && (
@@ -187,7 +193,7 @@ export function ForecastPage({
             </Panel>
 
             <Panel area="services" index={6} title="Where they’ll land" meta={`Next ${horizon} weeks, likely range`} table={<ServiceRiskTable services={fc.services} />}>
-              <ServiceRisk services={fc.services} scoped={serviceId} onScope={(id) => rescope({ serviceId: id }, true)} />
+              <ServiceRisk services={fc.services} scoped={serviceId} onScope={(id) => rescope({ serviceId: id })} />
             </Panel>
 
             <Panel area="calendar" index={7} title="The days ahead" meta={`${dayMonth(fc.days[0].date)} to ${dayMonth(fc.days[fc.days.length - 1].date)}`}>
@@ -225,9 +231,18 @@ export function ForecastPage({
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         page="forecast"
-        onService={(id) => rescope({ serviceId: id }, false)}
-        onWeeks={(w) => rescope({ weeks: w }, false)}
-        onHorizon={(h) => rescope({ horizon: h }, false)}
+        onService={(id) => {
+          snapNextChange();
+          rescope({ serviceId: id });
+        }}
+        onWeeks={(w) => {
+          snapNextChange();
+          rescope({ weeks: w });
+        }}
+        onHorizon={(h) => {
+          snapNextChange();
+          rescope({ horizon: h });
+        }}
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}

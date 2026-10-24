@@ -116,23 +116,30 @@ export function Journey({
   );
 }
 
-/** The line while the incident's journey is being fetched. Every incident meets the same six
- * checkpoints, so the line can be drawn before anything about this one is known: empty, with
- * the dot running it end to end and each mark ringing as it passes, until the real journey
- * arrives and takes its place. Grey bars hold the room each checkpoint's words will need. */
-export function JourneyWaiting() {
+/** The journey while it's on its way. Every incident meets the same six checkpoints, so their
+ *  places can be drawn before anything about this one is known: in the journey's own grid (and
+ *  its column on a narrow pane), a shape where each mark, name, verdict and time will land, and
+ *  where the time between two checkpoints will sit. Shapes only, sheened (mn-skel): no line and
+ *  no dot, so it can't be read as a journey that stopped. */
+export function JourneySkeleton() {
   return (
-    <div className="ic-journey-wrap" data-waiting data-tour="ic-journey" aria-hidden style={{ '--stop': STATIONS.length - 1 } as CSSProperties}>
-      <span className="ic-traveller" />
+    <div className="ic-journey-wrap" data-skeleton data-tour="ic-journey" aria-hidden>
       <ol className="ic-journey">
         {STATIONS.map((station, i) => (
-          <li key={station} data-state="unreached" style={{ '--i': i } as CSSProperties}>
-            {i > 0 && <span className="ic-leg" data-lit />}
+          <li key={station}>
+            {i > 0 && <span className="mn-skel ic-skel-took" />}
             <div className="ic-station">
-              <i />
-              <span className="ic-station-name">{STATION_LABEL[station]}</span>
-              <span className="ic-bar" data-size="verdict" />
-              <span className="ic-bar" data-size="time" />
+              <i className="mn-skel" data-shape="pill" />
+              <span className="ic-station-name">
+                <span className="mn-skel ic-skel-text" style={{ width: STATION_LABEL[station].length * 7.4 }} />
+              </span>
+              <span className="ic-station-verdict ic-skel-lines">
+                <span className="mn-skel" style={{ width: 118 }} />
+                <span className="mn-skel" style={{ width: 74 }} />
+              </span>
+              <time>
+                <span className="mn-skel ic-skel-text" style={{ width: 50 }} />
+              </time>
             </div>
           </li>
         ))}

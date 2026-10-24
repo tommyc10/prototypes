@@ -24,6 +24,11 @@ export const STATION_ASKS: Record<StationId, string> = {
   delivered: 'Handed to the group that owns it.',
 };
 
+/** How many checkpoints an incident reaches, by how it ended: held at the change window is two
+ *  (raised, windows), delivered is all six. The list row knows the ending before the journey
+ *  arrives, so the waiting page can draw as many sections as will land. */
+export const REACHED: Record<End, number> = { held: 2, suppressed: 3, folded: 4, noise: 5, enriching: 5, delivered: 6 };
+
 export const END_LABEL: Record<End, string> = {
   held: 'Held by a change window',
   suppressed: 'Suppressed',
