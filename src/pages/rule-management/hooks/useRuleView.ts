@@ -5,15 +5,16 @@ import { useMemo, useState } from 'react';
 import { groupKey, matches, sortRules, type ViewState } from '../model/browse';
 import type { Rule } from '../model/types';
 
-export function useRuleView(rules: Rule[]) {
-  const [view, setView] = useState<ViewState>({
+export function useRuleView(rules: Rule[], initial?: Partial<ViewState>) {
+  const [view, setView] = useState<ViewState>(() => ({
     status: 'all',
     query: '',
     groupBy: 'assignment',
     groupId: 'all',
     sort: 'updated',
     dir: 'desc',
-  });
+    ...initial,
+  }));
 
   // Group and search first, so the tab counts describe what the search found.
   const scoped = useMemo(

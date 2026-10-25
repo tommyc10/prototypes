@@ -307,7 +307,15 @@ One family, Geist, at a 14px base; Geist Mono for identifiers and code. Three we
 ## Layout
 
 **The shell** is a three-column grid filling the viewport: sidebar 240px, list 380px,
-detail `1fr`. Only the panes scroll, never the page. `[` and `]` tuck the sidebar and the
+detail `1fr`.
+
+**The sidebar** groups pages by the question someone comes with: Home and Services first
+with no heading (where to start), then *Live* (Incidents, Alerts, Change windows), *Tuning*
+(Rules, Hindcast, Forecast), *Pinned* (your groups, on every page), and *Admin* (Access,
+Audit log) pushed to the bottom above the user. Section labels are 12px/500 `fg-3`,
+sentence case, 16px above each. A count sits beside a page only when it asks something of a
+person ("4 waiting", "1 late"), and only its number takes a status colour. No collapsible
+groups. Only the panes scroll, never the page. `[` and `]` tuck the sidebar and the
 list away; the grid columns animate over 240ms and the detail pane takes the room.
 
 **A pane** is a flex column with `min-width: 0; min-height: 0`; its scrolling child is
@@ -470,6 +478,7 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `A` `X` `E` `D` | Approve, reject, activate, deactivate (Rules) |
 | `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
 | `[` `]` | Tuck away the sidebar / the list |
+| `G` then a letter | Go to a page: `H` Home, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
 | `?` | Start the guided tour |
 | `Esc` | Step back one layer |
 | `⌘↵` | Submit the open decision |

@@ -1,4 +1,4 @@
-/* The sidebar: brand, ⌘K button, navigation, the page's own section, user and theme switch. */
+/* The sidebar: brand, ⌘K button, the pages in their sections, the pins, admin, user and theme switch. */
 
 .mn-side {
   display: flex;
@@ -86,7 +86,71 @@
 }
 
 .mn-nav-item svg {
+  flex: none;
   color: var(--fg-3);
+}
+
+.mn-nav-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- sections: a quiet label over a few pages ---------- */
+
+.mn-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 16px;
+}
+
+.mn-nav-label {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+/* A count asks something of a person. Only its number takes the status colour. */
+.mn-nav-count {
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-nav-count b {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.mn-nav-count[data-tone='red'] b {
+  color: var(--red);
+}
+
+.mn-nav-count[data-tone='orange'] b {
+  color: var(--orange);
+}
+
+.mn-nav-count[data-tone='amber'] b {
+  color: var(--amber);
+}
+
+/* Admin sits at the bottom, just above you. */
+.mn-nav-admin {
+  flex: none;
+  padding-bottom: 10px;
+}
+
+.mn-nav-admin .mn-nav-section {
+  margin-top: 10px;
 }
 
 .mn-nav-item[data-active] {
@@ -104,13 +168,18 @@
   outline-offset: -2px;
 }
 
-/* The page's own section. It takes the room that's left, so the user row stays at the bottom. */
+/* The pages and pins. It takes the room that's left, so admin and the user row stay at the
+ * bottom, and scrolls on a short window. */
 .mn-side-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   flex: 1;
   min-height: 0;
+  margin: 0 -4px;
+  padding: 0 4px 8px;
+  overflow-y: auto;
+  /* Scroll edge: rows fade out rather than meeting a hard line. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent 100%);
 }
 
 .mn-user {

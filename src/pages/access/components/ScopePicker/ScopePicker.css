@@ -1,0 +1,540 @@
+/* The picker: a search over the tree, a card per stream, its sub-streams inside it, and
+ * each sub-stream's assignment groups as chips. */
+
+.ac-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ac-pick-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ac-pick-search {
+  flex: 1;
+  min-width: 0;
+}
+
+/* What ↵ would do, inside the search box. */
+.ac-pick-hint {
+  flex: 0 1 auto;
+  max-width: 50%;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ac-pick-hint kbd {
+  margin-right: 2px;
+}
+
+.ac-pick-hint b {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.ac-pick-clear {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--fg-3);
+}
+
+.ac-pick-all {
+  flex: none;
+  padding: 0 4px;
+}
+
+.ac-pick-empty {
+  padding: 32px 16px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.ac-pick-foot {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ac-streams {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- a stream ---------- */
+
+.ac-stream {
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.ac-stream-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 14px 0 6px;
+}
+
+.ac-chev svg {
+  transition: transform 200ms var(--ease-out);
+}
+
+.ac-stream[data-open] .ac-chev svg {
+  transform: rotate(90deg);
+}
+
+.ac-chev:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ac-stream-tick {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* A change inside, not saved yet: one dot, so it's seen while the stream is closed. */
+.ac-changed {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fg);
+}
+
+.ac-stream-meta {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  align-self: stretch;
+  min-width: 0;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+.ac-stream[data-tick='on'] .ac-stream-meta,
+.ac-stream[data-tick='mixed'] .ac-stream-meta {
+  color: var(--fg-2);
+}
+
+/* How much of the stream they see, at a glance, with the card closed. */
+.ac-meter {
+  flex: none;
+  width: 48px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--tint-2);
+  overflow: hidden;
+}
+
+.ac-meter i {
+  display: block;
+  height: 100%;
+  background: var(--fg);
+  transform-origin: left;
+  transition: transform 240ms var(--ease-out);
+}
+
+/* The parts inside, indented so each box sits under its parent's name. */
+.ac-stream-body {
+  padding: 0 14px 4px 66px;
+}
+
+.ac-stream-body[data-animate] {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+@starting-style {
+  .ac-stream-body[data-animate] {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- a sub-stream ---------- */
+
+.ac-sub {
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--line);
+}
+
+.ac-sub-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 28px;
+}
+
+.ac-sub-head .ac-tick {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ac-sub-meta {
+  flex: none;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the box ---------- */
+
+.ac-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 28px;
+  padding: 0 6px 0 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg);
+  text-align: left;
+}
+
+.ac-tick:focus-visible,
+.ac-chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ac-tick:disabled,
+.ac-chip:disabled {
+  cursor: default;
+}
+
+.ac-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+  color: var(--l2);
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ac-tick:active:not(:disabled) .ac-box {
+  transform: scale(0.9);
+}
+
+/* Ticked or half ticked: a mid grey, not white, so a page of ticks stays quieter than the one
+ * white button. */
+.ac-tick:is([data-tick='on'], [data-tick='mixed']) .ac-box {
+  background: var(--fg-2);
+  box-shadow: none;
+}
+
+.ac-box svg {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.5);
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
+.ac-tick[data-tick='on'] .ac-box svg:first-child,
+.ac-tick[data-tick='mixed'] .ac-box svg:last-child {
+  opacity: 1;
+  transform: none;
+}
+
+.ac-tick-label {
+  min-width: 0;
+}
+
+/* ---------- a group's chip ---------- */
+
+.ac-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding-left: 26px;
+}
+
+.ac-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 10px 0 7px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ac-chip:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.ac-chip[data-on] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+}
+
+/* A plus while it's off, a check once it's on: one turns into the other. */
+.ac-chip-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.ac-chip-icon svg {
+  position: absolute;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out),
+    filter 150ms var(--ease-out);
+}
+
+.ac-chip-icon svg:first-child {
+  color: var(--fg-3);
+}
+
+.ac-chip-icon svg:last-child {
+  opacity: 0;
+  transform: scale(0.5);
+  filter: blur(2px);
+}
+
+.ac-chip[data-on] .ac-chip-icon svg:first-child {
+  opacity: 0;
+  transform: scale(0.5) rotate(-45deg);
+  filter: blur(2px);
+}
+
+.ac-chip[data-on] .ac-chip-icon svg:last-child {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Ticked or unticked as a branch, with the pointer: the chips follow one after another.
+ * Capped, so a long sub-stream still lands inside a quarter of a second. */
+.ac-sub[data-cascade] :is(.ac-chip, .ac-chip-icon svg) {
+  transition-delay: calc(min(var(--i), 12) * 16ms);
+}
+
+/* Against what's saved: a dot on what's been added, a line through what's been taken away. */
+.ac-chip[data-change='added']::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fg);
+  box-shadow: 0 0 0 2px var(--l3);
+}
+
+.ac-chip[data-change='removed'] {
+  color: var(--fg-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--fg-3);
+}
+
+/* Search matches: heavier, underlined, never coloured. */
+.ac-pick mark {
+  background: none;
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--line-3);
+  text-underline-offset: 3px;
+}
+
+/* ---------- same as… ---------- */
+
+.ac-same {
+  flex: none;
+  padding: 0 12px;
+}
+
+.ac-same[data-popup-open] {
+  background: var(--l4);
+  color: var(--fg);
+}
+
+.ac-same-popup {
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+}
+
+.ac-same-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg-3);
+}
+
+.ac-same-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.ac-same-search input::placeholder {
+  color: var(--fg-3);
+}
+
+.ac-same-list {
+  max-height: 280px;
+  margin-top: 4px;
+  overflow-y: auto;
+  scroll-padding: 4px;
+}
+
+.ac-same-popup [cmdk-item] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px 0 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-2);
+  cursor: default;
+}
+
+.ac-same-popup [cmdk-item][data-selected='true'] {
+  background: var(--tint-2);
+  color: var(--fg);
+}
+
+.ac-same-avatar {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+.ac-same-name {
+  flex: 1;
+}
+
+.ac-same-count {
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-same-empty {
+  padding: 20px 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+.ac-same-foot {
+  margin-top: 4px;
+  padding: 8px 8px 4px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ac-chip:hover:not(:disabled):not([data-on]) {
+    background: var(--tint);
+    color: var(--fg);
+  }
+  .ac-chip[data-on]:hover:not(:disabled) {
+    background: var(--l5);
+  }
+  .ac-tick:hover:not(:disabled):not([data-tick='on']):not([data-tick='mixed']) .ac-box {
+    box-shadow: inset 0 0 0 1px var(--fg-3);
+  }
+}
+
+:root[data-mn-theme='light'] .ac-chip[data-on] {
+  background: var(--l2);
+  box-shadow:
+    inset 0 0 0 1px var(--line-2),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac-stream-body[data-animate] {
+    transition: opacity 150ms ease;
+  }
+  @starting-style {
+    .ac-stream-body[data-animate] {
+      transform: none;
+    }
+  }
+  .ac-chev svg,
+  .ac-box svg,
+  .ac-chip-icon svg {
+    transition: opacity 150ms ease;
+  }
+  .ac-sub[data-cascade] :is(.ac-chip, .ac-chip-icon svg) {
+    transition-delay: 0ms;
+  }
+}
+
+@container access (max-width: 640px) {
+  .ac-stream-body {
+    padding-left: 14px;
+  }
+  .ac-chips {
+    padding-left: 0;
+  }
+  .ac-pick-hint,
+  .ac-pick-all {
+    display: none;
+  }
+}

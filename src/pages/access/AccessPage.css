@@ -1,0 +1,382 @@
+/* The access page: the pane, a person's header and sections, and the bar that floats over it.
+ * Each component's own styles sit beside it.
+ *
+ * The pane is a container called `access`, so the layout answers to its own width, not the
+ * window's: the sidebar and list beside it can be tucked away. */
+
+.ac {
+  --mn-list-w: 340px;
+}
+
+.ac-pane {
+  container: access / inline-size;
+}
+
+.ac-top {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 40px;
+}
+
+.ac-top-note {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 40px 48px;
+}
+
+/* Room for the bar, so the last of the page can be scrolled clear of it. */
+.ac-scroll[data-bar] {
+  padding-bottom: 200px;
+}
+
+/* ---------- the document: a person, or an invitation ---------- */
+
+.ac-doc {
+  max-width: 880px;
+}
+
+/* Picked with the pointer, it rises in; from the keyboard it's simply there. */
+.ac-doc[data-animate] {
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.ac-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ac-head-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  font-size: 15px;
+}
+
+.ac-head-avatar[data-invited] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-3);
+  color: var(--fg-3);
+}
+
+.ac-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ac-title {
+  max-width: 760px;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.ac-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ac-head-meta > .mn-truncate {
+  max-width: 100%;
+}
+
+.ac-sep {
+  flex: none;
+  width: 1px;
+  height: 12px;
+  margin: 0 10px;
+  background: var(--line-2);
+}
+
+.ac-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ac-status .mn-dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.ac-resend {
+  margin-left: 10px;
+  font-size: 13px;
+}
+
+.ac-lead {
+  max-width: 68ch;
+  margin: 20px 0 0;
+  font-size: 17px;
+  line-height: 1.62;
+  letter-spacing: -0.005em;
+  text-wrap: pretty;
+  color: var(--fg-2);
+}
+
+.ac-lead strong {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-note {
+  max-width: 68ch;
+  margin: 16px 0 0;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ac-sec {
+  margin-top: 32px;
+}
+
+.ac-sec h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.ac-sec h3 .mn-subtle {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.ac-p {
+  max-width: 68ch;
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+/* ---------- role ---------- */
+
+.ac-role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+/* A segmented control: a sunken track with the chosen value raised in it. */
+.ac-segmented {
+  flex: none;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ac-segmented .mn-tab {
+  justify-content: center;
+  min-width: 76px;
+}
+
+.ac-segmented .mn-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ac-segmented .mn-tab:disabled {
+  cursor: default;
+}
+
+.ac-segmented .mn-tab:disabled:not([data-active]) {
+  opacity: 0.4;
+}
+
+.ac-role-means {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+/* ---------- history ---------- */
+
+.ac-history {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ac-history li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ac-history li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.ac-history .mn-subtle {
+  flex: none;
+  font-size: 12px;
+}
+
+/* ---------- removal ---------- */
+
+.ac-remove {
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- nothing picked ---------- */
+
+.ac-blank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 60%;
+  text-align: center;
+  color: var(--fg-3);
+}
+
+.ac-blank p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ---------- the change bar: glass, over the pane ---------- */
+
+.ac-bar {
+  position: absolute;
+  right: 24px;
+  bottom: 80px;
+  left: 24px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 920px;
+  min-height: 54px;
+  padding: 10px 10px 10px 18px;
+  border-radius: 14px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    filter 220ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+  }
+}
+
+.ac-bar-note {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500; /* heavier on translucent material, so it holds up */
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.ac-bar-note strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ac-bar .mn-btn {
+  flex: none;
+}
+
+.ac-bar .mn-btn[data-variant='primary'] {
+  padding-right: 6px;
+}
+
+@container access (max-width: 760px) {
+  .ac-top {
+    padding: 0 24px;
+  }
+  .ac-scroll {
+    padding: 8px 24px 40px;
+  }
+  .ac-head-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 13px;
+  }
+  .ac-bar {
+    right: 16px;
+    left: 16px;
+    flex-wrap: wrap;
+  }
+  .ac-bar-note {
+    flex-basis: 100%;
+    padding-bottom: 4px;
+  }
+  .ac-bar .mn-btn-ghost {
+    margin-left: auto;
+  }
+  .ac-history li {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac-doc[data-animate],
+  .ac-bar {
+    transition: opacity 150ms ease;
+    @starting-style {
+      transform: none;
+      filter: none;
+    }
+  }
+}

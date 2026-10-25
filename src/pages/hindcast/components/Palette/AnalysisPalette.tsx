@@ -4,7 +4,7 @@
  * It opens with no animation: it's used all day. */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope } from 'lucide-react';
+import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import { SERVICES } from '../../data/mockData';
 import { CAUSES, CAUSE_LABEL, HORIZONS, LOOKBACKS } from '../../model/labels';
@@ -119,6 +119,10 @@ export function AnalysisPalette({
           <Command.Item value="go to change windows" onSelect={run(() => onNavigate('#/changes'))}>
             <CalendarClock size={15} />
             Change windows
+          </Command.Item>
+          <Command.Item value="go to access people users permissions invite" onSelect={run(() => onNavigate('#/access'))}>
+            <Users size={15} />
+            Access
           </Command.Item>
         </Command.Group>
 

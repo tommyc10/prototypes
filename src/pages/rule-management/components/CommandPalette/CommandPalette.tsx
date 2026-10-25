@@ -4,7 +4,7 @@
  * search matches against, which is why "RUL-0419" finds a rule by its id. */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, CircleHelp, History, Moon, Search, Siren, Sun, Telescope } from 'lucide-react';
+import { Bell, CalendarClock, CircleHelp, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { GROUPS } from '../../data/mockData';
 import type { Theme } from '../../../../hooks/useTheme';
 import { SORT_KEYS, SORT_LABEL, STATUS_TABS, type SortKey, type StatusFilter } from '../../model/browse';
@@ -131,6 +131,10 @@ export function CommandPalette({
           <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
             <Siren size={15} />
             Incidents
+          </Command.Item>
+          <Command.Item value="go to access people users permissions invite" onSelect={run(() => onNavigate('#/access'))}>
+            <Users size={15} />
+            Access
           </Command.Item>
         </Command.Group>
 

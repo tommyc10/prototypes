@@ -19,7 +19,6 @@ import { DecisionToast } from './components/common/DecisionToast';
 import { SuggestionToast } from './components/common/SuggestionToast';
 import { IncidentsPanel } from './components/Incidents/IncidentsPanel';
 import { IncidentView } from './components/Incidents/IncidentView';
-import { PinnedGroups } from './components/PinnedGroups/PinnedGroups';
 import { RuleDetail } from './components/RuleDetail/RuleDetail';
 import { OvernightBlock } from './components/RuleList/OvernightBlock';
 import { RuleList } from './components/RuleList/RuleList';
@@ -37,7 +36,7 @@ import { CURRENT_USER, groupById } from './data/mockData';
 import { NIGHT_TOTAL } from './data/overnightData';
 import { useDecision } from './hooks/useDecision';
 import { usePaneMode } from './hooks/usePaneMode';
-import { usePinnedGroups } from './hooks/usePinnedGroups';
+import { usePinnedGroups, type Pin } from './hooks/usePinnedGroups';
 import { useRuleView } from './hooks/useRuleView';
 import { useRulesStore } from './hooks/useRulesStore';
 import { useSuggestions, type Suggested } from './hooks/useSuggestions';
@@ -52,9 +51,17 @@ const BLOCK_EXIT_MS = 150;
 /** How long an arrival stays marked: long enough to play once, then it is an ordinary row again. */
 const ARRIVE_MS = 600;
 
-export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a link from another page). */ initialRuleId?: string }) {
+export function RuleManagementPage({
+  initialRuleId,
+  initialGroup,
+}: {
+  /** Open on this rule (a link from another page). */
+  initialRuleId?: string;
+  /** Open filtered to this group (a pinned group in the sidebar, picked on another page). */
+  initialGroup?: Pin | null;
+}) {
   const rules = useRulesStore((s) => s.rules);
-  const { view, update, visible, counts } = useRuleView(rules);
+  const { view, update, visible, counts } = useRuleView(rules, initialGroup ? { groupBy: initialGroup.by, groupId: initialGroup.id } : undefined);
   const [pins, togglePin] = usePinnedGroups();
   // A rule's id, or an overnight suggestion's: both are rows in the same list.
   const [selectedId, setSelectedId] = useState<string | null>(initialRuleId ?? null);
@@ -292,14 +299,9 @@ export function RuleManagementPage({ initialRuleId }: { /** Open on this rule (a
         onStartTour={startTour}
         theme={theme}
         onToggleTheme={toggleTheme}
-      >
-        <PinnedGroups
-          rules={rules}
-          pins={pins}
-          view={view}
-          onSelect={(pin) => update({ groupBy: pin.by, groupId: pin.id })}
-        />
-      </Sidebar>
+        activePin={view.groupId === 'all' ? null : { by: view.groupBy, id: view.groupId }}
+        onPin={(pin) => update({ groupBy: pin.by, groupId: pin.id })}
+      />
 
       <RuleList
         hidden={hideList}

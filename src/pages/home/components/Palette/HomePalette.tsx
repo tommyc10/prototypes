@@ -3,7 +3,7 @@
  * (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope } from 'lucide-react';
+import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 
 export function HomePalette({
@@ -66,6 +66,10 @@ export function HomePalette({
           <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
             <Siren size={15} />
             Incidents
+          </Command.Item>
+          <Command.Item value="go to access people users permissions invite" onSelect={run(() => onNavigate('#/access'))}>
+            <Users size={15} />
+            Access
           </Command.Item>
         </Command.Group>
 

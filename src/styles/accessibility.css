@@ -3,6 +3,7 @@
 /* People who ask for less transparency get solid surfaces. */
 @media (prefers-reduced-transparency: reduce) {
   .mn-actionbar,
+  .ac-bar,
   .mn-composer,
   .mn-menu,
   .mn-palette,
@@ -28,6 +29,7 @@
     --line-2: rgba(255, 255, 255, 0.3);
   }
   .mn-actionbar,
+  .ac-bar,
   .mn-composer,
   .mn-menu,
   .mn-palette,

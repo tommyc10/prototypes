@@ -3,12 +3,19 @@
  *   1. ⌘K always toggles the palette.
  *   2. While the palette is open, it handles its own keys.
  *   3. While a decision is open, only Esc (cancel) and ⌘↵ (submit) work.
+ *      A page with something to save but no decision form (Access) passes onSubmit: ⌘↵ saves.
  *   4. A popup marked `data-own-keys` (the group filter) handles its own keys.
  *   5. While typing in a field, keys are text; Esc, ↵ and ↓ leave the field.
  *   6. Keys held with ⌘, Ctrl or Alt are left for the browser.
- *   7. Otherwise, the key is looked up in `keys`. */
+ *   7. G, then a letter, goes to another page (lib/route.ts GO). The letter after G is
+ *      never also the page's own key, so G R can't approve a rule.
+ *   8. Otherwise, the key is looked up in `keys`. */
 
 import { useEffect, useRef } from 'react';
+import { GO, navigate } from '../lib/route';
+
+/** How long G waits for its letter. */
+const CHORD_MS = 1200;
 
 interface Shortcuts {
   tourOpen: boolean;
@@ -18,6 +25,8 @@ interface Shortcuts {
   decisionOpen?: boolean;
   onCancelDecision?: () => void;
   onSubmitDecision?: () => void;
+  /** ⌘↵ outside a decision form, from anywhere on the page, fields included. */
+  onSubmit?: () => void;
   /** Single-key shortcuts, e.g. `{ j: next, k: previous }`. */
   keys: Record<string, () => void>;
 }
@@ -29,6 +38,8 @@ export function useKeyboardShortcuts(shortcuts: Shortcuts) {
   live.current = shortcuts;
 
   useEffect(() => {
+    // When G was pressed, waiting for the letter after it.
+    let gAt = 0;
     const onKey = (e: KeyboardEvent) => {
       const s = live.current;
       if (s.tourOpen) return;
@@ -48,6 +59,11 @@ export function useKeyboardShortcuts(shortcuts: Shortcuts) {
         }
         return;
       }
+      if (s.onSubmit && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        s.onSubmit();
+        return;
+      }
       const target = e.target as HTMLElement;
       if (target.closest('[data-own-keys]')) return;
       if (/^(INPUT|TEXTAREA)$/.test(target.tagName) || target.isContentEditable) {
@@ -58,6 +74,19 @@ export function useKeyboardShortcuts(shortcuts: Shortcuts) {
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (performance.now() - gAt < CHORD_MS) {
+        gAt = 0;
+        const go = GO[e.key.toLowerCase()];
+        if (go) {
+          e.preventDefault();
+          navigate(go.to);
+          return;
+        }
+      }
+      if (e.key === 'g' && !s.keys.g) {
+        gAt = performance.now();
+        return;
+      }
       const run = s.keys[e.key];
       if (run) {
         e.preventDefault();

@@ -1,0 +1,158 @@
+/* The work email field: a well holding a chip per address, then the text being typed. */
+
+.ac-email {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ac-email-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  cursor: text;
+  transition: box-shadow 150ms ease;
+}
+
+.ac-email-box:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--line-3),
+    0 0 0 3px var(--focus-glow);
+}
+
+.ac-email-box[data-invalid] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 60%, transparent);
+}
+
+.ac-email-box input {
+  flex: 1 0 160px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 4px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.ac-email-box input::placeholder {
+  color: var(--fg-3);
+}
+
+.ac-email-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border-radius: 999px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.ac-email-chip:is([data-check='malformed'], [data-check='outside']) {
+  background: var(--red-wash);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 35%, transparent);
+  color: var(--danger-fg);
+}
+
+/* Already let in: it stays, quietly, and is left out when the invitations go. */
+.ac-email-chip[data-check='member'] {
+  background: transparent;
+  color: var(--fg-3);
+  text-decoration: line-through;
+}
+
+.ac-email-x {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg-3);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.ac-email-x:active {
+  transform: scale(0.9);
+}
+
+.ac-email-x:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.ac-email-problems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ac-email-problems li[data-blocks] {
+  color: var(--red-text);
+}
+
+.ac-email-problems b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ac-email-problems li[data-blocks] b {
+  color: var(--red-strong);
+}
+
+.ac-email-problems .mn-link {
+  font-size: 13px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ac-email-x:hover {
+    background: var(--tint);
+    color: var(--fg);
+  }
+}
+
+:root[data-mn-theme='light'] .ac-email-chip:not([data-check='malformed'], [data-check='outside'], [data-check='member']) {
+  background: var(--l2);
+  box-shadow:
+    inset 0 0 0 1px var(--line-2),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac-email-chip {
+    @starting-style {
+      transform: none;
+    }
+  }
+}

@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { Toaster } from 'sonner';
 import { useRoute, type PageId } from './lib/route';
+import { AccessPage } from './pages/access/AccessPage';
 import { AlertsPage } from './pages/alerts/AlertsPage';
 import { ChangeWindowsPage } from './pages/change-windows/ChangeWindowsPage';
 import { ForecastPage } from './pages/forecast/ForecastPage';
@@ -13,8 +14,9 @@ import { LoginPage } from './pages/login/LoginPage';
 import { IncidentsPage } from './pages/incidents/IncidentsPage';
 import { RuleManagementPage } from './pages/rule-management/RuleManagementPage';
 import { FeatureBanner } from './components/FeatureBanner/FeatureBanner';
+import { pinFromParam } from './pages/rule-management/hooks/usePinnedGroups';
 
-const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', rules: 'Rules', hindcast: 'Hindcast', forecast: 'Forecast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents' };
+const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', rules: 'Rules', hindcast: 'Hindcast', forecast: 'Forecast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents', access: 'Access' };
 
 export function App() {
   const route = useRoute();
@@ -33,6 +35,8 @@ export function App() {
         <IncidentsPage key={route.parts[0] ?? ''} initialId={route.parts[0]} />
       ) : route.page === 'alerts' ? (
         <AlertsPage />
+      ) : route.page === 'access' ? (
+        <AccessPage initialId={route.parts[0]} />
       ) : route.page === 'changes' ? (
         <ChangeWindowsPage initialId={route.parts[0]} />
       ) : route.page === 'hindcast' ? (
@@ -42,7 +46,7 @@ export function App() {
         <ForecastPage key={route.parts.join('/')} serviceId={route.parts[0]} weeks={route.parts[1]} horizon={route.parts[2]} focus={route.parts[3]} />
       ) : (
         // The key gives a link to another rule a fresh page, opened on that rule.
-        <RuleManagementPage key={route.parts[0] ?? ''} initialRuleId={route.parts[0]} />
+        <RuleManagementPage key={`${route.parts[0] ?? ''}?${route.query}`} initialRuleId={route.parts[0]} initialGroup={pinFromParam(route.query.get('group'))} />
       )}
       <Toaster position="bottom-right" theme="dark" />
     </div>

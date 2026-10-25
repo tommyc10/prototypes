@@ -3,7 +3,7 @@
  * keys; the look is shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun, Telescope } from 'lucide-react';
+import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Sun, Telescope, Users } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import { END_SHORT } from '../../model/lifecycle';
 import type { Lifecycle } from '../../model/types';
@@ -85,6 +85,10 @@ export function IncidentsPalette({
           <Command.Item value="go to change windows maintenance schedule" onSelect={run(() => onNavigate('#/changes'))}>
             <CalendarClock size={15} />
             Change windows
+          </Command.Item>
+          <Command.Item value="go to access people users permissions invite" onSelect={run(() => onNavigate('#/access'))}>
+            <Users size={15} />
+            Access
           </Command.Item>
         </Command.Group>
 
