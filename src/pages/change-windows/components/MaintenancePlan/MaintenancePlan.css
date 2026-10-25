@@ -1,0 +1,409 @@
+/* The maintenance plan section in the rail, and its form. Status colour only where a status
+ * is meant: amber held (waiting on the work), green cleared or in place, orange sent to the
+ * queue (needs a look), red a P1 that paged anyway. Everything else is grey. */
+
+.cw-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 14px 16px 16px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.cw-plan-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-height: 34px;
+}
+
+/* The rail's own h3 rule adds a bottom margin and spreads its content; not here. */
+.cw-detail .cw-plan h3 {
+  display: block;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.cw-plan-grow {
+  flex: 1;
+}
+
+.cw-plan-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 24px;
+  padding: 0 10px 0 9px;
+  border-radius: 999px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cw-plan-say {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.cw-plan-say b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.cw-plan-ci {
+  color: var(--fg);
+}
+
+.cw-plan-by {
+  margin: -4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-3);
+}
+
+.cw-plan-start {
+  align-self: flex-start;
+}
+
+.cw-plan-never {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.cw-plan-late {
+  align-items: center;
+  margin-top: 0;
+}
+
+.cw-plan-late > span {
+  flex: 1;
+}
+
+.cw-plan-late .mn-btn {
+  flex: none;
+}
+
+/* ---------- the dot: a status colour with its halo, or a hollow ring for the ordinary ---------- */
+
+.cw-plan-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.cw-plan-dot[data-tone] {
+  background: var(--cw-tone);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cw-tone) 14%, transparent);
+}
+
+.cw-plan [data-tone='red'] {
+  --cw-tone: var(--red);
+}
+.cw-plan [data-tone='amber'] {
+  --cw-tone: var(--amber);
+}
+.cw-plan [data-tone='green'] {
+  --cw-tone: var(--green);
+}
+.cw-plan [data-tone='orange'] {
+  --cw-tone: var(--orange);
+}
+
+/* ---------- the tally: a metric well ---------- */
+
+.cw-plan-well {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.cw-plan-well > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  box-shadow: -1px 0 0 var(--line);
+}
+
+.cw-plan-well b {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.cw-plan-well b[data-tone] {
+  color: var(--cw-tone);
+}
+
+.cw-plan-well span {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--fg-3);
+}
+
+/* ---------- the tickets ---------- */
+
+.cw-tickets {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cw-ticket {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 0;
+}
+
+.cw-ticket + .cw-ticket {
+  border-top: 1px solid var(--line);
+}
+
+.cw-ticket-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cw-ticket-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Paged as usual, outside any plan: it sits back so the plan's own tickets lead. */
+.cw-ticket[data-fate='pages'] .cw-ticket-title {
+  font-weight: 400;
+  color: var(--fg-2);
+}
+
+.cw-ticket-meta {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.cw-ticket-meta .mn-mono {
+  font-size: 11px;
+}
+
+.cw-ticket-fate {
+  flex: none;
+  max-width: 45%;
+  font-size: 12px;
+  text-align: right;
+  color: var(--fg-3);
+}
+
+.cw-ticket-fate[data-tone] {
+  color: var(--cw-tone);
+}
+
+.cw-ticket-send {
+  flex: none;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.cw-tickets-more {
+  align-self: flex-start;
+  height: 28px;
+  margin: -6px 0 0 -8px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+/* ---------- the form ---------- */
+
+.cw-plan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Pointer-opened: arrive. Keyboard-opened: appear at once. */
+.cw-plan-form[data-animate] {
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    filter 220ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+  }
+}
+
+.cw-plan-form-head p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.cw-plan-would {
+  align-self: flex-start;
+}
+
+.cw-plan-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.cw-plan-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.cw-plan-says {
+  max-width: 68ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.cw-plan-runs {
+  max-width: 68ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.cw-plan-runs b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.cw-plan-seg {
+  flex-wrap: wrap;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cw-plan-seg .mn-tab {
+  height: 26px;
+}
+
+.cw-plan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cw-plan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+.cw-plan-chip:has(button) {
+  padding-right: 5px;
+}
+
+.cw-plan-chip button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-3);
+}
+
+.cw-plan-chip button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.cw-plan-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg-3);
+  transition: box-shadow 150ms ease;
+}
+
+.cw-plan-add:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--line-3),
+    0 0 0 3px var(--focus-glow);
+}
+
+.cw-plan-add input {
+  width: 120px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.cw-plan-add input::placeholder {
+  color: var(--fg-3);
+}
+
+.cw-plan-form-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cw-plan-chip button:hover {
+    background: var(--tint);
+    color: var(--fg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-plan-form[data-animate] {
+    transition: opacity 150ms ease;
+    @starting-style {
+      opacity: 0;
+      transform: none;
+      filter: none;
+    }
+  }
+}

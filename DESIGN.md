@@ -477,6 +477,7 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `⌘K` | Command palette |
 | `A` `X` `E` `D` | Approve, reject, activate, deactivate (Rules) |
 | `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
+| `M` | Plan maintenance for the picked window (Change windows) |
 | `[` `]` | Tuck away the sidebar / the list |
 | `G` then a letter | Go to a page: `H` Home, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
 | `?` | Start the guided tour |

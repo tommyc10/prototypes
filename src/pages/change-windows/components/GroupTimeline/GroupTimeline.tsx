@@ -16,7 +16,8 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import type { Group } from '../../model/categories';
-import type { ChangeWindow, Range } from '../../model/types';
+import { fades, planEnd, planLive, planStart, withWindow, workEnd } from '../../model/plans';
+import type { ChangeWindow, MaintenancePlan, Range } from '../../model/types';
 import { HOUR, RANGES, dayLabel, endOf, hourLabel, howLong, rangeOf, statusOf, timing, when } from '../../model/windows';
 import { Pager } from '../Pager/Pager';
 import './GroupTimeline.css';
@@ -70,9 +71,12 @@ export function GroupTimeline({
   selectedKey,
   onSelect,
   onOrder,
+  plans,
 }: {
   group?: Group;
   now: number;
+  /** Each window's maintenance plan, by its key: a chip by its name and a line under its bar. */
+  plans: Record<string, MaintenancePlan>;
   selectedKey: string | null;
   onSelect: (key: string) => void;
   /** Tell the page what order the windows are showing in, so J and K follow it. */
@@ -123,6 +127,7 @@ export function GroupTimeline({
   const ending = group.windows.filter((w) => statusOf(w, now) === 'active' && w.plannedEnd - now <= ENDING_SOON).length;
 
   const lane = (w: ChangeWindow) => {
+    const plan = plans[w.key] && withWindow(plans[w.key], w);
     const status = statusOf(w, now);
     const end = endOf(w, now);
     const seen = w.start < to && end > from;
@@ -148,10 +153,16 @@ export function GroupTimeline({
           <span className="mn-truncate">{w.name}</span>
           <small className="mn-truncate">
             <span className="mn-mono">{w.id}</span>
+            {plan && (
+              <span className="cw-gl-plan" data-live={planLive(plan, now) || undefined} title={`Maintenance plan ${plan.id}`}>
+                Plan
+              </span>
+            )}
             {when(w.start, now)} to {when(w.closedAt ?? w.plannedEnd, now)}
           </small>
         </span>
         <span className="cw-gl-track">
+          {seen && plan && <PlanLine plan={plan} at={at} />}
           {seen ? (
             <span
               className="cw-gl-bar"
@@ -308,5 +319,17 @@ export function GroupTimeline({
         </div>
       </div>
     </section>
+  );
+}
+
+/** A plan under its window's bar: a line for the work it covers, and a fading tail when it
+ *  fades out rather than switching off. */
+function PlanLine({ plan, at }: { plan: MaintenancePlan; at: (ms: number) => number }) {
+  const [a, b, c] = [at(planStart(plan)), at(workEnd(plan)), at(planEnd(plan))];
+  return (
+    <span className="cw-gl-planline" aria-hidden>
+      <i style={{ left: `${a}%`, width: `${Math.max(0.4, b - a)}%` }} />
+      {fades(plan) && c > b && <i data-part="fade" style={{ left: `${b}%`, width: `${c - b}%` }} />}
+    </span>
   );
 }

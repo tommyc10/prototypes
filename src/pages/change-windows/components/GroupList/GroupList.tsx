@@ -84,7 +84,7 @@ export function GroupList({
           <kbd>J</kbd> <kbd>K</kbd> Navigate
         </span>
         <span>
-          <kbd>/</kbd> Search
+          <kbd>M</kbd> Plan
         </span>
         <span>
           <kbd>⌘K</kbd> Commands

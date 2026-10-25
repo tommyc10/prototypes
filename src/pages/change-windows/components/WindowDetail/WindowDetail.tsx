@@ -1,6 +1,6 @@
 /* The picked window, in the rail: what it is and why, its timeline, what it covers, how
- * many alerts it has held back, and anything else in place for the same group at the same
- * time. */
+ * many alerts it has held back, its maintenance plan, and anything else in place for the
+ * same group at the same time. */
 
 import { useState, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
@@ -18,6 +18,7 @@ export function WindowDetail({
   now,
   onSelect,
   timeline,
+  plan,
 }: {
   window: ChangeWindow | null;
   /** Every window, to find the ones that overlap this one. */
@@ -26,6 +27,8 @@ export function WindowDetail({
   onSelect: (key: string) => void;
   /** A fuller picture of the window's run (see WindowLanes), drawn above the usual one. */
   timeline?: ReactNode;
+  /** The window's maintenance plan (see MaintenancePlan), under its timeline. */
+  plan?: ReactNode;
 }) {
   if (!w) {
     return (
@@ -73,6 +76,8 @@ export function WindowDetail({
       {timeline}
       {/* With the timeline above, the plain run is only worth drawing for its count of held alerts. */}
       {(!timeline || w.held !== undefined) && <Run window={w} now={now} />}
+
+      {plan}
 
       <div className="cw-detail-grid">
         <div>

@@ -11,11 +11,15 @@
  *   GroupTimeline   the picked category: a bar per window on a timeline
  *   WindowDetail    the picked window, in a rail that opens when one is picked
  *   WindowLanes     …with its own timeline, among its neighbours
+ *   MaintenancePlan …and its maintenance plan: what happens to the tickets filed against
+ *                   it while the work runs. M plans one for the picked window.
  *   WindowsPalette / Tour   on top when opened
  *
  * The state is small: the search, which category is picked, and which window (it's in the
  * address, so a window can be linked to). A window's status is never stored; it's worked
- * out from its times and the time now (see model/windows.ts). */
+ * out from its times and the time now (see model/windows.ts). The plans live in a store
+ * (hooks/usePlansStore.ts) so they outlast a visit; the plan form's state is the page's, so
+ * its one key listener can give Esc and ⌘↵ to the form while it's open. */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -35,7 +39,12 @@ import { WindowsPalette } from './components/Palette/WindowsPalette';
 import { WindowDetail } from './components/WindowDetail/WindowDetail';
 import { WindowLanes } from './components/WindowLanes/WindowLanes';
 import { WindowsBar } from './components/WindowsBar/WindowsBar';
+import { MaintenancePlan } from './components/MaintenancePlan/MaintenancePlan';
 import { SAMPLES } from './data/mockData';
+import { TICKETS } from './data/planData';
+import { usePlanForm } from './hooks/usePlanForm';
+import { usePlansStore } from './hooks/usePlansStore';
+import { planLive, planStart, withWindow } from './model/plans';
 import { categorise, groupFor, groupsOf } from './model/categories';
 import type { ChangeWindow, Sample } from './model/types';
 import { groupOf, sortWindows } from './model/windows';
@@ -64,6 +73,8 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
   const [hideList, setHideList] = useState(false);
   const [theme, toggleTheme] = useTheme();
   const searchRef = useRef<HTMLInputElement>(null);
+  const plans = usePlansStore((s) => s.plans);
+  const form = usePlanForm();
   const mainRef = useRef<HTMLDivElement>(null);
   const tour = useTour(WINDOWS_TOUR.length, { auto: false, seenKey: 'mn-windows-tour-seen' });
   // The order the timeline is showing the windows in, for J and K (it reports its own).
@@ -86,6 +97,18 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
 
   // The rail shows a window only while the search still has it.
   const selected = found.find((w) => w.key === selectedKey) ?? null;
+  // A plan ends with its window, so one closed early cuts its plan short.
+  const plan = selected && plans[selected.key] ? withWindow(plans[selected.key], selected) : undefined;
+  // Tickets filed against the picked window so far, newest first.
+  const tickets = useMemo(() => (selected ? TICKETS[sample].filter((t) => t.windowKey === selected.key && t.filedAt <= now).reverse() : []), [selected, sample, now]);
+  // A plan can be started for work still to come, or changed while it hasn't ended.
+  const plannable = !!selected && !selected.closedAt && (!plan || planLive(plan, now) || now < planStart(plan));
+  const startPlan = (via: 'key' | 'pointer') => selected && plannable && form.open(selected, plan, now, via);
+
+  // The form belongs to one window: picking another puts it away.
+  useEffect(() => {
+    if (form.windowKey && form.windowKey !== selected?.key) form.close();
+  }, [selected?.key]);
 
   // Keep the address in step, without adding a Back step for every J and K.
   useEffect(() => {
@@ -132,7 +155,11 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
     tourOpen: tour.open,
     paletteOpen,
     onTogglePalette: () => setPaletteOpen((open) => !open),
+    decisionOpen: !!form.windowKey,
+    onCancelDecision: form.close,
+    onSubmitDecision: () => form.submit(now),
     keys: {
+      m: () => startPlan('key'),
       j: () => move(1),
       ArrowDown: () => move(1),
       k: () => move(-1),
@@ -184,7 +211,7 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
         {/* The timeline, and beside it the rail, which is only there while a window is picked. */}
         <div className="cw-frame" data-rail={selected ? true : undefined}>
           <div className="cw-frame-main" ref={mainRef}>
-            <GroupTimeline group={group} now={now} selectedKey={selected?.key ?? null} onSelect={select} onOrder={onOrder} />
+            <GroupTimeline group={group} now={now} selectedKey={selected?.key ?? null} onSelect={select} onOrder={onOrder} plans={plans} />
           </div>
           {selected && (
             <aside className="cw-rail" aria-label="The picked window">
@@ -197,6 +224,7 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
                 now={now}
                 onSelect={select}
                 timeline={<WindowLanes window={selected} all={windows} now={now} categories={categories} onSelect={select} animate={byPointer} />}
+                plan={<MaintenancePlan window={selected} plan={plan} tickets={tickets} now={now} form={form} />}
               />
             </aside>
           )}
@@ -213,6 +241,8 @@ export function ChangeWindowsPage({ initialId }: { /** Open on this window (a li
         theme={theme}
         onToggleTheme={toggleTheme}
         onStartTour={startTour}
+        planFor={plannable ? selected : null}
+        onPlan={() => startPlan('key')}
       />
 
       {/* Rendered into <body>, outside the page, which is inert while the tour shows. */}

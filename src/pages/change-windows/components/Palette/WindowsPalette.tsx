@@ -3,7 +3,7 @@
  * is shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CircleHelp, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { Bell, CalendarClock, CircleHelp, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
 import type { ChangeWindow } from '../../model/types';
 import { timing } from '../../model/windows';
@@ -18,6 +18,8 @@ export function WindowsPalette({
   theme,
   onToggleTheme,
   onStartTour,
+  planFor,
+  onPlan,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,6 +32,9 @@ export function WindowsPalette({
   theme: Theme;
   onToggleTheme: () => void;
   onStartTour: () => void;
+  /** The picked window, when a maintenance plan can be started or changed for it. */
+  planFor?: ChangeWindow | null;
+  onPlan?: () => void;
 }) {
   /** Run a command, then close the palette. */
   const run = (fn: () => void) => () => {
@@ -52,6 +57,16 @@ export function WindowsPalette({
       </div>
       <Command.List className="mn-palette-list">
         <Command.Empty className="mn-palette-empty">No results</Command.Empty>
+
+        {planFor && onPlan && (
+          <Command.Group heading="This window">
+            <Command.Item value={`plan maintenance soften suppress ${planFor.id}`} onSelect={run(onPlan)}>
+              <CalendarClock size={15} />
+              <span className="mn-truncate">Plan maintenance for {planFor.id}</span>
+              <kbd>M</kbd>
+            </Command.Item>
+          </Command.Group>
+        )}
 
         <Command.Group heading="Change window">
           {windows.map((w) => (
