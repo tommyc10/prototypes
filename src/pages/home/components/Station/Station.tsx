@@ -7,6 +7,7 @@
  * library here). Whoever uses it owns which group is picked. */
 
 import { useEffect, useRef } from 'react';
+import { useHalloween } from '../../../../hooks/useHalloween';
 import type { Theme } from '../../../../hooks/useTheme';
 import type { Outcome } from '../../../alerts/model/types';
 import { toneOf, type Station as StationData } from '../../model/station';
@@ -69,6 +70,7 @@ export function Station({
   onPick: (id: string | null) => void;
   onHover: (id: string | null) => void;
 }) {
+  const halloween = useHalloween(); // Halloween mode changes the colours too
   const canvas = useRef<HTMLCanvasElement>(null);
 
   // The drawing loop reads these, so it never has to restart when the page re-renders.
@@ -315,7 +317,7 @@ export function Station({
       el.removeEventListener('pointerleave', leave);
     };
     // The colours are read from the theme, so a new theme starts the drawing again.
-  }, [theme]);
+  }, [theme, halloween]);
 
   return (
     <canvas

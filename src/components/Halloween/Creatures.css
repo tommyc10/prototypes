@@ -1,0 +1,332 @@
+/* The creatures (hw-): ghost, bat, witch, jack-o'-lantern. Colours from the scene tokens in
+ * styles/halloween.css. Every loop stops under reduced motion. */
+
+.hw-stop-ghost-1 {
+  stop-color: var(--ghost-1);
+}
+.hw-stop-ghost-2 {
+  stop-color: var(--ghost-2);
+}
+.hw-stop-ghost-3 {
+  stop-color: var(--ghost-3);
+}
+.hw-stop-aura {
+  stop-color: var(--ghost-glow);
+}
+.hw-stop-pumpkin {
+  stop-color: var(--pumpkin);
+}
+.hw-stop-pumpkin-shade {
+  stop-color: var(--pumpkin-shade);
+}
+.hw-stop-glow {
+  stop-color: var(--candle-glow);
+}
+
+/* ---------- the ghost ---------- */
+
+.hw-ghost-art {
+  overflow: visible;
+}
+
+.hw-ghost-art * {
+  transform-box: fill-box;
+}
+
+.hw-ghost-aura {
+  transform-origin: center;
+  animation: hw-aura 2.6s ease-in-out infinite alternate;
+}
+
+.hw-ghost-arm {
+  animation: hw-wave 0.9s ease-in-out infinite alternate;
+}
+.hw-ghost-arm[data-side='l'] {
+  transform-origin: 100% 0%;
+}
+.hw-ghost-arm[data-side='r'] {
+  transform-origin: 0% 0%;
+  animation-delay: -0.45s;
+  animation-direction: alternate-reverse;
+}
+
+.hw-ghost-fold {
+  fill: none;
+  stroke: var(--ghost-fold);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.hw-ghost-hole,
+.hw-ghost-mouth {
+  fill: var(--ghost-hole);
+}
+
+.hw-ghost-iris {
+  fill: var(--ghost-eye);
+  filter: drop-shadow(0 0 3px var(--ghost-eye));
+}
+
+.hw-ghost-eyes {
+  transform-origin: center;
+  animation: hw-blink 4.2s infinite;
+}
+
+.hw-ghost-mouth {
+  transform-origin: center;
+  transition: transform 160ms var(--ease-out);
+}
+
+[data-boo] .hw-ghost-mouth {
+  transform: scale(1.9, 2.3);
+}
+
+[data-boo] .hw-ghost-eyes {
+  animation: none;
+  transform: scale(1.25);
+}
+
+@keyframes hw-aura {
+  from {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes hw-wave {
+  from {
+    transform: rotate(-14deg);
+  }
+  to {
+    transform: rotate(22deg);
+  }
+}
+
+@keyframes hw-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  93% {
+    transform: scaleY(0.08);
+  }
+  96% {
+    transform: scaleY(1);
+  }
+}
+
+/* ---------- the bat ---------- */
+
+.hw-bat-wing,
+.hw-bat-body {
+  fill: var(--bat);
+}
+
+.hw-bat-eye {
+  fill: var(--candle);
+}
+
+.hw-bat-wing {
+  transform-box: fill-box;
+  animation: hw-flap 0.2s ease-in-out infinite alternate;
+}
+.hw-bat-wing[data-side='l'] {
+  transform-origin: 100% 40%;
+}
+.hw-bat-wing[data-side='r'] {
+  transform-origin: 0% 40%;
+}
+
+@keyframes hw-flap {
+  to {
+    transform: scaleY(-0.55);
+  }
+}
+
+/* ---------- the witch ---------- */
+
+.hw-witch {
+  fill: var(--bat);
+}
+
+.hw-witch-broom {
+  fill: none;
+  stroke: var(--bat);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.hw-witch-cape {
+  transform-box: fill-box;
+  transform-origin: 100% 0%;
+  animation: hw-cape 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes hw-cape {
+  to {
+    transform: skewY(-8deg) scaleY(0.85);
+  }
+}
+
+/* ---------- the jack-o'-lantern ---------- */
+
+.hw-stem {
+  fill: var(--stem);
+}
+
+.hw-pumpkin-rib {
+  fill: none;
+  stroke: var(--pumpkin-shade);
+  stroke-width: 1.5;
+  opacity: 0.6;
+}
+
+.hw-face,
+.hw-face-glow {
+  fill: var(--candle);
+}
+
+.hw-pumpkin-bob,
+.hw-pumpkin-mouth,
+.hw-pumpkin-eye,
+.hw-candle-glow {
+  transform-box: fill-box;
+}
+
+/* It bounces: up, a stretch, lands with a squash. */
+.hw-pumpkin-bob {
+  transform-origin: 50% 100%;
+  animation: hw-bounce 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* And laughs every few seconds. */
+.hw-pumpkin-mouth {
+  transform-origin: 50% 20%;
+  animation: hw-laugh 3.6s ease-in-out infinite;
+  animation-delay: inherit;
+}
+
+.hw-pumpkin-eye {
+  transform-origin: 50% 100%;
+  animation: hw-squint 3.6s ease-in-out infinite;
+  animation-delay: inherit;
+}
+
+.hw-face,
+.hw-face-glow {
+  animation: hw-candle 1.7s steps(1, end) infinite;
+}
+
+.hw-face-glow {
+  opacity: 0.9;
+}
+
+.hw-candle-glow {
+  transform-origin: center;
+  animation: hw-glow 1.9s ease-in-out infinite alternate;
+}
+
+@keyframes hw-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  12% {
+    transform: translateY(0) scale(1.08, 0.9);
+  }
+  32% {
+    transform: translateY(-14px) scale(0.94, 1.08);
+  }
+  52% {
+    transform: translateY(0) scale(1.1, 0.88);
+  }
+  64% {
+    transform: translateY(-3px) scale(0.98, 1.02);
+  }
+  76% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes hw-laugh {
+  0%,
+  55%,
+  100% {
+    transform: scaleY(1);
+  }
+  62%,
+  74% {
+    transform: scaleY(1.7);
+  }
+  68%,
+  80% {
+    transform: scaleY(1.15);
+  }
+}
+
+@keyframes hw-squint {
+  0%,
+  55%,
+  86%,
+  100% {
+    transform: scaleY(1);
+  }
+  62%,
+  80% {
+    transform: scaleY(0.55);
+  }
+}
+
+@keyframes hw-candle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0.72;
+  }
+  24% {
+    opacity: 1;
+  }
+  51% {
+    opacity: 0.6;
+  }
+  57% {
+    opacity: 0.95;
+  }
+  83% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes hw-glow {
+  from {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-ghost-aura,
+  .hw-ghost-arm,
+  .hw-ghost-eyes,
+  .hw-bat-wing,
+  .hw-witch-cape,
+  .hw-pumpkin-bob,
+  .hw-pumpkin-mouth,
+  .hw-pumpkin-eye,
+  .hw-face,
+  .hw-face-glow,
+  .hw-candle-glow {
+    animation: none;
+  }
+}

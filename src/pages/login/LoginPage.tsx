@@ -3,6 +3,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Check, Eye, EyeOff, Loader, Moon, Sun, TriangleAlert } from 'lucide-react';
+import { BrandMark } from '../../components/BrandMark';
+import { NightScene } from '../../components/Halloween/NightScene';
+import { useHalloween } from '../../hooks/useHalloween';
 import { useTheme } from '../../hooks/useTheme';
 import { navigate } from '../../lib/route';
 import { AuthError, DEMO, signIn } from './data/mockAuth';
@@ -22,6 +25,7 @@ function checkFields(email: string, password: string) {
 
 export function LoginPage() {
   const [theme, toggleTheme] = useTheme();
+  const halloween = useHalloween();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [reveal, setReveal] = useState(false);
@@ -83,18 +87,14 @@ export function LoginPage() {
 
   return (
     <div className="mn lg">
+      {halloween && <NightScene variant="sky" />}
       <button className="mn-icon-btn lg-theme" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}>
         {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
       </button>
 
       <main className="lg-card">
         <div className="lg-brand" aria-hidden>
-          <div className="mn-brand-mark">
-            <svg viewBox="0 0 24 24" width="14" height="14">
-              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-              <circle cx="12" cy="12" r="3" fill="currentColor" />
-            </svg>
-          </div>
+          <BrandMark />
           Imperial Ops
         </div>
         <h1 className="lg-title">Sign in</h1>

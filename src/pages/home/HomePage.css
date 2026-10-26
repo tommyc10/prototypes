@@ -14,6 +14,7 @@
 }
 
 .hm-pane {
+  isolation: isolate; /* the Halloween scene sits behind the page, over the pane */
   overflow: hidden auto; /* only the narrow layout, where the station goes under the words, is taller than the pane */
   container: home / inline-size;
 }
@@ -214,6 +215,20 @@
   animation: hm-fade 220ms var(--ease-out) 100ms backwards;
 }
 
+/* Halloween mode: the station is the moon, so it gets the moon's halo. */
+:root[data-mn-halloween] .hm-station {
+  isolation: isolate;
+}
+
+:root[data-mn-halloween] .hm-station::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle closest-side at 50% calc(50% + 8px), var(--moon-halo), transparent);
+  pointer-events: none;
+}
+
 @keyframes hm-fade {
   from {
     opacity: 0;
@@ -268,6 +283,10 @@
   }
   .hm-caption {
     bottom: 12px;
+  }
+  /* The station stands where the graveyard would; the halo is enough. */
+  .hm-pane > .hw-scene {
+    display: none;
   }
 }
 

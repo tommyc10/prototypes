@@ -14,18 +14,23 @@ import { LoginPage } from './pages/login/LoginPage';
 import { IncidentsPage } from './pages/incidents/IncidentsPage';
 import { RuleManagementPage } from './pages/rule-management/RuleManagementPage';
 import { FeatureBanner } from './components/FeatureBanner/FeatureBanner';
+import { HalloweenCard, useHalloweenCard } from './components/Halloween/HalloweenCard';
+import { Haunting } from './components/Halloween/Haunting';
+import { useHalloween } from './hooks/useHalloween';
 import { pinFromParam } from './pages/rule-management/hooks/usePinnedGroups';
 
 const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', rules: 'Rules', hindcast: 'Hindcast', forecast: 'Forecast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents', access: 'Access' };
 
 export function App() {
   const route = useRoute();
+  const halloweenCard = useHalloweenCard();
+  const halloween = useHalloween();
   useEffect(() => {
     document.title = `${TITLE[route.page]} · Imperial Ops`;
   }, [route.page]);
   return (
     <div className="mn mn-app">
-      {route.page !== 'login' && <FeatureBanner />}
+      {route.page !== 'login' && (halloweenCard.shown ? <HalloweenCard onDismiss={halloweenCard.dismiss} /> : <FeatureBanner />)}
       {route.page === 'login' ? (
         <LoginPage />
       ) : route.page === 'home' ? (
@@ -48,6 +53,7 @@ export function App() {
         // The key gives a link to another rule a fresh page, opened on that rule.
         <RuleManagementPage key={`${route.parts[0] ?? ''}?${route.query}`} initialRuleId={route.parts[0]} initialGroup={pinFromParam(route.query.get('group'))} />
       )}
+      {halloween && <Haunting />}
       <Toaster position="bottom-right" theme="dark" />
     </div>
   );

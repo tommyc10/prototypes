@@ -1,6 +1,8 @@
 /* Sign-in page (lg-): one centred card on the page grey. */
 
 .mn.lg {
+  position: relative;
+  isolation: isolate; /* the Halloween scene sits behind the card, over the page grey */
   display: flex;
   flex-direction: column;
   align-items: center;

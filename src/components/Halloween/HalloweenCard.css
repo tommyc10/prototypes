@@ -1,0 +1,121 @@
+/* The Halloween card (hw-): the announcement row's recipe, with a lantern and a switch. */
+
+.hw-card {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line-2);
+  background: var(--l3);
+}
+
+/* A window onto the scene: always night, whatever the theme. */
+.hw-card-thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--sky-low);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hw-lantern {
+  width: 30px;
+  height: 30px;
+}
+
+.hw-card-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-width: 0;
+  margin: 0;
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.hw-card-copy strong {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* ---------- the switch: the stream bar's recipe ---------- */
+
+.hw-switch {
+  flex: none;
+  width: 34px;
+  height: 20px;
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tint-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.hw-switch span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--fg-3);
+  transition:
+    transform 200ms var(--ease-out),
+    background-color 150ms ease;
+}
+
+.hw-switch[aria-checked='true'] {
+  background: var(--primary);
+  box-shadow: 0 0 14px -2px var(--ghost-glow, transparent);
+}
+
+.hw-switch[aria-checked='true'] span {
+  transform: translateX(14px);
+  background: var(--primary-fg);
+}
+
+.hw-switch:active {
+  transform: scale(0.95);
+}
+
+.hw-switch:focus-visible,
+.hw-card-dismiss:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hw-card-dismiss {
+  flex: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hw-switch:not([aria-checked='true']):hover {
+    background: var(--l5);
+  }
+  .hw-card-dismiss:hover {
+    background: var(--l4);
+    color: var(--fg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-switch,
+  .hw-switch span {
+    transition: background-color 150ms ease;
+  }
+  .hw-switch:active {
+    transform: none;
+  }
+}

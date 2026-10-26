@@ -1,0 +1,178 @@
+/* Halloween mode, after Tesla's: the same controls in the same places, in costume.
+ *
+ * Tesla kept the car's interface as it was and changed three things, and so does this:
+ *
+ *   The night     the greys lean towards moonlit blue. Same ladder, same steps.
+ *   The costume   the thing you own wears a sheet: the brand mark is a ghost, and the one
+ *                 white thing on a screen (the primary button) glows like it.
+ *   The path      Tesla's route ahead turns purple. Ours is where you're about to act:
+ *                 the focus ring and the text you select.
+ *
+ * Status colours do not change. Red is still a real incident; orange is still a warning.
+ * Candlelight and pumpkins belong to the scene (components/Halloween/NightScene), never to a
+ * control, a chip or a number, so nothing orange on a page can be mistaken for a warning.
+ *
+ * Halloween mode always shows over dark (see hooks/useTheme.ts). */
+
+:root[data-mn-halloween] :is(.mn, .mn-menu, .mn-palette, .mn-toast, .mn-tour) {
+  --l0: #05060a;
+  --l1: #0a0b11;
+  --l2: #0e1017;
+  --l3: #14161f;
+  --l4: #1a1d27;
+  --l5: #232633;
+  --line: rgba(200, 214, 255, 0.07);
+  --line-2: rgba(200, 214, 255, 0.11);
+  --line-3: rgba(200, 214, 255, 0.18);
+  --fg: #eceff7;
+  --fg-2: #a3a8b9;
+  --fg-3: #767c90;
+  --row-name: #d5d9e5;
+  --code-val: #d8dcea;
+  --glass: rgba(22, 24, 34, 0.78);
+  --glass-menu: rgba(26, 28, 39, 0.86);
+  --glass-palette: rgba(20, 22, 32, 0.6);
+  --glass-toast: rgba(26, 28, 39, 0.88);
+  --glass-edge: rgba(210, 225, 255, 0.08);
+  --card-edge: rgba(210, 225, 255, 0.035);
+  --tint: rgba(200, 214, 255, 0.06);
+  --tint-2: rgba(200, 214, 255, 0.07);
+  --avatar: linear-gradient(145deg, #3a3e4d, #191b24);
+  --tone-1: #eceff7;
+  --tone-2: #979db0;
+  --tone-3: #626879;
+  --tone-4: #2a2d3a;
+  --wb-bar-c: #2a2d3a;
+  /* the sheet: the costume's one bright thing */
+  --primary: #eaf5ff;
+  --primary-hover: #d3eafa;
+  --primary-fg: #0a0d14;
+  /* the path ahead */
+  --focus-ring: rgba(169, 139, 255, 0.7);
+  --focus-glow: rgba(169, 139, 255, 0.1);
+  --selection: rgba(169, 139, 255, 0.3);
+  /* moonlight crossing a waiting page: the skeletons */
+  --sheen: rgba(190, 210, 255, 0.14);
+}
+
+/* The scene's own colours, never on a control. Declared in every theme, because the
+ * banner's lantern shows them before the costume goes on. */
+
+:is(.mn, .mn-menu, .mn-palette, .mn-toast, .mn-tour) {
+  --sky-top: #070910;
+  --sky-low: #1a2234;
+  --moon: #e9eef6;
+  --moon-shade: #c3ccda;
+  --moon-halo: rgba(200, 220, 255, 0.16);
+  --hill: #0c1019;
+  --ground: #06070b;
+  --rim: rgba(200, 220, 255, 0.16);
+  --fog: rgba(170, 190, 230, 0.07);
+  --candle: #ffc45c;
+  --candle-glow: rgba(255, 150, 40, 0.42);
+  --pumpkin: #c8611e;
+  --pumpkin-shade: #6e2c0b;
+  --stem: #3b3a1e;
+  --star: #dfe8ff;
+  --cloud: rgba(30, 36, 52, 0.85);
+  --lightning: rgba(200, 215, 255, 0.28);
+  --bolt: #e6eeff;
+  --bat: #030305;
+  --zombie: #6d7a58;
+  --zombie-shade: #2c3324;
+  --leaf: #8a3d14;
+  --wisp: rgba(150, 235, 255, 0.85);
+  /* the sheet ghost, after Tesla's glowing car-under-a-sheet */
+  --ghost-1: #ffffff;
+  --ghost-2: #dcf1ff;
+  --ghost-3: #a9d8ff;
+  --ghost-fold: rgba(80, 140, 205, 0.32);
+  --ghost-hole: #0a1422;
+  --ghost-eye: #6fd3ff;
+  --ghost-glow: rgba(150, 215, 255, 0.34);
+}
+
+/* ---------- the costume ---------- */
+
+:root[data-mn-halloween] .mn-brand-mark {
+  background: transparent;
+  color: var(--primary);
+  filter: drop-shadow(0 0 5px var(--ghost-glow));
+  animation: mn-haunt 2.4s ease-in-out infinite alternate;
+}
+
+.mn-brand-mark .mn-ghost-eye {
+  fill: var(--ghost-eye);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hw-blink 3.8s infinite;
+}
+
+/* The one bright button glows like the sheet, and breathes. */
+:root[data-mn-halloween] .mn-btn[data-variant='primary']:not(:disabled) {
+  animation: mn-sheet-glow 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes mn-haunt {
+  from {
+    transform: translateY(1.5px) rotate(-4deg);
+  }
+  to {
+    transform: translateY(-1.5px) rotate(4deg);
+  }
+}
+
+@keyframes mn-sheet-glow {
+  from {
+    box-shadow: 0 0 10px -4px var(--ghost-glow);
+  }
+  to {
+    box-shadow: 0 0 22px 0 var(--ghost-glow);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-mn-halloween] .mn-brand-mark,
+  .mn-brand-mark .mn-ghost-eye,
+  :root[data-mn-halloween] .mn-btn[data-variant='primary']:not(:disabled) {
+    animation: none;
+  }
+  :root[data-mn-halloween] .mn-btn[data-variant='primary']:not(:disabled) {
+    box-shadow: 0 0 18px -2px var(--ghost-glow);
+  }
+}
+
+/* ---------- the lights flicker once as it comes on ---------- */
+
+:root[data-mn-flicker]::view-transition-new(root) {
+  animation: mn-flicker 640ms linear;
+}
+
+/* Two dips, under three flashes a second, between two dark pages. */
+@keyframes mn-flicker {
+  0% {
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.9;
+  }
+  22% {
+    opacity: 0.25;
+  }
+  36% {
+    opacity: 1;
+  }
+  46% {
+    opacity: 0.55;
+  }
+  60%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-mn-flicker]::view-transition-new(root) {
+    animation: mn-dissolve 200ms var(--ease-out);
+  }
+}

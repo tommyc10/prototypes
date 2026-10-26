@@ -4,6 +4,7 @@
 
 import { Command } from 'cmdk';
 import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import type { Theme } from '../../../../hooks/useTheme';
 
 export function HomePalette({
@@ -78,6 +79,7 @@ export function HomePalette({
             {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             Switch to {theme === 'dark' ? 'light' : 'dark'} theme
           </Command.Item>
+          <HalloweenCommand run={run} />
         </Command.Group>
       </Command.List>
     </Command.Dialog>

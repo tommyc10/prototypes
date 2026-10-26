@@ -15,6 +15,11 @@
   --ic-stopped: #949494;
 }
 
+/* With nothing picked, the Halloween graveyard sits behind the pane. */
+.ic-detail {
+  isolation: isolate;
+}
+
 .ic-scroll {
   flex: 1;
   min-height: 0;

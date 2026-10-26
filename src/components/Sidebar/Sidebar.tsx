@@ -16,6 +16,7 @@
 import type { ComponentType, ReactNode } from 'react';
 import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { goKey, type PageId } from '../../lib/route';
+import { BrandMark } from '../BrandMark';
 import type { Theme } from '../../hooks/useTheme';
 import type { Pin } from '../../pages/rule-management/hooks/usePinnedGroups';
 import { useNavCounts } from './navCounts';
@@ -112,12 +113,7 @@ export function Sidebar({
   return (
     <aside className="mn-side" inert={hidden}>
       <a className="mn-brand" href="#/" aria-label="Imperial Ops, home">
-        <div className="mn-brand-mark" aria-hidden>
-          <svg viewBox="0 0 24 24" width="14" height="14">
-            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-            <circle cx="12" cy="12" r="3" fill="currentColor" />
-          </svg>
-        </div>
+        <BrandMark />
         Imperial Ops
       </a>
 

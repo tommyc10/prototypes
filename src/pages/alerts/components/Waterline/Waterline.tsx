@@ -19,6 +19,7 @@
  * who can't use the picture. */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useHalloween } from '../../../../hooks/useHalloween';
 import { MINUTE, WINDOW, WINDOW_MINUTES } from '../../data/mockData';
 import { OUTCOME_LABEL } from '../../model/labels';
 import { isSunk } from '../../model/stream';
@@ -121,6 +122,7 @@ export function Waterline({
   onSelect: (id: string) => void;
   onScrub: (at: number | null) => void;
 }) {
+  const halloween = useHalloween(); // Halloween mode changes the colours too
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tip, setTip] = useState<Tip | null>(null);
@@ -409,7 +411,7 @@ export function Waterline({
       canvas.removeEventListener('pointercancel', onUp);
       canvas.removeEventListener('pointerleave', onLeave);
     };
-  }, [theme]);
+  }, [theme, halloween]);
 
   const sunkNow = counts.hidden + (preview ? counts.wouldHide : 0);
   const seenNow = counts.total - sunkNow;

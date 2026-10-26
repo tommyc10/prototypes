@@ -247,7 +247,8 @@ The product is plain CSS. No Tailwind, no CSS-in-JS.
   attribute** (`data-variant="primary"`, `data-active`, `data-selected`, `data-status`),
   and its colours from **tokens** (`var(--l3)`). Never a raw hex in a component.
 - Shared pieces are prefixed `mn-`. Each page has its own prefix for its own pieces:
-  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `lg-` Sign in.
+  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `lg-` Sign in,
+  `hw-` Halloween mode.
 - Tokens: `src/styles/theme.css`. Shared pieces: `src/styles/ui.css`. Page frame:
   `src/styles/shell.css`. Command palette: `src/styles/palette.css`. OS preferences:
   `src/styles/accessibility.css`. Every other component keeps its CSS beside its `.tsx`.
@@ -462,7 +463,8 @@ colour (what the rule caught, in green); every other series is a grey from the t
   entrance, so it looks the same from the keyboard; only the arrival differs (a pointer pick
   rises in over 220ms, a key shows it at once). Reduced motion: the band stops and the shapes
   breathe.
-- **Theme switch** dissolves through the View Transitions API over 200ms.
+- **Theme switch** dissolves through the View Transitions API over 200ms. Turning Halloween
+  mode on flickers instead (640ms, two dips); with reduced motion it dissolves.
 
 ## Interaction patterns
 
@@ -547,6 +549,43 @@ No chart library. Bars are divs, lines are SVG, everything is drawn with the sam
 - Status is never colour alone: there is always a word, an icon or a shape change.
 - Measured contrast in dark: `fg` on `l2` 16.3:1, `fg-2` on `l2` 7.5:1, `fg-3` on `l2`
   4.0:1 and on a card 3.8:1. See Known gaps.
+
+## Halloween mode
+
+A costume the app wears in October, after Tesla's Halloween mode (software update 2026.38.3):
+its look (the glowing sheet ghost, lit jack-o'-lanterns, a graveyard under a full moon), and
+none of this file's calm. It's a toy, so it moves, everywhere. The rules below are the only
+things it keeps.
+
+- **The night.** The grey ladder leans towards moonlit blue. Same rungs and steps; `fg-3`
+  on `l2` is 4.6:1, up from 4.0.
+- **The costume.** The brand mark is a ghost that bobs and blinks. The primary button glows
+  like the sheet and breathes. Focus and selection turn purple, after Tesla's purple path.
+- **The haunting** flies over every page (`Haunting.tsx`, z-index 45, under ⌘K, dialogs and
+  the tour): four sheet ghosts that wander, fade out and reappear, flee the pointer and shout
+  "boo" when it gets close, and keep clear of whatever has focus; a flock of bats every 20s;
+  a cobweb whose spider drops and climbs.
+- **The scene** (`NightScene.tsx`) fills the places nobody is working yet, as Tesla's shows in
+  Park: the whole night behind the sign-in card; a graveyard band along Home's foot and the
+  empty Incidents pane. Witch across the moon, orbiting bats, lightning, twinkling stars,
+  falling leaves, a blinking owl, a zombie hand, ghosts rising from graves, wisps, rolling fog,
+  pumpkins that bounce and laugh.
+
+Rules it keeps:
+
+- **Status colours do not change.** Candlelight and pumpkins are scene tokens; never put one
+  on a control, chip or number.
+- **It never catches a click.** Every layer is `pointer-events: none`.
+- **Reduced motion** removes the haunting entirely and stills the scene; lightning and leaves
+  go. Turning it on flickers the page twice (under three flashes a second); lightning is two
+  cracks under a second apart, every 11s.
+- It's always night: while it's on the page shows dark, and a light pick comes back after.
+  The theme button asking for light takes the costume off.
+- Offered in October and on 1 November (the real date, not the prototype's clock): a card in
+  the announcement row with a switch until dismissed, then ⌘K › "Turn on Halloween mode".
+- Code: `hooks/useHalloween.ts` (one store, `<html data-mn-halloween>`), `styles/halloween.css`,
+  `components/Halloween/` (creatures, scene, haunting, card, ⌘K item), `components/BrandMark.tsx`.
+  Canvas charts read their colours again when it changes.
 
 ## Do's and Don'ts
 

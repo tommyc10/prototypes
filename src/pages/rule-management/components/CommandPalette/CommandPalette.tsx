@@ -5,6 +5,7 @@
 
 import { Command } from 'cmdk';
 import { Bell, CalendarClock, CircleHelp, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import { GROUPS } from '../../data/mockData';
 import type { Theme } from '../../../../hooks/useTheme';
 import { SORT_KEYS, SORT_LABEL, STATUS_TABS, type SortKey, type StatusFilter } from '../../model/browse';
@@ -143,6 +144,7 @@ export function CommandPalette({
             {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             Switch to {theme === 'dark' ? 'light' : 'dark'} theme
           </Command.Item>
+          <HalloweenCommand run={run} />
           <Command.Item value="tour help guide tutorial onboarding" onSelect={run(onStartTour)}>
             <CircleHelp size={15} />
             Take the tour

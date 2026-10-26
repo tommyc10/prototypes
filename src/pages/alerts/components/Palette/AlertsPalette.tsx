@@ -4,6 +4,7 @@
 
 import { Command } from 'cmdk';
 import { CalendarClock, CircleHelp, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import type { Theme } from '../../../../hooks/useTheme';
 import { FEED_TABS } from '../../model/labels';
 import type { FeedFilter } from '../../model/types';
@@ -107,6 +108,7 @@ export function AlertsPalette({
             {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             Switch to {theme === 'dark' ? 'light' : 'dark'} theme
           </Command.Item>
+          <HalloweenCommand run={run} />
           <Command.Item value="tour help guide tutorial onboarding" onSelect={run(onStartTour)}>
             <CircleHelp size={15} />
             Take the tour

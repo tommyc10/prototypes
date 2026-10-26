@@ -1,0 +1,526 @@
+/* The Halloween scene (hw-). Colours from the scene tokens in styles/halloween.css. */
+
+.hw-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* behind the page's content; its host isolates, so still over its background */
+  pointer-events: none;
+}
+
+/* As a band, the graveyard rises out of the dark at the foot of the page. */
+.hw-scene[data-variant='ground'] {
+  top: auto;
+  height: 260px;
+  mask-image: linear-gradient(to bottom, transparent, black 40%);
+}
+
+.hw-stop-sky-top {
+  stop-color: var(--sky-top);
+}
+.hw-stop-sky-low {
+  stop-color: var(--sky-low);
+}
+.hw-stop-halo {
+  stop-color: var(--moon-halo);
+}
+.hw-stop-moon {
+  stop-color: var(--moon);
+}
+.hw-stop-moon-shade {
+  stop-color: var(--moon-shade);
+}
+.hw-stop-wisp {
+  stop-color: var(--wisp);
+}
+
+/* ---------- the sky ---------- */
+
+.hw-stars {
+  fill: var(--star);
+}
+
+.hw-stars circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hw-twinkle 3s ease-in-out infinite alternate;
+}
+
+.hw-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hw-moon-breathe 5s ease-in-out infinite alternate;
+}
+
+.hw-crater {
+  fill: var(--moon-shade);
+  opacity: 0.3;
+}
+
+/* Two cracks of lightning, under a second apart, then nothing for ten. */
+.hw-lightning {
+  fill: var(--lightning);
+  opacity: 0;
+  animation: hw-flash 11s linear infinite;
+}
+
+.hw-bolt {
+  fill: none;
+  stroke: var(--bolt);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px var(--bolt));
+  opacity: 0;
+  animation: hw-flash 11s linear infinite;
+}
+
+.hw-cloud,
+.hw-fog {
+  fill: var(--fog);
+}
+
+.hw-cloud {
+  animation: hw-drift 40s ease-in-out infinite alternate;
+}
+
+.hw-cloud-front {
+  fill: var(--cloud);
+  animation: hw-cross 26s linear infinite;
+}
+
+.hw-fog {
+  animation: hw-roll 18s ease-in-out infinite alternate;
+}
+
+.hw-fog-front {
+  animation-duration: 12s;
+  animation-direction: alternate-reverse;
+}
+
+/* The witch crosses in front of the moon every 16 seconds, bobbing on her broom. */
+.hw-witch-fly {
+  animation: hw-witch 16s linear infinite;
+}
+
+.hw-witch-bob {
+  transform-box: fill-box;
+  animation: hw-bob 1.4s ease-in-out infinite alternate;
+}
+
+/* Bats circle the moon, staying upright as they go. */
+.hw-bat-orbit {
+  transform-box: view-box;
+  transform-origin: 1080px 190px;
+  animation: hw-orbit 10s linear infinite;
+}
+
+.hw-bat-upright {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hw-orbit 10s linear infinite reverse;
+}
+
+/* ---------- the house, the trees, the owl, the spider ---------- */
+
+.hw-hill {
+  fill: var(--hill);
+}
+
+.hw-far,
+.hw-ground,
+.hw-grave,
+.hw-owl-body {
+  fill: var(--ground);
+}
+
+.hw-far-tree,
+.hw-tree {
+  fill: none;
+  stroke: var(--ground);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Moonlight catches the top of the ground and the graves. */
+.hw-ground,
+.hw-grave {
+  stroke: var(--rim);
+  stroke-width: 1;
+}
+
+.hw-window {
+  fill: var(--candle);
+}
+
+.hw-window > * {
+  animation: hw-window 6s steps(1, end) infinite;
+}
+
+/* Someone walks past the upstairs windows. */
+.hw-window-figure {
+  fill: var(--ground);
+  animation: hw-walk 9s ease-in-out infinite;
+}
+
+.hw-owl {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hw-owl-turn 8s steps(1, end) infinite;
+}
+
+.hw-owl-eyes {
+  transform-box: fill-box;
+  fill: var(--candle);
+  transform-origin: center;
+  animation: hw-owl-blink 3.4s infinite;
+}
+
+.hw-thread {
+  transform-box: fill-box;
+  stroke: var(--rim);
+  stroke-width: 1;
+  transform-origin: 50% 0%;
+  animation: hw-thread 7s ease-in-out infinite;
+}
+
+.hw-spider {
+  animation: hw-dangle 7s ease-in-out infinite;
+}
+
+.hw-spider-body {
+  fill: var(--bat);
+}
+
+.hw-spider-legs {
+  transform-box: fill-box;
+  fill: none;
+  stroke: var(--bat);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transform-origin: center;
+  animation: hw-wiggle 0.3s ease-in-out infinite alternate;
+}
+
+/* ---------- the graveyard ---------- */
+
+/* A ghost rises out of the grave, hangs there, and drifts off. */
+.hw-rise {
+  animation: hw-rise 12s ease-in-out infinite;
+}
+
+.hw-zombie-skin {
+  fill: var(--zombie);
+}
+
+.hw-zombie-sleeve {
+  fill: var(--zombie-shade);
+}
+
+.hw-zombie-fingers {
+  transform-box: fill-box;
+  fill: none;
+  stroke: var(--zombie);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform-origin: 50% 100%;
+  animation: hw-claw 0.6s ease-in-out infinite alternate;
+}
+
+.hw-zombie-arm {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: hw-zombie 9s ease-in-out infinite;
+}
+
+.hw-wisp {
+  animation: hw-wisp 8s ease-in-out infinite alternate;
+}
+
+.hw-wisp-core {
+  fill: var(--wisp);
+}
+
+.hw-leaf {
+  transform-box: fill-box;
+  fill: var(--leaf);
+  transform-origin: center;
+  animation: hw-fall 12s linear infinite;
+}
+
+/* ---------- keyframes ---------- */
+
+@keyframes hw-twinkle {
+  from {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes hw-moon-breathe {
+  from {
+    opacity: 0.7;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes hw-flash {
+  0%,
+  88%,
+  89.6%,
+  91%,
+  92.2%,
+  100% {
+    opacity: 0;
+  }
+  88.6% {
+    opacity: 1;
+  }
+  91.6% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes hw-drift {
+  to {
+    transform: translateX(120px);
+  }
+}
+
+@keyframes hw-cross {
+  from {
+    transform: translateX(-700px);
+  }
+  to {
+    transform: translateX(700px);
+  }
+}
+
+@keyframes hw-roll {
+  from {
+    transform: translateX(-90px);
+  }
+  to {
+    transform: translateX(110px);
+  }
+}
+
+@keyframes hw-witch {
+  from {
+    transform: translate(-120px, 250px) rotate(-8deg);
+  }
+  50% {
+    transform: translate(1080px, 170px) rotate(-4deg);
+  }
+  to {
+    transform: translate(1620px, 60px) rotate(-12deg);
+  }
+}
+
+@keyframes hw-bob {
+  to {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+
+@keyframes hw-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hw-window {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.55;
+  }
+  23% {
+    opacity: 1;
+  }
+  48% {
+    opacity: 0.15;
+  }
+  60% {
+    opacity: 1;
+  }
+  81% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes hw-walk {
+  0%,
+  10% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  55% {
+    transform: translateX(98px);
+    opacity: 1;
+  }
+  60%,
+  100% {
+    transform: translateX(98px);
+    opacity: 0;
+  }
+}
+
+@keyframes hw-owl-blink {
+  0%,
+  86%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  89% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes hw-owl-turn {
+  0%,
+  100% {
+    transform: none;
+  }
+  45% {
+    transform: scaleX(-1);
+  }
+  70% {
+    transform: none;
+  }
+}
+
+@keyframes hw-thread {
+  0%,
+  100% {
+    transform: scaleY(0.2);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes hw-dangle {
+  0%,
+  100% {
+    transform: translateY(-88px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hw-wiggle {
+  to {
+    transform: scaleX(0.85) rotate(4deg);
+  }
+}
+
+@keyframes hw-rise {
+  0% {
+    transform: translateY(80px);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-40px);
+  }
+  55% {
+    transform: translate(30px, -110px);
+    opacity: 1;
+  }
+  75%,
+  100% {
+    transform: translate(90px, -260px);
+    opacity: 0;
+  }
+}
+
+@keyframes hw-zombie {
+  0%,
+  15% {
+    transform: translateY(60px);
+  }
+  30% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  45% {
+    transform: translateY(-4px) rotate(8deg);
+  }
+  60% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  72% {
+    transform: translateY(2px) rotate(4deg);
+  }
+  88%,
+  100% {
+    transform: translateY(60px);
+  }
+}
+
+@keyframes hw-claw {
+  to {
+    transform: scaleY(0.75) rotate(-6deg);
+  }
+}
+
+@keyframes hw-wisp {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(40px, -36px);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-30px, -14px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes hw-fall {
+  0% {
+    transform: translate(0, -40px) rotate(0deg);
+  }
+  25% {
+    transform: translate(50px, 220px) rotate(160deg);
+  }
+  50% {
+    transform: translate(-30px, 460px) rotate(340deg);
+  }
+  75% {
+    transform: translate(60px, 700px) rotate(520deg);
+  }
+  100% {
+    transform: translate(20px, 960px) rotate(720deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-scene * {
+    animation: none !important;
+  }
+  .hw-lightning,
+  .hw-bolt,
+  .hw-leaf {
+    display: none;
+  }
+}

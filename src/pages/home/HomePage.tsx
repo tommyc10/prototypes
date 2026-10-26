@@ -13,6 +13,8 @@ import { useState } from 'react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Sidebar } from '../../components/Sidebar/Sidebar';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { NightScene } from '../../components/Halloween/NightScene';
+import { useHalloween } from '../../hooks/useHalloween';
 import { useTheme } from '../../hooks/useTheme';
 import { num } from '../../lib/format';
 import { navigate } from '../../lib/route';
@@ -35,6 +37,7 @@ export function HomePage() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [hideSide, setHideSide] = useState(false);
   const [theme, toggleTheme] = useTheme();
+  const halloween = useHalloween();
 
   const at = Math.min(picked, Math.max(0, queue.length - 1));
   const need = queue[at];
@@ -78,6 +81,7 @@ export function HomePage() {
       <Sidebar hidden={hideSide} page="home" onOpenPalette={() => setPaletteOpen(true)} theme={theme} onToggleTheme={toggleTheme} />
 
       <section className="mn-detail hm-pane">
+        {halloween && <NightScene variant="ground" />}
         <button
           className="mn-icon-btn hm-side-toggle"
           onClick={() => setHideSide((hidden) => !hidden)}

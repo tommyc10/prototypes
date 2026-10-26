@@ -43,6 +43,8 @@ import { PaneToggles } from '../../components/PaneToggles';
 import { Sidebar } from '../../components/Sidebar/Sidebar';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useSheen } from '../../hooks/useSheen';
+import { NightScene } from '../../components/Halloween/NightScene';
+import { useHalloween } from '../../hooks/useHalloween';
 import { useTheme } from '../../hooks/useTheme';
 import { navigate } from '../../lib/route';
 import { INCIDENTS_TOUR } from '../../../tours/incidents';
@@ -98,6 +100,7 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
   const [hideSide, setHideSide] = useState(false);
   const [hideList, setHideList] = useState(false);
   const [theme, toggleTheme] = useTheme();
+  const halloween = useHalloween();
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -218,7 +221,8 @@ export function IncidentsPage({ initialId }: { /** Open on this incident (a link
         searchRef={searchRef}
       />
 
-      <section className="mn-detail">
+      <section className="mn-detail ic-detail">
+        {halloween && !selectedId && <NightScene variant="ground" />}
         <div className="ic-scroll" ref={scrollRef}>
           <div className="ic-top">
             <PaneToggles
