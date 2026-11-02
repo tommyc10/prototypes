@@ -3,8 +3,8 @@
  * `pinned` is whatever the page wants above the rows (the overnight suggestions). */
 
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
-import { AlertTriangle, Search } from 'lucide-react';
-import { pct } from '../../../../lib/format';
+import { AlertTriangle, Moon, Search } from 'lucide-react';
+import { pct, shortDate } from '../../../../lib/format';
 import type { Pin } from '../../hooks/usePinnedGroups';
 import { STATUS_TABS, groupName, type StatusFilter, type ViewState } from '../../model/browse';
 import { statusLabel } from '../../model/labels';
@@ -106,7 +106,14 @@ export function RuleList({
               <div className="mn-row-name">{rule.name}</div>
               <div className="mn-row-meta">
                 <span className="mn-mono">{rule.id}</span>
-                <span>{groupName(rule, view.groupBy)}</span>
+                {rule.fromRefresh ? (
+                  <span className="mn-row-from">
+                    <Moon size={12} />
+                    Nightly refresh, {shortDate(rule.fromRefresh)}
+                  </span>
+                ) : (
+                  <span>{groupName(rule, view.groupBy)}</span>
+                )}
               </div>
             </div>
             <div className="mn-row-side">

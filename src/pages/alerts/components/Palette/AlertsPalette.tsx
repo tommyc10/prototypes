@@ -3,7 +3,7 @@
  * shared with the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { CalendarClock, CircleHelp, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { CalendarClock, CircleHelp, Filter, History, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import type { Theme } from '../../../../hooks/useTheme';
 import { FEED_TABS } from '../../model/labels';
@@ -77,6 +77,10 @@ export function AlertsPalette({
         </Command.Group>
 
         <Command.Group heading="Go to">
+          <Command.Item value="go to services top talkers loudest" onSelect={run(() => onNavigate('#/services'))}>
+            <LayoutGrid size={15} />
+            Services
+          </Command.Item>
           <Command.Item value="go to rules rule management" onSelect={run(() => onNavigate('#/rules'))}>
             <Filter size={15} />
             Rules

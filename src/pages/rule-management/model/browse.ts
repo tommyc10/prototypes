@@ -71,6 +71,7 @@ export function matches(rule: Rule, query: string) {
     serviceGroupById(g.serviceGroupId).name,
     SOURCE_LABEL[rule.source],
     rule.sourceDetail,
+    rule.fromRefresh ? 'nightly refresh' : '',
     ...rule.evidence.conditions.map((c) => `${c.field} ${c.value}`),
   ]
     .join(' ')

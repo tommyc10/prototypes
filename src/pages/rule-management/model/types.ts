@@ -91,6 +91,8 @@ export interface Rule {
   evidence: Evidence;
   related: RelatedIncident[];
   audit: AuditEntry[];
+  /** It came from an overnight suggestion nobody decided on: the night that found it. */
+  fromRefresh?: string;
 }
 
 /** What a person can do to a rule. Which ones are allowed depends on its status (see policy.ts). */

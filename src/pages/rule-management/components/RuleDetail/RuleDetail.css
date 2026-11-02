@@ -19,6 +19,16 @@
   gap: 10px;
 }
 
+.mn-detail-from {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
 .mn-badge {
   display: inline-flex;
   align-items: center;

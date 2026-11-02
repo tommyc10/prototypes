@@ -85,31 +85,36 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Last night as one bar: a segment per pattern, then everything that fit none. */
-.mn-overnight-share {
+/* A night: its date, then the patterns it found. */
+.mn-overnight-night + .mn-overnight-night {
+  margin-top: 4px;
+  padding-top: 4px;
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.mn-overnight-night-head {
   display: flex;
-  gap: 2px;
-  height: 4px;
-  margin: 2px 10px 10px;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 12px;
+  font-size: 12px;
+  color: var(--fg-3);
 }
 
-.mn-overnight[data-collapsed] .mn-overnight-share {
-  margin-bottom: 8px;
+.mn-overnight-night-name {
+  font-weight: 500;
+  color: var(--fg-2);
 }
 
-.mn-overnight-share span {
-  flex: 0 0 0;
-  border-radius: 2px;
-  background: var(--fg-3);
-  transition: background-color 150ms ease;
+.mn-overnight-night-note {
+  flex: 1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-.mn-overnight-share span[data-on] {
-  background: var(--fg);
-}
-
-.mn-overnight-share span[data-rest] {
-  background: var(--tint-2);
+.mn-overnight-night-note[data-last] {
+  color: var(--fg-2);
 }
 
 /* Rows on a card lift with a tint, and the selected one goes two rungs up, not one. */
@@ -155,8 +160,7 @@
   .mn-overnight-head:active {
     transform: none;
   }
-  .mn-overnight-head svg,
-  .mn-overnight-share span {
+  .mn-overnight-head svg {
     transition: none;
   }
 }

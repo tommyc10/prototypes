@@ -94,6 +94,13 @@
   font-size: 11.5px;
 }
 
+/* A rule that moved in from the overnight block, nobody having decided on it. */
+.mn-row-from {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .mn-row-side {
   display: flex;
   flex-direction: column;

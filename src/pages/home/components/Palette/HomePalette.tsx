@@ -3,7 +3,7 @@
  * (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { Bell, CalendarClock, Filter, History, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import type { Theme } from '../../../../hooks/useTheme';
 
@@ -44,6 +44,10 @@ export function HomePalette({
         <Command.Empty className="mn-palette-empty">No results</Command.Empty>
 
         <Command.Group heading="Go to">
+          <Command.Item value="go to services top talkers loudest" onSelect={run(() => onNavigate('#/services'))}>
+            <LayoutGrid size={15} />
+            Services
+          </Command.Item>
           <Command.Item value="go to alerts stream" onSelect={run(() => onNavigate('#/alerts'))}>
             <Bell size={15} />
             Alerts

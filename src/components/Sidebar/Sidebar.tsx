@@ -26,7 +26,7 @@ import './Sidebar.css';
 type Tone = 'red' | 'orange' | 'amber';
 
 interface Item {
-  /** The page it opens. Services and the Audit log aren't built yet. */
+  /** The page it opens. The Audit log isn't built yet. */
   page?: PageId;
   label: string;
   Icon: ComponentType<{ size?: number }>;
@@ -61,7 +61,7 @@ export function Sidebar({
 
   const START: Item[] = [
     { page: 'home', label: 'Home', Icon: House },
-    { label: 'Services', Icon: LayoutGrid },
+    { page: 'services', label: 'Services', Icon: LayoutGrid },
   ];
   const LIVE: Item[] = [
     { page: 'incidents', label: 'Incidents', Icon: Siren, count: counts.open ? { n: counts.open, word: 'open', tone: 'red', title: `${counts.open} real incidents with the team now` } : undefined },

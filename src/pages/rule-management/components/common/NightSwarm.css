@@ -1,0 +1,142 @@
+/* The night swarm: grey dots on a baseline, red for the ones that needed a person. */
+
+.mn-ns-plot {
+  position: relative;
+  border-bottom: 1px solid var(--line-3);
+}
+
+.mn-ns-hour {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+.mn-ns-dot {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tone-2);
+  /* Tightening the threshold takes dots out; the rest settle into their new places. */
+  transition:
+    transform 200ms var(--ease-out),
+    background-color 120ms var(--ease-out);
+}
+
+.mn-ns-dot[data-real] {
+  background: var(--red);
+}
+
+.mn-ns-dot[data-hover] {
+  background: var(--fg);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 18%, transparent);
+}
+
+.mn-ns-dot[data-real][data-hover] {
+  background: var(--red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 24%, transparent);
+}
+
+.mn-ns-axis {
+  position: relative;
+  height: 14px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-ns-axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.mn-ns-axis span:first-child {
+  transform: none;
+}
+
+.mn-ns-axis span:last-child {
+  transform: translateX(-100%);
+}
+
+.mn-ns-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-ns-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mn-ns-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tone-2);
+}
+
+.mn-ns-legend [data-real] i {
+  background: var(--red);
+}
+
+.mn-ns-legend b {
+  font-weight: 600;
+  color: var(--danger-fg);
+}
+
+/* The solid tooltip recipe. */
+.mn-ns-tip {
+  position: absolute;
+  z-index: 5;
+  transform: translate(12px, -50%);
+  max-width: 280px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--fg-2);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.mn-ns-tip[data-flip] {
+  transform: translate(calc(-100% - 12px), -50%);
+}
+
+.mn-ns-tip > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mn-ns-tip-title {
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.mn-ns-tip [data-real] {
+  color: var(--danger-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-ns-dot {
+    transition: background-color 120ms var(--ease-out);
+  }
+}

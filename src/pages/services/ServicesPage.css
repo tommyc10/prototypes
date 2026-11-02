@@ -1,0 +1,18 @@
+/* The Services page frame: the shell's three columns, and a detail pane that scrolls and
+ * lays itself out from its own width. */
+
+.sv-top {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sv-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container: report / inline-size;
+}

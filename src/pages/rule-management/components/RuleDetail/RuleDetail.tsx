@@ -4,7 +4,8 @@
  *   ultra:  two content columns (the full incident list gets its own), plus the rail */
 
 import type { ReactNode } from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { Moon, ShieldCheck } from 'lucide-react';
+import { shortDate } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
 import type { Decision } from '../../hooks/useDecision';
 import type { PaneMode } from '../../hooks/usePaneMode';
@@ -60,6 +61,12 @@ export function RuleDetail({
           <span className="mn-dot" data-status={rule.status} />
           {statusLabel(rule)}
         </span>
+        {rule.fromRefresh && (
+          <span className="mn-detail-from">
+            <Moon size={13} />
+            Moved from the nightly refresh, found {shortDate(rule.fromRefresh)}
+          </span>
+        )}
       </div>
       <h2 className="mn-title">{rule.name}</h2>
       <div className="mn-scope">

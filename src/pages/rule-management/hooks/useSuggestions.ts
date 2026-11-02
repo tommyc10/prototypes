@@ -1,9 +1,9 @@
 /* The overnight suggestions still waiting for a decision, each with what it catches and the
  * rule it would become. Tightening a threshold recomputes both. In the real app this is a
- * query for the latest refresh, plus mutations for propose and dismiss. */
+ * query for the last three refreshes, plus mutations for propose and dismiss. */
 
 import { useMemo, useState } from 'react';
-import { NIGHT_START, REFRESHED_AT, SUGGESTIONS } from '../data/overnightData';
+import { SUGGESTIONS } from '../data/overnightData';
 import { asRule, matchSuggestion, type Suggestion, type SuggestionMatch } from '../model/suggestions';
 import type { Rule } from '../model/types';
 
@@ -26,7 +26,7 @@ export function useSuggestions() {
       SUGGESTIONS.filter((s) => !handled.includes(s.id)).map((suggestion): Suggested => {
         const threshold = thresholds[suggestion.id] ?? suggestion.threshold.suggested;
         const match = matchSuggestion(suggestion, threshold);
-        return { suggestion, threshold, match, rule: asRule(suggestion, match, threshold, REFRESHED_AT, NIGHT_START) };
+        return { suggestion, threshold, match, rule: asRule(suggestion, match, threshold) };
       }),
     [handled, thresholds],
   );

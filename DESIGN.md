@@ -210,7 +210,7 @@ end says so and says which value wins.
 
 ## Overview
 
-Imperial Ops is an operations dashboard: alert rules, incidents, change windows, and a
+Imperial Ops is an operations dashboard: the services that raise the most, alert rules, incidents, change windows, and a
 hindcast and forecast: what past tickets were caused by, and what the next weeks should hold. The person using it is on
 shift, making decisions that hide or surface real pages. The look follows from that:
 
@@ -247,7 +247,7 @@ The product is plain CSS. No Tailwind, no CSS-in-JS.
   attribute** (`data-variant="primary"`, `data-active`, `data-selected`, `data-status`),
   and its colours from **tokens** (`var(--l3)`). Never a raw hex in a component.
 - Shared pieces are prefixed `mn-`. Each page has its own prefix for its own pieces:
-  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `lg-` Sign in,
+  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `sv-` Services, `lg-` Sign in,
   `hw-` Halloween mode.
 - Tokens: `src/styles/theme.css`. Shared pieces: `src/styles/ui.css`. Page frame:
   `src/styles/shell.css`. Command palette: `src/styles/palette.css`. OS preferences:
@@ -480,8 +480,9 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `A` `X` `E` `D` | Approve, reject, activate, deactivate (Rules) |
 | `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
 | `M` | Plan maintenance for the picked window (Change windows) |
+| `S` `H` `R` | Rank by the next measure; open the picked service in the Hindcast, or its rules (Services) |
 | `[` `]` | Tuck away the sidebar / the list |
-| `G` then a letter | Go to a page: `H` Home, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
+| `G` then a letter | Go to a page: `H` Home, `S` Services, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
 | `?` | Start the guided tour |
 | `Esc` | Step back one layer |
 | `⌘↵` | Submit the open decision |
@@ -500,6 +501,12 @@ toast.
 
 **Feedback.** Hover within 120ms, press immediately, result as a toast. Errors appear
 beside the field that caused them, in a sentence that says what to do.
+
+**The overnight block.** Holds what the last three refreshes found, newest night first, each
+under its date; the oldest night says "Moves to rules tomorrow". A pattern's three refreshes
+count from the one that first found it. With no decision it moves to the rule list as a proposed
+rule, so it hides nothing, and its row and header say it came from the nightly refresh. A
+dismissed pattern doesn't move.
 
 **Empty and waiting.** An empty list says what would appear here and how to get it, in
 `fg-3`, centred, with no illustration. Waiting states say what is being computed.

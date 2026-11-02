@@ -4,7 +4,7 @@
  * search matches against, which is why "RUL-0419" finds a rule by its id. */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, CircleHelp, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { Bell, CalendarClock, CircleHelp, History, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import { GROUPS } from '../../data/mockData';
 import type { Theme } from '../../../../hooks/useTheme';
@@ -120,6 +120,10 @@ export function CommandPalette({
           <Command.Item value="go to forecast predictions look ahead" onSelect={run(() => onNavigate('#/forecast'))}>
             <Telescope size={15} />
             Forecast
+          </Command.Item>
+          <Command.Item value="go to services top talkers loudest" onSelect={run(() => onNavigate('#/services'))}>
+            <LayoutGrid size={15} />
+            Services
           </Command.Item>
           <Command.Item value="go to alerts stream" onSelect={run(() => onNavigate('#/alerts'))}>
             <Bell size={15} />

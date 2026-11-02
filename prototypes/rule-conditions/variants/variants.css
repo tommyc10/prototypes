@@ -1,0 +1,461 @@
+/* Throwaway: four ways to show a rule's conditions. Everything here is prefixed pc-, and
+ * every colour is a token. Status colour appears once: green for what the rule catches. */
+
+.pc-op {
+  color: var(--fg-3);
+}
+
+[data-mono] {
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+/* ---------- 1 Spec: the table recipe ---------- */
+
+.pc-spec {
+  margin: 0;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.pc-spec > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 180px) 76px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 14px;
+  transition: background-color 120ms ease;
+}
+
+.pc-spec > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.pc-spec dt {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.pc-spec dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.pc-spec b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.pc-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-3);
+  align-self: center;
+}
+
+/* ---------- 2 Sentence ---------- */
+
+.pc-sentence {
+  padding: 2px 0 2px 16px;
+  box-shadow: inset 2px 0 0 var(--line-3);
+}
+
+.pc-kicker {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.pc-sentence p {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.62;
+  letter-spacing: -0.005em;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.pc-val {
+  position: relative;
+  font-weight: 500;
+  color: var(--fg);
+  text-decoration: underline dotted;
+  text-decoration-color: var(--line-3);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 5px;
+  border-radius: 4px;
+  cursor: help;
+}
+
+.pc-val[data-mono] {
+  font-size: 15px;
+}
+
+.pc-val:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The condition as stored: the solid tooltip recipe. */
+.pc-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 5;
+  padding: 6px 9px;
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--fg-2);
+  opacity: 0;
+  transform: translate(-50%, 2px);
+  pointer-events: none;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
+.pc-val:focus-visible .pc-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- 3 Sieve ---------- */
+
+.pc-sieve {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px 12px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.pc-sieve-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 14px;
+  min-height: 40px;
+  padding-left: 18px;
+}
+
+/* The thread the incidents fall along, with a stop at each condition. */
+.pc-sieve-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+  background: var(--line-2);
+}
+
+.pc-sieve-row:first-child::before {
+  top: 50%;
+}
+
+.pc-sieve-row:nth-last-child(2)::before {
+  bottom: 50%;
+}
+
+.pc-sieve-row::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+}
+
+.pc-sieve-row[data-caught]::after {
+  background: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 14%, transparent);
+}
+
+.pc-sieve-step {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+.pc-sieve-step b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.pc-sieve-step svg {
+  margin-right: 6px;
+  vertical-align: -1px;
+  color: var(--fg-3);
+}
+
+.pc-sieve-track {
+  height: 8px;
+  border-radius: 2px;
+  background: var(--tint-2);
+  overflow: hidden;
+}
+
+.pc-sieve-track i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tone-2);
+  transform-origin: left;
+  animation: pc-grow 420ms cubic-bezier(0.77, 0, 0.175, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.pc-sieve-row:first-child .pc-sieve-track i {
+  background: var(--tone-3);
+}
+
+.pc-sieve-row[data-caught] .pc-sieve-track i {
+  background: var(--green);
+}
+
+@keyframes pc-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.pc-sieve-n {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-sieve-n small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.pc-sieve-row[data-caught] .pc-sieve-n {
+  color: var(--green);
+}
+
+.pc-sieve-foot {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.pc-sieve-foot b {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+/* ---------- 4 Chips ---------- */
+
+.pc-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--fg-2);
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.pc-chip:active {
+  transform: scale(0.97);
+}
+
+.pc-chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.pc-chip b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.pc-chip[data-open] {
+  background: var(--l5);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+}
+
+.pc-chip[data-lock] svg {
+  color: var(--fg-3);
+}
+
+:root[data-mn-theme='light'] .pc-chip {
+  background: var(--l2);
+  box-shadow:
+    inset 0 0 0 1px var(--line-2),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-mn-theme='light'] .pc-chip[data-open] {
+  background: var(--l4);
+}
+
+.pc-chip-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.pc-chip-detail p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.pc-chip-detail b {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.pc-without {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pc-without > div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 10px;
+}
+
+.pc-without span {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.pc-without i {
+  display: block;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--green);
+  transform-origin: left;
+}
+
+.pc-without i[data-more] {
+  background: var(--tone-3);
+}
+
+.pc-without b {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-chip-detail .pc-chip-note {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.pc-chip-note b {
+  color: var(--fg-2);
+}
+
+.pc-chip-note .mn-mono {
+  font-size: 11px;
+  color: var(--fg-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pc-spec > div:hover {
+    background: var(--tint);
+  }
+  .pc-val:hover .pc-tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  .pc-chip:hover:not([data-open]) {
+    background: var(--l5);
+  }
+  :root[data-mn-theme='light'] .pc-chip:hover:not([data-open]) {
+    background: var(--l3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-sieve-track i {
+    animation: none;
+  }
+  .pc-chip-detail {
+    transition: opacity 150ms ease;
+    @starting-style {
+      opacity: 0;
+      transform: none;
+    }
+  }
+  .pc-tip {
+    transition: opacity 150ms ease;
+  }
+}

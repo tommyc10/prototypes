@@ -2,7 +2,7 @@
  *
  *   Sidebar      navigation (shared with the other pages), with this page's pinned groups in it
  *   RuleList     finding rules: group filter, search, status tabs, sort
- *   OvernightBlock   what last night's refresh found, pinned above the rules until it is dealt with
+ *   OvernightBlock   what the last three refreshes found, pinned above the rules until it is dealt with
  *   RuleDetail   the selected rule, and the decision form
  *   SuggestionDetail   the selected overnight suggestion: propose it or dismiss it
  *   IncidentsPanel / CommandPalette   on top when opened
@@ -33,7 +33,7 @@ import { TOUR_STEPS } from '../../../tours/rule-management';
 import { Tour } from '../../../tours/Tour';
 import { tourMode, useTour } from '../../../tours/useTour';
 import { CURRENT_USER, groupById } from './data/mockData';
-import { NIGHT_TOTAL } from './data/overnightData';
+import { REFRESH_NIGHTS } from './data/overnightData';
 import { useDecision } from './hooks/useDecision';
 import { usePaneMode } from './hooks/usePaneMode';
 import { usePinnedGroups, type Pin } from './hooks/usePinnedGroups';
@@ -321,7 +321,7 @@ export function RuleManagementPage({
             <OvernightBlock
               items={leavingBlock ?? suggestions}
               leaving={leavingBlock !== null}
-              total={NIGHT_TOTAL}
+              nights={REFRESH_NIGHTS}
               collapsed={overnightCollapsed}
               onToggle={() => setOvernightCollapsed((collapsed) => !collapsed)}
               selectedId={selectedId}

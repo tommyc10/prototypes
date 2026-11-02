@@ -4,14 +4,14 @@
 
 import type { ReactNode } from 'react';
 import { AlertTriangle, Bot, ShieldCheck } from 'lucide-react';
-import { ago } from '../../../../lib/format';
+import { ago, shortDate } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
 import type { Suggested } from '../../hooks/useSuggestions';
 import type { PaneMode } from '../../hooks/usePaneMode';
 import { SOURCE_LABEL } from '../../model/labels';
-import { canTighten, thresholdLabel } from '../../model/suggestions';
+import { canTighten, movesWords, nightWords, thresholdLabel } from '../../model/suggestions';
 import type { RelatedIncident, Rule } from '../../model/types';
-import { NightBars } from '../common/NightBars';
+import { NightSwarm } from '../common/NightSwarm';
 import { IncidentList } from '../Incidents/IncidentList';
 import { AlsoInGroup } from '../RuleDetail/AlsoInGroup';
 import { Evidence } from '../RuleDetail/Evidence';
@@ -65,7 +65,7 @@ export function SuggestionDetail({
         Would be scoped to <strong>{group.name}</strong>
         <span className="mn-subtle">· {group.unit}</span>
         <span className="mn-sep" />
-        {SOURCE_LABEL[suggestion.source]} · found in the 06:00 refresh
+        {SOURCE_LABEL[suggestion.source]} · found in the {suggestion.daysAgo === 0 ? '06:00' : shortDate(suggestion.foundAt)} refresh
       </div>
     </>
   );
@@ -79,9 +79,9 @@ export function SuggestionDetail({
       <Evidence rule={rule} onOpenIncident={onOpenIncident} />
       <section className="mn-sec">
         <h3>
-          When they came in last night <span className="mn-subtle">{match.matched.length} incidents</span>
+          When they came in {nightWords(suggestion)} <span className="mn-subtle">{match.matched.length} incidents</span>
         </h3>
-        <NightBars halfHours={match.halfHours} />
+        <NightSwarm incidents={match.matched} />
       </section>
       <section className="mn-sec">
         <h3>
@@ -105,7 +105,7 @@ export function SuggestionDetail({
           {sections}
         </div>
         <div className="mn-actionbar">
-          <span className="mn-subtle mn-actionbar-note">Proposing adds it to the queue as {suggestion.ruleId}</span>
+          <span className="mn-subtle mn-actionbar-note">With no decision, it moves to the rules {movesWords(suggestion)}</span>
           {tighten && (
             <button className="mn-btn mn-btn-ghost" onClick={tighten}>
               Tighten
@@ -138,8 +138,8 @@ export function SuggestionDetail({
                 </div>
                 <div className="mn-decide-title">Suggestion</div>
                 <p>
-                  Not a rule yet. Proposing adds it to the queue as <span className="mn-mono">{suggestion.ruleId}</span>, where it waits for approval
-                  like any other.
+                  Not a rule yet. Proposing adds it to the queue as <span className="mn-mono">{suggestion.ruleId}</span>. With no decision, it moves there by itself{' '}
+                  {movesWords(suggestion)}.
                 </p>
                 <div className="mn-decide-actions">{buttons}</div>
                 {tighten && safe !== undefined && (

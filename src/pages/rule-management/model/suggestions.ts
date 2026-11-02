@@ -1,11 +1,16 @@
-/* Overnight suggestions: patterns the rule engine found in last night's incidents that no
- * rule covers yet. A suggestion is not a rule. A person either proposes it, which makes it one
- * (waiting for approval like any other), or dismisses it.
+/* Overnight suggestions: patterns the rule engine found in a night's incidents that no rule
+ * covers yet. A suggestion is not a rule. A person either proposes it, which makes it one
+ * (waiting for approval like any other), or dismisses it. If neither happens within three
+ * refreshes it moves to the rules by itself, proposed, so the block only ever holds recent finds.
  * Plain functions with no React in them, like policy.ts. */
 
+import { shortDate } from '../../../lib/format';
 import type { Condition, Resolution, Rule, RuleSource } from './types';
 
-/** One incident from last night that sits near a pattern: matched by it, or a near miss. */
+/** How many refreshes a suggestion stays in the overnight block, counted from the one that found it. */
+export const REFRESH_WINDOW = 3;
+
+/** One incident from its night that sits near a pattern: matched by it, or a near miss. */
 export interface NightIncident {
   id: string;
   /** Minutes after 22:00, when the night starts. */
@@ -41,6 +46,12 @@ export interface Suggestion {
   confidence: number;
   /** How many of the last seven nights the pattern appeared on. */
   nights: number;
+  /** How many refreshes ago it was first found: 0 is this morning's. Seeing it again doesn't reset this. */
+  daysAgo: number;
+  /** The refresh that found it. */
+  foundAt: string;
+  /** The 22:00 its incidents are counted from. */
+  nightStart: string;
   summary: string;
   /** The threshold condition's value is filled in from `threshold`. */
   conditions: Condition[];
@@ -59,8 +70,6 @@ export interface SuggestionMatch {
   noise: number;
   first: number;
   last: number;
-  /** Matched incidents per half hour, 22:00 to 06:00. */
-  halfHours: number[];
 }
 
 export const isReal = (resolution: Resolution) => resolution === 'worked' || resolution === 'escalated';
@@ -80,15 +89,12 @@ export const conditionsAt = (s: Suggestion, threshold: number): Condition[] =>
 export function matchSuggestion(s: Suggestion, threshold: number): SuggestionMatch {
   const matched = s.pool.filter((i) => i.fails.length === 0 && i.metric < threshold);
   const real = matched.filter((i) => isReal(i.resolution));
-  const halfHours = Array.from({ length: 16 }, () => 0);
-  matched.forEach((i) => halfHours[Math.min(15, Math.floor(i.minute / 30))]++);
   return {
     matched,
     real,
     noise: matched.length - real.length,
     first: matched[0]?.minute ?? 0,
     last: matched[matched.length - 1]?.minute ?? 0,
-    halfHours,
   };
 }
 
@@ -96,10 +102,21 @@ export function matchSuggestion(s: Suggestion, threshold: number): SuggestionMat
 export const canTighten = (s: Suggestion, match: SuggestionMatch, threshold: number) =>
   match.real.length > 0 && s.threshold.safe !== undefined && threshold > s.threshold.safe;
 
+/** Its night, as a sentence says it. */
+export const nightWords = (s: Suggestion) => (s.daysAgo === 0 ? 'last night' : `on the night of ${shortDate(s.nightStart)}`);
+
+/** When it moves to the rules if nobody decides, as a sentence says it. */
+export function movesWords(s: Suggestion) {
+  if (s.daysAgo === REFRESH_WINDOW - 1) return "at tomorrow's refresh";
+  const at = new Date(s.foundAt);
+  at.setUTCDate(at.getUTCDate() + REFRESH_WINDOW);
+  return `on ${shortDate(at.toISOString())}`;
+}
+
 /** The suggestion in the shape of the rule it would become, so the page's own sections
- * (stats, evidence, impact, the incident table) can show it. `foundAt` is the refresh that
- * found it; `nightStart` is the 22:00 its incidents are counted from. */
-export function asRule(s: Suggestion, match: SuggestionMatch, threshold: number, foundAt: string, nightStart: string): Rule {
+ * (stats, evidence, impact, the incident table) can show it. */
+export function asRule(s: Suggestion, match: SuggestionMatch, threshold: number): Rule {
+  const { foundAt, nightStart } = s;
   const matched = match.matched.length;
   // Twelve weeks, as the page charts them: nothing, then the nights it has been seen on.
   const weekly = Array.from({ length: 12 }, (_, week) =>
@@ -121,7 +138,7 @@ export function asRule(s: Suggestion, match: SuggestionMatch, threshold: number,
     createdAt: foundAt,
     updatedAt: foundAt,
     evidence: {
-      summary: `${matched} incidents last night, between ${nightClock(match.first)} and ${nightClock(match.last)}. ${s.summary}`,
+      summary: `${matched} incidents ${nightWords(s)}, between ${nightClock(match.first)} and ${nightClock(match.last)}. ${s.summary}`,
       conditions: conditionsAt(s, threshold),
       window: `Last ${s.nights} nights`,
       weekly,
@@ -138,6 +155,30 @@ export function asRule(s: Suggestion, match: SuggestionMatch, threshold: number,
       minutesOpen: i.minutesOpen,
     })),
     audit: [],
+  };
+}
+
+/** The rule a suggestion becomes when its time in the block runs out. Proposed, so it hides nothing. */
+export function movedFrom(s: Suggestion, preview: Rule, match: SuggestionMatch, movedAt: string): Rule {
+  return {
+    ...preview,
+    id: s.ruleId,
+    updatedAt: movedAt,
+    fromRefresh: s.nightStart,
+    audit: [
+      {
+        at: preview.createdAt,
+        actor: s.sourceDetail,
+        action: 'proposed',
+        reason: `Found in the overnight refresh: ${match.matched.length} incidents with the same shape, ${match.noise} of them noise.`,
+      },
+      {
+        at: movedAt,
+        actor: 'Overnight refresh',
+        action: 'proposed',
+        reason: `Moved to the rules after ${REFRESH_WINDOW} refreshes with no decision. It waits for approval like any other proposal.`,
+      },
+    ],
   };
 }
 

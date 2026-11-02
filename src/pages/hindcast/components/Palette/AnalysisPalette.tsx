@@ -4,7 +4,7 @@
  * It opens with no animation: it's used all day. */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, Filter, History, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { Bell, CalendarClock, Filter, History, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import type { Theme } from '../../../../hooks/useTheme';
 import { SERVICES } from '../../data/mockData';
@@ -108,6 +108,10 @@ export function AnalysisPalette({
           <Command.Item value="go to incidents" onSelect={run(() => onNavigate('#/incidents'))}>
             <Siren size={15} />
             Incidents
+          </Command.Item>
+          <Command.Item value="go to services top talkers loudest" onSelect={run(() => onNavigate('#/services'))}>
+            <LayoutGrid size={15} />
+            Services
           </Command.Item>
           <Command.Item value="go to alerts stream" onSelect={run(() => onNavigate('#/alerts'))}>
             <Bell size={15} />

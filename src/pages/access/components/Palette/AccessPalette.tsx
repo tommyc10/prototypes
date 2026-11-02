@@ -3,7 +3,7 @@
  * the other pages' menus (styles/palette.css). */
 
 import { Command } from 'cmdk';
-import { Bell, CalendarClock, Filter, History, House, Moon, Search, Siren, Sun, Telescope, UserPlus } from 'lucide-react';
+import { Bell, CalendarClock, Filter, History, House, LayoutGrid, Moon, Search, Siren, Sun, Telescope, UserPlus } from 'lucide-react';
 import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
 import type { Theme } from '../../../../hooks/useTheme';
 import type { Person } from '../../model/types';
@@ -75,6 +75,10 @@ export function AccessPalette({
           <Command.Item value="go to incidents journey lifecycle" onSelect={run(() => onNavigate('#/incidents'))}>
             <Siren size={15} />
             Incidents
+          </Command.Item>
+          <Command.Item value="go to services top talkers loudest" onSelect={run(() => onNavigate('#/services'))}>
+            <LayoutGrid size={15} />
+            Services
           </Command.Item>
           <Command.Item value="go to alerts stream" onSelect={run(() => onNavigate('#/alerts'))}>
             <Bell size={15} />
