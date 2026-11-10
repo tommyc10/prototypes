@@ -11,7 +11,7 @@ import { Actions, DecisionForm, FilterRow, PatternHead, SearchBox, Spark, Status
 import { UploadFlow } from '../upload';
 
 const SECTIONS: { label: string; has: Status[] }[] = [
-  { label: 'To decide', has: ['new', 'investigating'] },
+  { label: 'To decide', has: ['new'] },
   { label: 'Waiting for a governor', has: ['proposed'] },
   { label: 'Decided', has: ['approved', 'rejected', 'dismissed'] },
 ];
@@ -22,7 +22,7 @@ export function Desk(props: VariantProps) {
   const { ingest, analysis, shown, picked, statusOf, reviews, role, filters, onFilters, deciding } = props;
   const ready = ingest.phase === 'ready' && !!analysis;
 
-  // What wants a person first comes first: investigate, then the safe ones, then the rest.
+  // What wants a person first comes first: the often-real ones, then the safe ones, then the rest.
   const sections = SECTIONS.map((s) => ({
     ...s,
     rows: shown.filter((p) => s.has.includes(statusOf(p.key))).sort((a, b) => RANK[a.advice] - RANK[b.advice] || b.count - a.count),

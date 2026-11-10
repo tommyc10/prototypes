@@ -230,7 +230,7 @@ function fitRules(service: string, signature: string, rows: Row[]) {
 
 export type Advice = 'investigate' | 'suppress' | 'watch';
 
-export const ADVICE_LABEL: Record<Advice, string> = { investigate: 'Worth investigating', suppress: 'Suppression candidate', watch: 'Watch' };
+export const ADVICE_LABEL: Record<Advice, string> = { investigate: 'Often real', suppress: 'Suppression candidate', watch: 'Watch' };
 
 /** The share of a pattern's alerts that became incidents, at or above which it wants a person. */
 export const RISKY = 0.08;
@@ -455,8 +455,8 @@ export function calcs(p: Pattern, a: Analysis): Calc[] {
 /* ---------- review: who may do what ---------- */
 
 export type Role = 'analyst' | 'governor' | 'viewer';
-export type Status = 'new' | 'investigating' | 'proposed' | 'approved' | 'rejected' | 'dismissed';
-export type Act = 'investigate' | 'propose' | 'dismiss' | 'approve' | 'reject' | 'reopen';
+export type Status = 'new' | 'proposed' | 'approved' | 'rejected' | 'dismissed';
+export type Act = 'propose' | 'dismiss' | 'approve' | 'reject' | 'reopen';
 
 export const PEOPLE: Record<Role, { name: string; title: string }> = {
   governor: { name: 'Admiral Piett', title: 'Rule governor' },
@@ -464,13 +464,13 @@ export const PEOPLE: Record<Role, { name: string; title: string }> = {
   viewer: { name: 'Lieutenant Venka', title: 'Viewer' },
 };
 
-export const STATUS_LABEL: Record<Status, string> = { new: 'Found', investigating: 'Investigating', proposed: 'Proposed', approved: 'Approved', rejected: 'Rejected', dismissed: 'Dismissed' };
-export const ACT_LABEL: Record<Act, string> = { investigate: 'Investigate', propose: 'Propose suppression', dismiss: 'Dismiss', approve: 'Approve', reject: 'Reject', reopen: 'Reopen' };
-export const ACT_PAST: Record<Act, string> = { investigate: 'under investigation', propose: 'proposed for suppression', dismiss: 'dismissed', approve: 'approved', reject: 'rejected', reopen: 'reopened' };
-const ACT_DONE: Record<Act, string> = { investigate: 'investigated', propose: 'proposed', dismiss: 'dismissed', approve: 'approved', reject: 'rejected', reopen: 'reopened' };
-export const ACT_STATUS: Record<Act, Status> = { investigate: 'investigating', propose: 'proposed', dismiss: 'dismissed', approve: 'approved', reject: 'rejected', reopen: 'new' };
-export const ACT_KEY: Partial<Record<Act, string>> = { investigate: 'I', propose: 'P', dismiss: 'X', approve: 'A', reject: 'X' };
-/** A written reason, as on the Rules page. Investigating and reopening only claim the pattern. */
+export const STATUS_LABEL: Record<Status, string> = { new: 'Found', proposed: 'Proposed', approved: 'Approved', rejected: 'Rejected', dismissed: 'Dismissed' };
+export const ACT_LABEL: Record<Act, string> = { propose: 'Propose suppression', dismiss: 'Dismiss', approve: 'Approve', reject: 'Reject', reopen: 'Reopen' };
+export const ACT_PAST: Record<Act, string> = { propose: 'proposed for suppression', dismiss: 'dismissed', approve: 'approved', reject: 'rejected', reopen: 'reopened' };
+const ACT_DONE: Record<Act, string> = { propose: 'proposed', dismiss: 'dismissed', approve: 'approved', reject: 'rejected', reopen: 'reopened' };
+export const ACT_STATUS: Record<Act, Status> = { propose: 'proposed', dismiss: 'dismissed', approve: 'approved', reject: 'rejected', reopen: 'new' };
+export const ACT_KEY: Partial<Record<Act, string>> = { propose: 'P', dismiss: 'X', approve: 'A', reject: 'X' };
+/** A written reason, as on the Rules page. Reopening needs none: it only puts the pattern back. */
 export const NEEDS_REASON: Act[] = ['propose', 'dismiss', 'approve', 'reject'];
 export const MIN_REASON = 12;
 
@@ -490,9 +490,8 @@ export interface Review {
 export const NO_REVIEW: Review = { status: 'new', events: [] };
 
 const FROM: Record<Act, Status[]> = {
-  investigate: ['new'],
-  propose: ['new', 'investigating'],
-  dismiss: ['new', 'investigating'],
+  propose: ['new'],
+  dismiss: ['new'],
   approve: ['proposed'],
   reject: ['proposed'],
   reopen: ['approved', 'rejected', 'dismissed'],
@@ -500,7 +499,7 @@ const FROM: Record<Act, Status[]> = {
 
 /** What this role can do to a pattern in this status, in the order the buttons show. */
 export function actsFor(status: Status): Act[] {
-  return (['investigate', 'dismiss', 'reject', 'reopen', 'propose', 'approve'] as Act[]).filter((a) => FROM[a].includes(status));
+  return (['dismiss', 'reject', 'reopen', 'propose', 'approve'] as Act[]).filter((a) => FROM[a].includes(status));
 }
 
 /** May they? And when they may not, the sentence that says why. */

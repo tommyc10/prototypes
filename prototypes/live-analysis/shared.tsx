@@ -4,7 +4,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Menu } from '@base-ui/react/menu';
-import { Check, ChevronDown, Eye, Lock, Search, ShieldOff, Telescope, X } from 'lucide-react';
+import { Check, ChevronDown, Eye, Lock, Search, ShieldOff, Siren, X } from 'lucide-react';
 import { useKeyboardShortcuts } from '../../src/hooks/useKeyboardShortcuts';
 import {
   ACT_KEY,
@@ -361,7 +361,6 @@ export function usePageKeys(props: VariantProps, order: Pattern[], extra: Record
       ArrowDown: () => step(1),
       k: () => step(-1),
       ArrowUp: () => step(-1),
-      i: on('investigate'),
       p: on('propose'),
       a: on('approve'),
       x: () => picked && onAct(picked, statusOf(picked.key) === 'proposed' ? 'reject' : 'dismiss', 'key'),
@@ -384,7 +383,7 @@ export const StatusBadge = ({ status }: { status: Status }) => (
   </span>
 );
 
-const ADVICE_ICON: Record<Advice, typeof Eye> = { investigate: Telescope, suppress: ShieldOff, watch: Eye };
+const ADVICE_ICON: Record<Advice, typeof Eye> = { investigate: Siren, suppress: ShieldOff, watch: Eye };
 
 /** What the analysis suggests. Grey: it's advice, not a status. */
 export function AdviceChip({ advice }: { advice: Advice }) {
@@ -552,7 +551,7 @@ export function Actions({ p, status, role, onAct, wide }: { p: Pattern; status: 
         return (
           <button
             key={act}
-            className={act === 'investigate' || act === 'reopen' || act === primary || act === 'reject' ? 'mn-btn' : 'mn-btn mn-btn-ghost'}
+            className={act === 'reopen' || act === primary || act === 'reject' ? 'mn-btn' : 'mn-btn mn-btn-ghost'}
             data-variant={act === primary ? 'primary' : act === 'reject' ? 'danger' : undefined}
             disabled={!allowed.ok}
             title={allowed.why}

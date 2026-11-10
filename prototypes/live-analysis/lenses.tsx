@@ -287,7 +287,7 @@ function Rules({ p, a }: { p: Pattern; a: Analysis }) {
     <div className="la-compare">
       {existing && existing.hidden > 0 && (
         <p className="la-callout" data-tone="red">
-          <b>{existing.id}</b> has hidden <b>{existing.hidden}</b> real {plural(existing.hidden, 'incident', 'incidents')} in {a.scope.weeks} weeks. Investigate it before proposing anything wider.
+          <b>{existing.id}</b> has hidden <b>{existing.hidden}</b> real {plural(existing.hidden, 'incident', 'incidents')} in {a.scope.weeks} weeks. Look into it before proposing anything wider.
         </p>
       )}
       {proposal.hidden > 0 && !(existing && existing.hidden > 0) && (

@@ -1,32 +1,21 @@
-/* Throwaway prototype: three workspaces for Live analysis, behind a picker.
+/* Throwaway prototype: Live analysis, in the Desk layout (a list of patterns, one pattern beside
+ * it, five lenses as tabs: the app's own list-and-detail).
  * Open http://localhost:5188/prototypes/live-analysis/ with the dev server running.
- * Nothing in src/ imports from here; delete the folder once a direction is chosen.
+ * Nothing in src/ imports from here.
  *
- * Live analysis is where you bring a file of alerts or incidents, find what keeps repeating,
- * and decide what each pattern deserves: an investigation, or a proposal to suppress it.
- * The file is really read: drop any CSV with a time, a service and an alert name, or use the
- * sample. Every figure is computed from its rows (model.ts).
- *
- *   1 Desk   a list of patterns, one pattern beside it, five lenses as tabs. The app's own
- *            list-and-detail. The upload happens in the pane the pattern will fill.
- *   2 Flow   the review is the layout: four lanes, and a decision is a card dragged to the
- *            next one. The upload is a sheet; the cards are dealt when it's done.
- *   3 Field  the chart is the page: each pattern a bubble, placed by how regular it is and
- *            how often it was real. The file's rows scatter, then gather into patterns.
- *
- * Two sources, switched in the header (L):
+ * Live analysis is where you find what keeps repeating in your alerts and decide what each
+ * pattern deserves: a proposal to suppress it, or nothing. Two sources, switched in the header (L):
  *   Live         the alert feed as it arrives. It opens on the last twelve weeks, then each new
  *                alert lands in its pattern and every figure follows. Pause holds it still.
- *   Historical   a file someone exported: drop a CSV, or try the sample.
+ *   Historical   a file someone exported: drop a CSV, or try the sample. The file is really
+ *                read, and every figure is computed from its rows (model.ts).
  *
- * The file, the filters and every decision carry over when you switch variant, so the same
- * analysis can be compared in all three. Decisions also survive the live feed's updates.
- * R starts over. Keys: 1–3 or ← → variant, R start over, L live or historical, U upload,
- * J K pattern, I P A X decide, / search, [ sidebar, T theme, ⌘K palette.
- * Address: ?v=1..3, ?bare (no picker), ?mode=historical (opens on the file drop),
- * ?sample (opens on the sample file). Opens live otherwise. */
+ * Decisions survive the live feed's updates.
+ * Keys: L live or historical, U upload, J K pattern, P A X decide, / search, [ sidebar,
+ * T theme, ⌘K palette. Address: ?mode=historical (opens on the file drop), ?sample (opens on
+ * the sample file). Opens live otherwise. */
 
-import { StrictMode, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { StrictMode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { Menu } from '@base-ui/react/menu';
@@ -44,7 +33,6 @@ import '../../src/pages/rule-management/components/common/DecisionToast.css';
 import './shared.css';
 import './variants/variants.css';
 import '../../src/styles/accessibility.css';
-import './proto.css';
 import { Sidebar } from '../../src/components/Sidebar/Sidebar';
 import { useSheen } from '../../src/hooks/useSheen';
 import { useTheme } from '../../src/hooks/useTheme';
@@ -53,21 +41,12 @@ import { HomePalette } from '../../src/pages/home/components/Palette/HomePalette
 import { ACT_PAST, NEEDS_REASON, NO_REVIEW, PEOPLE, analyse, can, count, download, evidenceCsv, patternsCsv, ACT_STATUS, type Act, type Pattern, type Review, type Role } from './model';
 import { useIngest, type Deciding, type Ingest, type Filters, type LensKey, type VariantProps } from './shared';
 import { Desk } from './variants/Desk';
-import { Field } from './variants/Field';
-import { Flow } from './variants/Flow';
-
-const VARIANTS: { name: string; idea: string; Screen: ComponentType<VariantProps> }[] = [
-  { name: 'Desk', idea: 'A list of patterns, one beside it, five lenses as tabs', Screen: Desk },
-  { name: 'Flow', idea: 'The review as a board: a decision is a card moved to the next lane', Screen: Flow },
-  { name: 'Field', idea: 'The chart is the page: where a bubble sits says what to do with it', Screen: Field },
-];
 
 const params = new URLSearchParams(location.search);
-const bare = params.has('bare');
 const ROLES: Role[] = ['governor', 'analyst', 'viewer'];
 const EVERY = [1, 2, 3, 4];
 
-function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: string }) {
+function Page() {
   const [role, setRole] = useState<Role>('governor');
   const person = PEOPLE[role];
   const ingest = useIngest(person.name);
@@ -124,7 +103,7 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
   const commit = (p: Pattern, act: Act, note?: string) => {
     setReviews((all) => {
       const was = all[p.key] ?? NO_REVIEW;
-      return { ...all, [p.key]: { status: ACT_STATUS[act], owner: act === 'investigate' ? person.name : was.owner, events: [...was.events, { at: Date.now(), who: person.name, act, note }] } };
+      return { ...all, [p.key]: { status: ACT_STATUS[act], owner: was.owner, events: [...was.events, { at: Date.now(), who: person.name, act, note }] } };
     });
     toast.custom(() => (
       <div className="mn-toast">
@@ -135,7 +114,7 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
           <div className="mn-toast-title">
             {p.id} {ACT_PAST[act]}
           </div>
-          <div className="mn-toast-sub">{note ? 'Reason recorded in the review log' : act === 'investigate' ? `It’s yours, ${person.name.split(' ').pop()}` : 'Back in the list to decide'}</div>
+          <div className="mn-toast-sub">{note ? 'Reason recorded in the review log' : 'Back in the list to decide'}</div>
         </div>
       </div>
     ));
@@ -150,7 +129,7 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
             <Lock size={12} />
           </span>
           <div>
-            <div className="mn-toast-title">Not {ACT_PAST[act].replace('under investigation', 'taken')}</div>
+            <div className="mn-toast-title">Not {ACT_PAST[act]}</div>
             <div className="mn-toast-sub">{allowed.why}</div>
           </div>
         </div>
@@ -274,7 +253,7 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
                         </Menu.RadioItemIndicator>
                         <span>
                           {PEOPLE[r].title}
-                          <em className="la-menu-note">{r === 'governor' ? 'decides proposals' : r === 'analyst' ? 'investigates and proposes' : 'reads only'}</em>
+                          <em className="la-menu-note">{r === 'governor' ? 'decides proposals' : r === 'analyst' ? 'proposes' : 'reads only'}</em>
                         </span>
                       </Menu.RadioItem>
                     ))}
@@ -320,11 +299,10 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
           )}
         </header>
 
-        <Screen key={nonce} {...props} />
+        <Desk {...props} />
       </section>
 
       <HomePalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={(to) => (location.href = `/${to}`)} theme={theme} onToggleTheme={toggleTheme} />
-      <StartOver nonce={nonce} onReset={ingest.mode === 'live' ? ingest.goLive : ingest.reset} />
     </div>
   );
 }
@@ -360,104 +338,11 @@ function LiveStatus({ ingest }: { ingest: Ingest }) {
   );
 }
 
-/** R in the picker starts the current variant over with no file. */
-function StartOver({ nonce, onReset }: { nonce: string; onReset: () => void }) {
-  const first = useRef(nonce.split(':')[1]);
-  useEffect(() => {
-    const replay = nonce.split(':')[1];
-    if (replay !== first.current) {
-      first.current = replay;
-      onReset();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nonce]);
-  return null;
-}
-
-function Picker({ current, onPick, onReplay }: { current: number; onPick: (i: number) => void; onReplay: () => void }) {
-  const highlight = useRef<HTMLSpanElement>(null);
-  const items = useRef<(HTMLButtonElement | null)[]>([]);
-  const [ready, setReady] = useState(false);
-
-  useLayoutEffect(() => {
-    const move = () => {
-      const el = items.current[current];
-      if (!el || !highlight.current) return;
-      highlight.current.style.width = el.offsetWidth + 'px';
-      highlight.current.style.transform = `translateX(${el.offsetLeft}px)`;
-    };
-    move();
-    window.addEventListener('resize', move);
-    return () => window.removeEventListener('resize', move);
-  }, [current]);
-
-  useEffect(() => {
-    requestAnimationFrame(() => requestAnimationFrame(() => setReady(true)));
-  }, []);
-
-  return (
-    <nav className="proto-picker" aria-label="Prototype variants" data-position="top" data-ready={ready || undefined}>
-      <span ref={highlight} className="proto-picker-highlight" aria-hidden="true" />
-      {VARIANTS.map((v, i) => (
-        <button
-          key={v.name}
-          ref={(el) => {
-            items.current[i] = el;
-          }}
-          className="proto-picker-item"
-          data-active={i === current || undefined}
-          aria-current={i === current ? 'true' : undefined}
-          onClick={() => onPick(i)}
-          title={v.idea}
-        >
-          {v.name}
-        </button>
-      ))}
-      <span className="proto-picker-divider" aria-hidden="true" />
-      <button className="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)" title="Start over with no file  R" onClick={onReplay}>
-        ↻
-      </button>
-    </nav>
-  );
-}
-
 function App() {
-  const [current, setCurrent] = useState(() => {
-    const v = (parseInt(params.get('v') ?? '', 10) || 1) - 1;
-    return v >= 0 && v < VARIANTS.length ? v : 0;
-  });
-  const [replays, setReplays] = useState(0);
-
-  const pick = (i: number) => {
-    setCurrent(i);
-    const url = new URL(location.href);
-    url.searchParams.set('v', String(i + 1));
-    history.replaceState(null, '', url);
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement;
-      if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable) return;
-      if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('[cmdk-dialog], .la-decide') || t.closest('[data-own-keys]')) return;
-      const n = parseInt(e.key, 10);
-      if (n >= 1 && n <= VARIANTS.length) pick(n - 1);
-      else if (e.key === 'ArrowRight') pick((current + 1) % VARIANTS.length);
-      else if (e.key === 'ArrowLeft') pick((current - 1 + VARIANTS.length) % VARIANTS.length);
-      else if (e.key === 'r' || e.key === 'R') setReplays((n) => n + 1);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
-
-  // One Page for the life of the prototype: switching swaps only the workspace (re-mounted, so
-  // its entrance plays), and the file, the filters and the decisions carry over.
-  const { Screen } = VARIANTS[current];
   return (
     <div className="mn mn-app">
-      <Page Screen={Screen} nonce={`${current}:${replays}`} />
+      <Page />
       <Toaster position="bottom-right" theme="dark" />
-      {!bare && <Picker current={current} onPick={pick} onReplay={() => setReplays((n) => n + 1)} />}
     </div>
   );
 }

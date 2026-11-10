@@ -266,11 +266,6 @@
   box-shadow: inset 0 0 0 1.5px var(--fg-3);
 }
 
-.la-dot[data-status='investigating'] {
-  background: var(--fg);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 14%, transparent);
-}
-
 .la-dot[data-status='proposed'] {
   background: var(--amber);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 14%, transparent);
@@ -329,11 +324,7 @@
   color: var(--danger-fg);
 }
 
-.la-badge[data-status='investigating'] {
-  color: var(--fg);
-}
-
-.la-badge:is([data-status='proposed'], [data-status='approved'], [data-status='rejected'], [data-status='investigating']) .la-dot {
+.la-badge:is([data-status='proposed'], [data-status='approved'], [data-status='rejected']) .la-dot {
   background: currentColor;
   box-shadow: none;
 }
@@ -1187,10 +1178,6 @@
   box-shadow: inset 0 0 0 1.5px var(--fg-3);
 }
 
-.la-log li[data-act='investigate'] > i {
-  background: var(--fg);
-  box-shadow: none;
-}
 .la-log li[data-act='propose'] > i {
   background: var(--amber);
   box-shadow: none;
@@ -1420,36 +1407,62 @@
   }
 }
 
+/* Nothing read yet: a raised card, opaque with a 1px edge so the pulse can bloom around it. */
 .la-drop {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
   width: 100%;
-  max-width: 560px;
-  padding: 40px 32px 28px;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
   border-radius: 14px;
-  background: var(--well-2);
-  box-shadow: inset 0 0 0 1px var(--line);
-  text-align: center;
+  background: var(--l3);
+  box-shadow: inset 0 1px 0 var(--card-edge);
   transition:
-    box-shadow 150ms ease,
+    border-color 150ms ease,
     background-color 150ms ease;
 }
 
-.la-drop[data-quiet] {
-  padding: 24px 24px 20px;
-  background: transparent;
-  box-shadow: none;
+.la-drop[data-over] {
+  border-color: var(--line-3);
+  background: var(--l4);
 }
 
-.la-drop[data-over] {
-  background: var(--tint);
-  box-shadow: inset 0 0 0 1px var(--line-3);
+.la-drop-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 32px 28px;
+  text-align: center;
+}
+
+/* One icon, raised, where the file will go. It lifts toward a file that's coming. */
+.la-drop-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2);
+  color: var(--fg-2);
+  transition:
+    translate 220ms var(--ease-out),
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.la-drop[data-over] .la-drop-icon {
+  translate: 0 -4px;
+  background: var(--l5);
+  color: var(--fg);
 }
 
 .la-drop h2 {
-  margin: 6px 0 0;
+  margin: 0;
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -1465,17 +1478,12 @@
   text-wrap: pretty;
 }
 
-.la-drop p b {
-  font-weight: 500;
-  color: var(--fg);
-}
-
 .la-drop-acts {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin: 8px 0 4px;
+  margin-top: 8px;
 }
 
 .la-drop .la-drop-error {
@@ -1487,55 +1495,108 @@
   color: var(--red-text);
 }
 
-/* Three sheets. They fan out when a file comes near, as if making room for it. */
-.la-sheets {
-  position: relative;
-  width: 64px;
-  height: 78px;
-  margin-bottom: 6px;
+/* What the file needs: the columns as a file would have them, with a line of example under. */
+.la-shape {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--well-2);
 }
 
-.la-sheets i {
-  position: absolute;
-  inset: 0;
-  border-radius: 7px;
-  background:
-    linear-gradient(var(--line-2), var(--line-2)) 10px 14px / 26px 2px no-repeat,
-    repeating-linear-gradient(to bottom, transparent 0 9px, var(--line) 9px 10px) 10px 22px / 44px 42px no-repeat,
-    var(--l4);
-  box-shadow:
-    inset 0 1px 0 var(--card-edge),
-    inset 0 0 0 1px var(--line-2);
-  transform-origin: 50% 110%;
-  transition: transform 260ms var(--ease-out);
+.la-shape-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
 }
 
-.la-sheets i:nth-child(1) {
-  transform: rotate(-7deg) translateX(-6px);
-}
-.la-sheets i:nth-child(2) {
-  transform: rotate(6deg) translateX(6px);
-}
-
-.la-drop[data-over] .la-sheets i:nth-child(1) {
-  transform: rotate(-16deg) translate(-16px, -4px);
-}
-.la-drop[data-over] .la-sheets i:nth-child(2) {
-  transform: rotate(15deg) translate(16px, -4px);
-}
-.la-drop[data-over] .la-sheets i:nth-child(3) {
-  transform: translateY(-10px);
+.la-shape-table {
+  display: grid;
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--l2);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .la-drop:hover .la-sheets i:nth-child(1) {
-    transform: rotate(-11deg) translate(-10px, -1px);
+.la-shape-table [role='row'] {
+  display: grid;
+  grid-template-columns: 1.55fr 1.2fr 1.45fr 0.8fr 1fr;
+}
+
+.la-shape-table [role='row'] + [role='row'] {
+  border-top: 1px solid var(--line);
+}
+
+.la-shape-table span {
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.la-shape-table span + span {
+  border-left: 1px solid var(--line);
+}
+
+.la-shape-table [role='columnheader'] {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-weight: 500;
+  color: var(--fg-3);
+  transition:
+    color 150ms ease calc(var(--i) * 40ms),
+    background-color 150ms ease calc(var(--i) * 40ms);
+}
+
+.la-shape-table [role='columnheader'][data-needed] {
+  color: var(--fg);
+}
+
+.la-shape-table [role='columnheader'] em {
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.la-shape-table [role='cell'] {
+  color: var(--fg-2);
+}
+
+/* A file over the window: the columns it will be read into light up, left to right. */
+.la-drop[data-over] .la-shape-table [role='columnheader'] {
+  background: var(--tint);
+}
+
+.la-drop-foot {
+  display: flex;
+  justify-content: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.la-drop-foot .mn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.la-drop-foot svg {
+  color: var(--fg-3);
+}
+
+@container la-page (max-width: 860px) {
+  .la-shape-table [role='row'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .la-drop:hover .la-sheets i:nth-child(2) {
-    transform: rotate(10deg) translate(10px, -1px);
-  }
-  .la-drop:hover .la-sheets i:nth-child(3) {
-    transform: translateY(-4px);
+  .la-shape-table span:nth-child(n + 4) {
+    display: none;
   }
 }
 
@@ -1862,7 +1923,6 @@
       filter: none;
     }
   }
-  .la-sheets i,
   .la-wk i,
   .la-wk b,
   .la-meter i,
@@ -1968,14 +2028,6 @@
   }
 }
 
-.la-drop-live {
-  margin-top: 4px;
-}
-
-.la-drop-live kbd {
-  margin-left: 6px;
-}
-
 @container la-page (max-width: 1100px) {
   .la-live-meta {
     display: none;
@@ -1997,29 +2049,14 @@
  * a little and the beam (border-beam, as on the overnight block) runs round its edge. */
 .la-drop-beam {
   display: flex;
-  justify-content: center;
   width: 100%;
-  max-width: 560px;
+  max-width: 600px;
   transition: scale 220ms var(--ease-out);
 }
 
-/* The wrapper lifts, not the well, so the beam stays on the well's edge. */
-.la-drop-beam[data-active] {
+/* The wrapper lifts, not the card, so the beam stays on the card's edge. */
+.la-drop-beam[data-over] {
   scale: 1.015;
-}
-
-.la-sheets i:nth-child(3) {
-  animation: la-float 3200ms var(--ease-in-out) infinite alternate;
-}
-
-.la-drop[data-over] .la-sheets i:nth-child(3) {
-  animation: none;
-}
-
-@keyframes la-float {
-  to {
-    translate: 0 -3px;
-  }
 }
 
 .la-drop-title {
@@ -2139,13 +2176,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .la-sheets i:nth-child(3),
   .la-ticker > div {
     animation: none;
   }
   .la-drop-beam,
-  .la-drop-beam[data-active] {
+  .la-drop-beam[data-over] {
     scale: none;
+  }
+  .la-drop-icon {
+    transition: none;
+  }
+  .la-drop[data-over] .la-drop-icon {
+    translate: none;
   }
   .la-drop-title,
   .la-reading .la-file,

@@ -1,6 +1,6 @@
 /* Throwaway: the pieces of the upload every variant arranges its own way.
  *
- *   DropWell   nothing read yet: the fan of sheets, choose a file, or try the sample
+ *   DropWell   nothing read yet: choose a file or try the sample, and what the file needs
  *   Reading    the file is being read: its name, and its rows counting up
  *   Mapper     the file's own first rows, with what we took each column to be above it
  *   Stages     the analysis, a step at a time, each leaving the figure it found
@@ -9,63 +9,98 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Menu } from '@base-ui/react/menu';
 import { BorderBeam } from 'border-beam';
-import { Check, ChevronDown, CornerDownLeft, FileSpreadsheet } from 'lucide-react';
+import { Check, ChevronDown, CornerDownLeft, FileSpreadsheet, FileUp, Radio } from 'lucide-react';
 import { FIELDS, FIELD_LABEL, RULES, SAMPLE_NAME, bytes, count, download, missingFields, plural, sampleCsv, type Analysis, type FieldKey } from './model';
-import { useCountUp, type Ingest } from './shared';
-
-/** Three sheets that fan out when a file comes near. */
-const Sheets = () => (
-  <span className="la-sheets" aria-hidden>
-    <i />
-    <i />
-    <i />
-  </span>
-);
+import { still, useCountUp, type Ingest } from './shared';
 
 /** The beam is tuned for the surface it sits on, as on the Rules page's overnight block. */
 const LIGHT_TUNING = { brightness: 0.45, glowSize: 1.4 };
 
-export function DropWell({ ingest, quiet }: { ingest: Ingest; quiet?: boolean }) {
-  // Read at render: the well re-renders the moment a drag starts, which is when the beam shows.
+/** What the file needs, as the file would have it: the columns we read, and a line under them. */
+const SHAPE: { label: string; example: string; needed: boolean }[] = [
+  { label: 'Time', example: '2026-09-14 08:12', needed: true },
+  { label: 'Service', example: 'tractor-beam', needed: true },
+  { label: 'Alert name', example: 'Queue backlog', needed: true },
+  { label: 'Severity', example: 'P3', needed: false },
+  { label: 'Incident', example: 'false', needed: false },
+];
+
+/** Nothing read yet. A raised card that asks for the file: its glow breathes while it waits
+ *  (border-beam, pulse-outside: the main field on an empty page). With a file over the window
+ *  the glow becomes a beam running round the edge, the card lifts, and the columns it will
+ *  read light up. */
+export function DropWell({ ingest }: { ingest: Ingest }) {
+  // Read at render: the page re-renders on a theme switch and the moment a drag starts.
   const theme = document.documentElement.dataset.mnTheme === 'light' ? 'light' : 'dark';
-  const well = (
-    <div className="la-drop" data-over={ingest.dragging || undefined} data-quiet={quiet || undefined}>
-      <Sheets />
-      {/* Keyed, so the new words arrive rather than snap. */}
-      <h2 key={ingest.dragging ? 'over' : 'idle'} className="la-drop-title">
-        {ingest.dragging ? 'Let go to read it' : 'Drop a CSV of alerts or incidents'}
-      </h2>
-      <p>
-        One alert per line, under a header row. It needs a <b>time</b>, a <b>service</b> and an <b>alert name</b>. The file is read in this browser and goes nowhere else.
-      </p>
-      <div className="la-drop-acts">
-        <button className="mn-btn" data-variant="primary" onClick={ingest.browse}>
-          Choose a file <kbd>U</kbd>
-        </button>
-        <button className="mn-btn" onClick={ingest.useSample}>
-          Try the sample file
-        </button>
-      </div>
-      {ingest.error ? (
-        <p className="la-drop-error" role="alert">
-          {ingest.error}
-        </p>
-      ) : (
-        <button className="mn-link" onClick={() => download(SAMPLE_NAME, sampleCsv())}>
-          Download {SAMPLE_NAME} to see the shape
-        </button>
-      )}
-      <button className="mn-link la-drop-live" onClick={ingest.goLive}>
-        Or watch alerts as they arrive <kbd>L</kbd>
-      </button>
-    </div>
-  );
-  // In a sheet or a card the well has no frame of its own, so nothing for a beam to trace.
-  if (quiet) return well;
-  // A light runs round the edge while a file is over the window: this is where it lands.
+  const over = ingest.dragging;
   return (
-    <BorderBeam size="md" colorVariant="mono" theme={theme} {...(theme === 'light' ? LIGHT_TUNING : {})} active={ingest.dragging} className="la-drop-beam">
-      {well}
+    <BorderBeam
+      size={over ? 'md' : 'pulse-outside'}
+      colorVariant="mono"
+      theme={theme}
+      {...(theme === 'light' ? LIGHT_TUNING : {})}
+      // The travelling beam ignores reduced motion, so it's switched off there; the pulse turns itself off.
+      active={!(over && still())}
+      className="la-drop-beam"
+      data-over={over || undefined}
+    >
+      <div className="la-drop" data-over={over || undefined}>
+        <div className="la-drop-main">
+          <span className="la-drop-icon" aria-hidden>
+            <FileUp size={18} />
+          </span>
+          {/* Keyed, so the new words arrive rather than snap. */}
+          <h2 key={over ? 'over' : 'idle'} className="la-drop-title">
+            {over ? 'Let go to read it' : 'Drop a CSV of past alerts'}
+          </h2>
+          <p>Anywhere on this page, or choose one. It’s read in this browser and goes nowhere else.</p>
+          <div className="la-drop-acts">
+            <button className="mn-btn" data-variant="primary" onClick={ingest.browse}>
+              Choose a file <kbd>U</kbd>
+            </button>
+            <button className="mn-btn" onClick={ingest.useSample}>
+              Try the sample
+            </button>
+          </div>
+          {ingest.error && (
+            <p className="la-drop-error" role="alert">
+              {ingest.error}
+            </p>
+          )}
+        </div>
+
+        <div className="la-shape">
+          <div className="la-shape-head">
+            <span>What the file needs</span>
+            <button className="mn-link" onClick={() => download(SAMPLE_NAME, sampleCsv())}>
+              Download the sample
+            </button>
+          </div>
+          <div className="la-shape-table" role="table" aria-label="The columns the file needs, with an example">
+            <div role="row">
+              {SHAPE.map((c, i) => (
+                <span key={c.label} role="columnheader" data-needed={c.needed || undefined} style={{ '--i': i } as CSSProperties}>
+                  {c.label}
+                  {!c.needed && <em>optional</em>}
+                </span>
+              ))}
+            </div>
+            <div role="row">
+              {SHAPE.map((c) => (
+                <span key={c.label} role="cell" className="mn-mono mn-truncate" title={c.example}>
+                  {c.example}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <footer className="la-drop-foot">
+          <button className="mn-link" onClick={ingest.goLive}>
+            <Radio size={13} /> Or watch alerts as they arrive <kbd>L</kbd>
+          </button>
+        </footer>
+      </div>
     </BorderBeam>
   );
 }
@@ -262,11 +297,11 @@ export function Stages({ ingest, analysis, layout = 'column' }: { ingest: Ingest
 }
 
 /** Whichever step of the upload the phase calls for. Each arrives once, as it becomes the step. */
-export function UploadFlow({ ingest, analysis, quiet }: { ingest: Ingest; analysis: Analysis | null; quiet?: boolean }) {
+export function UploadFlow({ ingest, analysis }: { ingest: Ingest; analysis: Analysis | null }) {
   if (ingest.phase === 'ready') return null;
   return (
     <div className="la-flow-step" key={ingest.phase} data-phase={ingest.phase}>
-      {ingest.phase === 'empty' && <DropWell ingest={ingest} quiet={quiet} />}
+      {ingest.phase === 'empty' && <DropWell ingest={ingest} />}
       {ingest.phase === 'reading' && <Reading ingest={ingest} />}
       {ingest.phase === 'mapping' && <Mapper ingest={ingest} />}
       {ingest.phase === 'analysing' && (
