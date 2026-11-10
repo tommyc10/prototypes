@@ -6,8 +6,9 @@
  *   Stages     the analysis, a step at a time, each leaving the figure it found
  *   UploadFlow whichever of those the phase calls for */
 
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Menu } from '@base-ui/react/menu';
+import { BorderBeam } from 'border-beam';
 import { Check, ChevronDown, CornerDownLeft, FileSpreadsheet } from 'lucide-react';
 import { FIELDS, FIELD_LABEL, RULES, SAMPLE_NAME, bytes, count, download, missingFields, plural, sampleCsv, type Analysis, type FieldKey } from './model';
 import { useCountUp, type Ingest } from './shared';
@@ -21,11 +22,19 @@ const Sheets = () => (
   </span>
 );
 
+/** The beam is tuned for the surface it sits on, as on the Rules page's overnight block. */
+const LIGHT_TUNING = { brightness: 0.45, glowSize: 1.4 };
+
 export function DropWell({ ingest, quiet }: { ingest: Ingest; quiet?: boolean }) {
-  return (
+  // Read at render: the well re-renders the moment a drag starts, which is when the beam shows.
+  const theme = document.documentElement.dataset.mnTheme === 'light' ? 'light' : 'dark';
+  const well = (
     <div className="la-drop" data-over={ingest.dragging || undefined} data-quiet={quiet || undefined}>
       <Sheets />
-      <h2>{ingest.dragging ? 'Let go to read it' : 'Drop a CSV of alerts or incidents'}</h2>
+      {/* Keyed, so the new words arrive rather than snap. */}
+      <h2 key={ingest.dragging ? 'over' : 'idle'} className="la-drop-title">
+        {ingest.dragging ? 'Let go to read it' : 'Drop a CSV of alerts or incidents'}
+      </h2>
       <p>
         One alert per line, under a header row. It needs a <b>time</b>, a <b>service</b> and an <b>alert name</b>. The file is read in this browser and goes nowhere else.
       </p>
@@ -51,6 +60,31 @@ export function DropWell({ ingest, quiet }: { ingest: Ingest; quiet?: boolean })
       </button>
     </div>
   );
+  // In a sheet or a card the well has no frame of its own, so nothing for a beam to trace.
+  if (quiet) return well;
+  // A light runs round the edge while a file is over the window: this is where it lands.
+  return (
+    <BorderBeam size="md" colorVariant="mono" theme={theme} {...(theme === 'light' ? LIGHT_TUNING : {})} active={ingest.dragging} className="la-drop-beam">
+      {well}
+    </BorderBeam>
+  );
+}
+
+/** The file's own first lines, streaming past behind the count while it's read. */
+function Ticker({ ingest }: { ingest: Ingest }) {
+  const lines = (ingest.table?.rows ?? []).slice(0, 40);
+  if (!lines.length) return null;
+  return (
+    <div className="la-ticker" aria-hidden>
+      <div>
+        {lines.map((cells, i) => (
+          <span key={i} className="mn-mono">
+            {cells.filter(Boolean).join('  ·  ')}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function Reading({ ingest }: { ingest: Ingest }) {
@@ -58,6 +92,7 @@ export function Reading({ ingest }: { ingest: Ingest }) {
   const source = ingest.source!;
   return (
     <div className="la-reading">
+      <Ticker ingest={ingest} />
       <span className="la-file">
         <FileSpreadsheet size={16} />
         <span className="mn-truncate">{source.name}</span>
@@ -82,6 +117,10 @@ export function Mapper({ ingest }: { ingest: Ingest }) {
   const fieldOf = (header: string) => (Object.keys(ingest.mapping) as FieldKey[]).find((k) => ingest.mapping[k] === header) ?? null;
   const missing = missingFields(ingest.mapping);
   const used = Object.keys(ingest.mapping).length;
+  // Counts up once, when the columns arrive; after that it follows the person's changes.
+  const [firstUsed] = useState(used);
+  const counted = useCountUp(firstUsed, 520);
+  const matched = counted < firstUsed ? counted : used;
   const sample = table.rows.slice(0, 4);
   // ↵ confirms the columns, unless a button or a menu has the key.
   const confirm = ingest.confirm;
@@ -96,7 +135,7 @@ export function Mapper({ ingest }: { ingest: Ingest }) {
     return () => window.removeEventListener('keydown', onKey);
   });
   return (
-    <div className="la-map">
+    <div className="la-map" style={{ '--cols': table.headers.length } as CSSProperties}>
       <header className="la-map-head">
         <span className="la-file">
           <FileSpreadsheet size={16} />
@@ -107,7 +146,7 @@ export function Mapper({ ingest }: { ingest: Ingest }) {
         </span>
         <h2>Is this what each column is?</h2>
         <p>
-          We matched <b>{used}</b> of {table.headers.length} columns from their names. Change any that are wrong. Columns we don’t use stay in the file and out of the analysis.
+          We matched <b>{matched}</b> of {table.headers.length} columns from their names. Change any that are wrong. Columns we don’t use stay in the file and out of the analysis.
         </p>
       </header>
 

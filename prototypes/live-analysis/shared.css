@@ -1987,3 +1987,177 @@
     display: none;
   }
 }
+
+/* ---------- the upload, in motion ----------
+ * The first run through the upload is rare, so it gets the page's delight budget: each step
+ * shows what's being done to the file. Entrances use the individual `translate` and `scale`
+ * properties so they never fight a `transform` that a hover or a press owns. */
+
+/* The well: the top sheet floats while it waits. With a file over the window the well lifts
+ * a little and the beam (border-beam, as on the overnight block) runs round its edge. */
+.la-drop-beam {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 560px;
+  transition: scale 220ms var(--ease-out);
+}
+
+/* The wrapper lifts, not the well, so the beam stays on the well's edge. */
+.la-drop-beam[data-active] {
+  scale: 1.015;
+}
+
+.la-sheets i:nth-child(3) {
+  animation: la-float 3200ms var(--ease-in-out) infinite alternate;
+}
+
+.la-drop[data-over] .la-sheets i:nth-child(3) {
+  animation: none;
+}
+
+@keyframes la-float {
+  to {
+    translate: 0 -3px;
+  }
+}
+
+.la-drop-title {
+  transition:
+    opacity 180ms var(--ease-out),
+    translate 180ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* Reading: the file's own lines stream past behind the count, and its badge lands. */
+.la-reading {
+  position: relative;
+  isolation: isolate;
+}
+
+.la-ticker {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  opacity: 0.4;
+  -webkit-mask-image: radial-gradient(closest-side, transparent 30%, #000 75%, transparent);
+  mask-image: radial-gradient(closest-side, transparent 30%, #000 75%, transparent);
+  pointer-events: none;
+}
+
+.la-ticker > div {
+  display: flex;
+  flex-direction: column;
+  /* Constant motion, as a meter: linear, and the same length as the reading. */
+  animation: la-ticker 1150ms linear both;
+}
+
+.la-ticker span {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--fg-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@keyframes la-ticker {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -50%;
+  }
+}
+
+.la-reading .la-file {
+  transition:
+    opacity 260ms var(--ease-out),
+    translate 260ms var(--ease-out),
+    scale 260ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    translate: 0 -12px;
+    scale: 0.96;
+  }
+}
+
+/* Mapping: once the columns have arrived, each one we recognised clicks into its role, left
+ * to right, and the line that says they're all matched comes last. */
+.la-map-col[data-used] .la-map-role {
+  transition:
+    transform 160ms var(--ease-out),
+    opacity 220ms var(--ease-out) calc(var(--i) * 40ms + 180ms),
+    scale 220ms var(--ease-out) calc(var(--i) * 40ms + 180ms);
+  @starting-style {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+.la-map-ok {
+  transition:
+    opacity 220ms var(--ease-out) calc(var(--cols) * 40ms + 200ms),
+    translate 220ms var(--ease-out) calc(var(--cols) * 40ms + 200ms);
+  @starting-style {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* Analysing: a line between the steps fills downward as each one is done. */
+.la-stages:not([data-layout='row']) li {
+  position: relative;
+}
+
+.la-stages:not([data-layout='row']) li:not(:last-child)::before,
+.la-stages:not([data-layout='row']) li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  bottom: -12px;
+  left: 7.5px;
+  width: 1px;
+  border-radius: 1px;
+  background: var(--line-2);
+}
+
+.la-stages:not([data-layout='row']) li:not(:last-child)::after {
+  background: var(--fg);
+  transform: scaleY(0);
+  transform-origin: top;
+  /* Something moving from one step to the next: ease-in-out. */
+  transition: transform 420ms var(--ease-in-out);
+}
+
+.la-stages:not([data-layout='row']) li[data-state='done']:not(:last-child)::after {
+  transform: scaleY(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .la-sheets i:nth-child(3),
+  .la-ticker > div {
+    animation: none;
+  }
+  .la-drop-beam,
+  .la-drop-beam[data-active] {
+    scale: none;
+  }
+  .la-drop-title,
+  .la-reading .la-file,
+  .la-map-col[data-used] .la-map-role,
+  .la-map-ok {
+    transition: opacity 150ms ease;
+    @starting-style {
+      translate: none;
+      scale: none;
+    }
+  }
+  .la-stages li::after {
+    transition: none;
+  }
+}
