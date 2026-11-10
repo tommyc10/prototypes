@@ -10,16 +10,20 @@ import {
   ACT_KEY,
   ACT_LABEL,
   ADVICE_LABEL,
+  LIVE_NAME,
   MIN_REASON,
   PEOPLE,
   SAMPLE_NAME,
   STATUS_LABEL,
   actsFor,
   can,
+  extendIds,
   extent,
   guessMapping,
   identify,
+  liveHistory,
   missingFields,
+  nextLive,
   parseCsv,
   sampleCsv,
   toRows,
@@ -58,10 +62,25 @@ export interface Dataset {
   span: number;
 }
 
-/** empty → reading → mapping (the person confirms the columns) → analysing (three stages) → ready */
+/** empty → reading → mapping (the person confirms the columns) → analysing (three stages) → ready.
+ *  The live feed goes straight to ready: there is no file to read or columns to confirm. */
 export type Phase = 'empty' | 'reading' | 'mapping' | 'analysing' | 'ready';
 
+/** Where the alerts come from: the feed as it arrives, or a file someone exported earlier. */
+export type Mode = 'live' | 'historical';
+
+export interface LiveState {
+  /** When the feed was connected. */
+  since: number;
+  paused: boolean;
+  /** When each alert since connecting arrived, newest last. */
+  arrivals: number[];
+}
+
 export interface Ingest {
+  mode: Mode;
+  /** Only in live mode. */
+  live?: LiveState;
   phase: Phase;
   /** While analysing: 0 reading the rows, 1 grouping what repeats, 2 comparing with the rules. */
   stage: number;
@@ -79,7 +98,15 @@ export interface Ingest {
   setField: (header: string, field: FieldKey | null) => void;
   confirm: () => void;
   reset: () => void;
+  /** Connect to the live feed: its history first, then each alert as it arrives. */
+  goLive: () => void;
+  /** Hold the feed where it is, or let it run again. */
+  togglePause: () => void;
 }
+
+/** How often the feed sends an alert. Prototype only: sped up from the real rate (about ten an
+ *  hour) so there is something to watch. */
+const LIVE_EVERY_MS: [number, number] = [1800, 4200];
 
 /** How long the file's rows count up for, and how long each stage of the analysis shows. The
  *  work itself takes a few milliseconds; the wait is there so each step can be read. */
@@ -92,15 +119,37 @@ async function sha256(text: string) {
 }
 
 export function useIngest(by: string): Ingest {
-  const [state, setState] = useState<Pick<Ingest, 'phase' | 'stage' | 'source' | 'table' | 'mapping' | 'data' | 'error'>>({ phase: 'empty', stage: 0, mapping: {} });
+  const [state, setState] = useState<Pick<Ingest, 'mode' | 'live' | 'phase' | 'stage' | 'source' | 'table' | 'mapping' | 'data' | 'error'>>({ mode: 'historical', phase: 'empty', stage: 0, mapping: {} });
   const [dragging, setDragging] = useState(false);
   const timers = useRef<number[]>([]);
   const run = useRef(0);
   const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms));
+  const feed = useRef<number | null>(null);
+  const stopFeed = () => {
+    if (feed.current != null) clearTimeout(feed.current);
+    feed.current = null;
+  };
   const clear = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
+    stopFeed();
     run.current++;
+  };
+
+  // The feed: one alert at a time, at an uneven pace, until it's paused or left.
+  const stream = () => {
+    stopFeed();
+    const [lo, hi] = LIVE_EVERY_MS;
+    feed.current = window.setTimeout(() => {
+      setState((s) => {
+        if (s.mode !== 'live' || !s.data || s.live?.paused) return s;
+        const now = Date.now();
+        const row = nextLive(s.data.rows, now, s.data.rows.length + 1);
+        const rows = [...s.data.rows, row];
+        return { ...s, data: { ...s.data, rows, ids: extendIds(s.data.ids, rows), span: extent(rows).span }, live: { ...s.live!, arrivals: [...s.live!.arrivals.slice(-199), now] } };
+      });
+      stream();
+    }, lo + Math.random() * (hi - lo));
   };
 
   const take = async (file: File) => {
@@ -108,17 +157,17 @@ export function useIngest(by: string): Ingest {
     const mine = run.current;
     const ext = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : '';
     if (!['csv', 'tsv', 'txt'].includes(ext)) {
-      setState({ phase: 'empty', stage: 0, mapping: {}, error: `${file.name} isn't a CSV. Export it as CSV, then drop it here again.` });
+      setState({ mode: 'historical', phase: 'empty', stage: 0, mapping: {}, error: `${file.name} isn't a CSV. Export it as CSV, then drop it here again.` });
       return;
     }
     const started = performance.now();
-    setState({ phase: 'reading', stage: 0, mapping: {}, source: { name: file.name, size: file.size, hash: '', readAt: Date.now(), by } });
+    setState({ mode: 'historical', phase: 'reading', stage: 0, mapping: {}, source: { name: file.name, size: file.size, hash: '', readAt: Date.now(), by } });
     const text = await file.text();
     const table = parseCsv(text);
     const hash = await sha256(text);
     if (mine !== run.current) return;
     if (!table.rows.length) {
-      setState({ phase: 'empty', stage: 0, mapping: {}, error: `${file.name} has ${table.headers.length ? 'a header row but no alerts under it' : 'nothing in it'}. Check the export and drop it again.` });
+      setState({ mode: 'historical', phase: 'empty', stage: 0, mapping: {}, error: `${file.name} has ${table.headers.length ? 'a header row but no alerts under it' : 'nothing in it'}. Check the export and drop it again.` });
       return;
     }
     setState((s) => ({ ...s, table, source: { ...s.source!, hash } }));
@@ -201,7 +250,29 @@ export function useIngest(by: string): Ingest {
       }),
     reset: () => {
       clear();
-      setState({ phase: 'empty', stage: 0, mapping: {} });
+      setState({ mode: 'historical', phase: 'empty', stage: 0, mapping: {} });
+    },
+    goLive: () => {
+      clear();
+      const now = Date.now();
+      const rows = liveHistory(now);
+      setState({
+        mode: 'live',
+        live: { since: now, paused: false, arrivals: [] },
+        phase: 'ready',
+        stage: 3,
+        mapping: {},
+        source: { name: LIVE_NAME, size: 0, hash: '', readAt: now, by },
+        data: { rows, dropped: [], ids: identify(rows), span: extent(rows).span },
+      });
+      stream();
+    },
+    togglePause: () => {
+      if (state.mode !== 'live' || !state.live) return;
+      const paused = !state.live.paused;
+      setState((s) => ({ ...s, live: { ...s.live!, paused } }));
+      if (paused) stopFeed();
+      else stream();
     },
   };
 }
@@ -499,7 +570,7 @@ export function Actions({ p, status, role, onAct, wide }: { p: Pattern; status: 
 const DECIDE_TITLE: Partial<Record<Act, string>> = { propose: 'Propose suppressing', dismiss: 'Dismiss', approve: 'Approve the proposal for', reject: 'Reject the proposal for' };
 const DECIDE_HINT: Partial<Record<Act, string>> = {
   propose: 'It goes to a rule governor. Nothing is held back until they approve it.',
-  dismiss: 'It leaves the list of things to decide. The rows stay in the file.',
+  dismiss: 'It leaves the list of things to decide. Its alerts are kept.',
   approve: 'It becomes a proposed rule on the Rules page, with this analysis as its evidence.',
   reject: 'It goes back to the analyst with your reason.',
 };

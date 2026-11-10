@@ -178,12 +178,13 @@ function Heat({ p }: { p: Pattern }) {
   );
 }
 
-function Rows({ p }: { p: Pattern }) {
+/** `since`: live, the moment the feed connected. Alerts after it are still open, and say so. */
+function Rows({ p, since }: { p: Pattern; since?: number }) {
   const rows = p.rows.slice(-60).reverse();
   return (
     <section className="la-rows">
       <div className="la-sec-head">
-        <h3>Rows from the file</h3>
+        <h3>{since == null ? 'Rows from the file' : 'Alerts from the feed'}</h3>
         <span className="la-read">
           {rows.length < p.count ? `Newest ${rows.length} of ${p.count}` : `All ${p.count}`}
         </span>
@@ -192,7 +193,7 @@ function Rows({ p }: { p: Pattern }) {
         <table>
           <thead>
             <tr>
-              <th>Line</th>
+              <th>{since == null ? 'Line' : 'No.'}</th>
               <th>Raised</th>
               <th>Severity</th>
               <th>Outcome</th>
@@ -201,13 +202,13 @@ function Rows({ p }: { p: Pattern }) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.line}>
+              <tr key={r.line} data-new={(since != null && r.at >= since) || undefined}>
                 <td className="mn-mono">{count(r.line)}</td>
                 <td>
                   {dayMonth(r.at)} <span className="mn-subtle">{clock(r.at)}</span>
                 </td>
                 <td>P{r.sev}</td>
-                <td>{r.incident ? <span className="la-incident">Incident</span> : <span className="mn-subtle">Cleared</span>}</td>
+                <td>{r.incident ? <span className="la-incident">Incident</span> : since != null && r.at >= since ? <span className="la-open">Open</span> : <span className="mn-subtle">Cleared</span>}</td>
                 <td className="la-num">{Number.isNaN(r.mins) ? '–' : mins(r.mins)}</td>
               </tr>
             ))}
@@ -218,12 +219,12 @@ function Rows({ p }: { p: Pattern }) {
   );
 }
 
-function Evidence({ p, a }: { p: Pattern; a: Analysis }) {
+function Evidence({ p, a, since }: { p: Pattern; a: Analysis; since?: number }) {
   return (
     <div className="la-evidence">
       <WeekBars p={p} a={a} />
       <Heat p={p} />
-      <Rows p={p} />
+      <Rows p={p} since={since} />
     </div>
   );
 }
@@ -342,7 +343,58 @@ function Maths({ p, a }: { p: Pattern; a: Analysis }) {
 
 /* ---------- provenance ---------- */
 
+const at = (t: number) => `${dayMonth(t)} at ${clock(t)}`;
+
+/** The live feed has no file and no hash: its provenance is when it was connected, and which of
+ *  this pattern's alerts arrived since. */
+function LiveSource({ p, a, ingest }: { p: Pattern; a: Analysis; ingest: Ingest }) {
+  const live = ingest.live!;
+  const data = ingest.data!;
+  const fresh = p.rows.filter((r) => r.at >= live.since).length;
+  return (
+    <dl className="la-source">
+      <div>
+        <dt>Feed</dt>
+        <dd>
+          <b>{ingest.source!.name}</b>
+          <span>
+            Connected {at(live.since)} by {ingest.source!.by}. {live.paused ? 'Paused: nothing new is coming in.' : 'Still running: the figures change as alerts arrive.'}
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt>Alerts</dt>
+        <dd>
+          <b>{count(data.rows.length)} in all</b>
+          <span>
+            {count(data.rows.length - live.arrivals.length)} from the feed’s history when it connected, {count(live.arrivals.length)} since.
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt>This pattern</dt>
+        <dd>
+          <b>
+            {count(p.rows.length)} {plural(p.rows.length, 'alert')}, {fresh} since connecting
+          </b>
+          <span>New alerts join it as they arrive, and its figures follow.</span>
+        </dd>
+      </div>
+      <div>
+        <dt>In scope</dt>
+        <dd>
+          <b>
+            {dayMonth(a.from)} to {dayMonth(a.to - 1)}
+          </b>
+          <span>The week that’s still running counts as a week.</span>
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 function Source({ p, a, ingest }: { p: Pattern; a: Analysis; ingest: Ingest }) {
+  if (ingest.mode === 'live') return <LiveSource p={p} a={a} ingest={ingest} />;
   const source = ingest.source!;
   const data = ingest.data!;
   const lines = p.rows.map((r) => r.line);
@@ -468,7 +520,7 @@ function ReviewLog({ p, review }: { p: Pattern; review: Review }) {
 export function LensBody({ lens, p, a, ingest, review }: { lens: LensKey; p: Pattern; a: Analysis; ingest: Ingest; review: Review }) {
   return (
     <div className="la-lens" data-lens={lens}>
-      {lens === 'evidence' && <Evidence p={p} a={a} />}
+      {lens === 'evidence' && <Evidence p={p} a={a} since={ingest.mode === 'live' ? ingest.live?.since : undefined} />}
       {lens === 'rules' && <Rules p={p} a={a} />}
       {lens === 'maths' && <Maths p={p} a={a} />}
       {lens === 'source' && <Source p={p} a={a} ingest={ingest} />}

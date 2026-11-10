@@ -147,10 +147,6 @@
   padding-bottom: 98px;
 }
 
-.la-detail-body .la-lens > * {
-  max-width: 1080px;
-}
-
 .la-none-pane {
   margin: auto;
 }
@@ -1224,5 +1220,85 @@
     background: var(--l4);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+}
+
+/* ---------- big screens ----------
+ * Above about 1600px of page the panes stop stretching what they hold: charts keep a readable
+ * height, lists keep their rows close to their numbers, and the room goes to more columns. */
+
+/* Evidence on a wide lens: the weeks and the hours stacked on the left at a fixed height, the
+ * file's rows down the whole right side. The bars no longer grow to fill a tall screen. */
+@container lens (min-width: 1100px) {
+  .la-evidence {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 28px 36px;
+  }
+  .la-evidence > .la-rows {
+    grid-column: 2;
+    grid-row: 1 / 4;
+  }
+  .la-bars-plot {
+    flex: none;
+    height: clamp(200px, 32vh, 400px);
+  }
+  .la-heat-row i {
+    height: 14px;
+  }
+}
+
+/* One width for everything in the detail, so the figures, the tabs and the chart line up. */
+.la-detail > :not(.la-bar, .la-decide) {
+  width: 100%;
+  max-width: 1600px;
+}
+
+@container la-page (min-width: 1800px) {
+  .la-desk {
+    grid-template-columns: 420px minmax(0, 1fr);
+  }
+  .la-detail {
+    padding: 28px 48px 0;
+  }
+  .la-field {
+    grid-template-columns: minmax(0, 1fr) 460px;
+  }
+  .la-drawer {
+    width: 480px;
+  }
+  .la-board[data-open] {
+    padding-right: 504px;
+  }
+  .la-drawer-body .la-rows-scroll,
+  .la-inspect-body .la-rows-scroll {
+    max-height: 360px;
+  }
+}
+
+@container la-page (min-width: 1600px) {
+  .la-board {
+    grid-template-columns: var(--la-cols, repeat(4, minmax(0, 1fr)));
+    transition:
+      padding-right 280ms var(--ease-drawer),
+      grid-template-columns 240ms var(--ease-out);
+  }
+}
+
+/* A lane wide enough for two cards side by side lays them out in columns. */
+@container lane (min-width: 540px) {
+  .la-lane-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    align-content: start;
+  }
+  .la-lane-body > :is(.la-lane-hint, .la-verdict) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .la-board {
+    transition: none;
   }
 }

@@ -14,16 +14,23 @@
  *   3 Field  the chart is the page: each pattern a bubble, placed by how regular it is and
  *            how often it was real. The file's rows scatter, then gather into patterns.
  *
- * The file, the filters and every decision carry over when you switch, so the same analysis
- * can be compared in all three. R starts over with no file.
- * Keys: 1–3 or ← → variant, R start over, U upload, J K pattern, I P A X decide, / search,
- * [ sidebar, T theme, ⌘K palette. Address: ?v=1..3, ?bare (no picker), ?sample (opens loaded). */
+ * Two sources, switched in the header (L):
+ *   Live         the alert feed as it arrives. It opens on the last twelve weeks, then each new
+ *                alert lands in its pattern and every figure follows. Pause holds it still.
+ *   Historical   a file someone exported: drop a CSV, or try the sample.
+ *
+ * The file, the filters and every decision carry over when you switch variant, so the same
+ * analysis can be compared in all three. Decisions also survive the live feed's updates.
+ * R starts over. Keys: 1–3 or ← → variant, R start over, L live or historical, U upload,
+ * J K pattern, I P A X decide, / search, [ sidebar, T theme, ⌘K palette.
+ * Address: ?v=1..3, ?bare (no picker), ?mode=historical (opens on the file drop),
+ * ?sample (opens on the sample file). Opens live otherwise. */
 
 import { StrictMode, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { Menu } from '@base-ui/react/menu';
-import { Check, ChevronDown, Download, FileSpreadsheet, Lock, PanelLeftClose, PanelLeftOpen, ScanSearch, Upload } from 'lucide-react';
+import { Check, ChevronDown, Download, FileSpreadsheet, History, Lock, PanelLeftClose, PanelLeftOpen, Pause, Play, Radio, ScanSearch, Upload } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
@@ -44,7 +51,7 @@ import { useTheme } from '../../src/hooks/useTheme';
 import type { PageId } from '../../src/lib/route';
 import { HomePalette } from '../../src/pages/home/components/Palette/HomePalette';
 import { ACT_PAST, NEEDS_REASON, NO_REVIEW, PEOPLE, analyse, can, count, download, evidenceCsv, patternsCsv, ACT_STATUS, type Act, type Pattern, type Review, type Role } from './model';
-import { useIngest, type Deciding, type Filters, type LensKey, type VariantProps } from './shared';
+import { useIngest, type Deciding, type Ingest, type Filters, type LensKey, type VariantProps } from './shared';
 import { Desk } from './variants/Desk';
 import { Field } from './variants/Field';
 import { Flow } from './variants/Flow';
@@ -80,21 +87,31 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
   // Prototype only: the page isn't in the sidebar yet, so its row is added to Live from here.
   useLayoutEffect(() => setLiveNav(root.current?.querySelector('[aria-labelledby="mn-nav-live"]') ?? null), []);
 
-  // ?sample opens with the sample already read.
+  // Live unless the address asks for a file; ?sample opens with the sample already read.
   useEffect(() => {
     if (params.has('sample')) ingest.useSample();
+    else if (params.get('mode') !== 'historical') ingest.goLive();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A new file is a new analysis: nothing decided, nothing narrowed.
+  // A new file, or connecting to the feed, is a new analysis: nothing decided, nothing narrowed.
+  // A live alert arriving is not: it changes the data, never what's been decided.
   const data = ingest.data;
+  const opened = ingest.source?.readAt;
   useEffect(() => {
     setReviews({});
     setPick({ key: null, arrive: false });
     setDeciding(null);
     setLens('evidence');
     setFilters({ weeks: data?.span ?? 12, service: 'all', sevs: EVERY, query: '' });
-  }, [data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, !!data]);
+
+  const switchMode = (mode: 'live' | 'historical') => {
+    if (mode === ingest.mode) return;
+    if (mode === 'live') ingest.goLive();
+    else ingest.reset();
+  };
 
   const analysis = useMemo(() => (data ? analyse(data.rows, { weeks: Math.min(filters.weeks, data.span), service: filters.service, sevs: filters.sevs }, data.ids) : null), [data, filters.weeks, filters.service, filters.sevs]);
   const shown = useMemo(() => {
@@ -178,6 +195,7 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
       keys: {
         '[': () => setHideSide((hidden) => !hidden),
         t: toggleTheme,
+        l: () => switchMode(ingest.mode === 'live' ? 'historical' : 'live'),
       },
     },
   };
@@ -219,7 +237,17 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
             {hideSide ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
           </button>
           <h1>Live analysis</h1>
-          {ingest.source && ingest.phase !== 'empty' && (
+          <div className="la-seg la-mode" role="radiogroup" aria-label="Data source">
+            <button role="radio" className="mn-tab" data-active={ingest.mode === 'live' || undefined} aria-checked={ingest.mode === 'live'} onClick={() => switchMode('live')} title="The alert feed as it arrives  L">
+              <Radio size={13} /> Live
+            </button>
+            <button role="radio" className="mn-tab" data-active={ingest.mode === 'historical' || undefined} aria-checked={ingest.mode === 'historical'} onClick={() => switchMode('historical')} title="A file of past alerts  L">
+              <History size={13} /> Historical
+            </button>
+          </div>
+          {ingest.mode === 'live' && ingest.live ? (
+            <LiveStatus ingest={ingest} />
+          ) : ingest.source && ingest.phase !== 'empty' && (
             <span className="la-chip" title={data ? `${count(data.rows.length)} rows, ${data.span} weeks. SHA-256 ${ingest.source.hash}` : undefined}>
               <FileSpreadsheet size={13} />
               <span className="mn-truncate">{ingest.source.name}</span>
@@ -285,7 +313,7 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
             </Menu.Portal>
           </Menu.Root>
 
-          {ingest.phase !== 'empty' && (
+          {ingest.mode === 'historical' && ingest.phase !== 'empty' && (
             <button className="mn-btn la-top-btn" onClick={ingest.browse}>
               <Upload size={14} /> {ready ? 'Another file' : 'Choose a file'} <kbd>U</kbd>
             </button>
@@ -296,8 +324,39 @@ function Page({ Screen, nonce }: { Screen: ComponentType<VariantProps>; nonce: s
       </section>
 
       <HomePalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={(to) => (location.href = `/${to}`)} theme={theme} onToggleTheme={toggleTheme} />
-      <StartOver nonce={nonce} onReset={ingest.reset} />
+      <StartOver nonce={nonce} onReset={ingest.mode === 'live' ? ingest.goLive : ingest.reset} />
     </div>
+  );
+}
+
+/** The feed's state in the bar: a green mark while it runs, what arrived in the last minute,
+ *  and pause. Ticks once a second so "the last minute" stays true between alerts. */
+function LiveStatus({ ingest }: { ingest: Ingest }) {
+  const live = ingest.live!;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const lastMinute = live.arrivals.filter((at) => now - at < 60_000).length;
+  const last = live.arrivals[live.arrivals.length - 1];
+  const ago = last ? Math.max(0, Math.round((now - last) / 1000)) : null;
+  return (
+    <>
+      <span className="la-live" data-paused={live.paused || undefined} title={`Connected at ${new Date(live.since).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}. ${count(live.arrivals.length)} alerts since.`}>
+        <i aria-hidden />
+        <span className="la-live-word">{live.paused ? 'Paused' : 'Live'}</span>
+        <span className="mn-subtle la-live-meta">
+          <b>{lastMinute}</b> in the last minute{ago != null && !live.paused ? ` · last ${ago < 2 ? 'just now' : `${ago}s ago`}` : ''}
+        </span>
+      </span>
+      <button className="mn-icon-btn" onClick={ingest.togglePause} aria-pressed={live.paused} aria-label={live.paused ? 'Resume the feed' : 'Pause the feed'} title={live.paused ? 'Resume the feed' : 'Pause the feed'}>
+        {live.paused ? <Play size={14} /> : <Pause size={14} />}
+      </button>
+      <span className="mn-sr" role="status">
+        {live.paused ? 'Live feed paused' : ''}
+      </span>
+    </>
   );
 }
 

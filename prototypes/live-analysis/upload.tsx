@@ -46,6 +46,9 @@ export function DropWell({ ingest, quiet }: { ingest: Ingest; quiet?: boolean })
           Download {SAMPLE_NAME} to see the shape
         </button>
       )}
+      <button className="mn-link la-drop-live" onClick={ingest.goLive}>
+        Or watch alerts as they arrive <kbd>L</kbd>
+      </button>
     </div>
   );
 }

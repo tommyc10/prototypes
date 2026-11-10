@@ -612,3 +612,56 @@ export function sampleCsv(): string {
   lines.splice(732, 0, ['2026-09-17T11:02:00Z', '', 'Probe timeout from sector 418', 'P3', 'false', 8, '', 'm.veers']);
   return csv([['opened_at', 'service', 'alert_name', 'severity', 'became_incident', 'minutes_to_resolve', 'ci', 'assigned_to'], ...lines]);
 }
+
+/* ---------- the live feed ---------- */
+
+/** What the live feed is called wherever a file's name would show. */
+export const LIVE_NAME = 'Live alert feed';
+
+/** The feed's history when you connect: the sample's twelve weeks, moved so the newest alert
+ *  arrived a few minutes ago. A real backend sends its own history instead. */
+export function liveHistory(now: number): Row[] {
+  const table = parseCsv(sampleCsv());
+  const { rows } = toRows(table, guessMapping(table.headers));
+  // Whole weeks, so every alert keeps its weekday and hour: the rules and the rhythms depend on
+  // them. Whatever would land after now hasn't happened yet, so it's left out.
+  const shift = Math.ceil((now - rows[rows.length - 1].at) / WEEK) * WEEK;
+  return rows
+    .map((r) => ({ ...r, at: r.at + shift }))
+    .filter((r) => r.at <= now)
+    .map((r, i) => ({ ...r, line: i + 1 }));
+}
+
+/** One new alert, as the feed would send it. Prototype only: it repeats what the history holds,
+ *  in the same proportions, so the patterns keep growing the way they already were; one in
+ *  twelve is something that happens once. */
+export function nextLive(history: Row[], now: number, line: number): Row {
+  const r = Math.random;
+  if (r() < 1 / 12) {
+    const services = [...new Set(history.map((h) => h.service))];
+    const checks = ['Disk latency high on node', 'Unexpected restart of unit', 'Probe timeout from sector', 'Memory pressure on controller'];
+    return { line, at: now, service: services[Math.floor(r() * services.length)], signature: `${checks[Math.floor(r() * checks.length)]} ${100 + Math.floor(r() * 899)}`, sev: 2 + Math.floor(r() * 3), incident: r() < 0.05, mins: NaN };
+  }
+  // What usually arrives at this hour on this weekday, so a rhythm stays a rhythm; anything from
+  // this hour on another day, or anything at all, if the history is quiet then.
+  const hour = (t: number) => new Date(t).getUTCHours();
+  const day = (t: number) => new Date(t).getUTCDay();
+  const near = (h: Row) => Math.min(Math.abs(hour(h.at) - hour(now)), 24 - Math.abs(hour(h.at) - hour(now))) <= 1;
+  const sameDay = history.filter((h) => near(h) && day(h.at) === day(now));
+  const sameHour = sameDay.length >= 3 ? sameDay : history.filter(near);
+  const pool = sameHour.length >= 3 ? sameHour : history;
+  const like = pool[Math.floor(r() * pool.length)];
+  return { ...like, line, at: now, mins: NaN };
+}
+
+/** Gives a pattern that has just reached MIN_COUNT the next free id, so ids never renumber
+ *  while the feed runs. Returns the same map when nothing changed. */
+export function extendIds(ids: Map<string, string>, rows: Row[]): Map<string, string> {
+  const counts = new Map<string, number>();
+  for (const r of rows) counts.set(keyOf(r), (counts.get(keyOf(r)) ?? 0) + 1);
+  const fresh = [...counts].filter(([key, n]) => n >= MIN_COUNT && !ids.has(key));
+  if (!fresh.length) return ids;
+  const next = new Map(ids);
+  for (const [key] of fresh) next.set(key, `PAT-${two(next.size + 1)}`);
+  return next;
+}

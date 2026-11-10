@@ -14,7 +14,7 @@ import { Actions, AdviceChip, DecisionForm, FilterRow, PatternHead, SearchBox, S
 import { UploadFlow } from '../upload';
 
 const LANES: { key: string; label: string; has: Status[]; act?: Act; hint: string }[] = [
-  { key: 'found', label: 'Found', has: ['new'], act: 'reopen', hint: 'What the file shows repeating. Nobody has these yet.' },
+  { key: 'found', label: 'Found', has: ['new'], act: 'reopen', hint: 'What keeps repeating. Nobody has these yet.' },
   { key: 'investigating', label: 'Investigating', has: ['investigating'], act: 'investigate', hint: 'Drag a pattern here to take it, or press I.' },
   { key: 'proposed', label: 'Proposed', has: ['proposed'], act: 'propose', hint: 'Suppression proposals wait here for a rule governor.' },
   { key: 'decided', label: 'Decided', has: ['approved', 'rejected', 'dismissed'], hint: 'Approved, rejected and dismissed patterns end up here.' },
@@ -77,7 +77,7 @@ export function Flow(props: VariantProps) {
         {ready ? (
           <>
             <p className="la-ledger-text">
-              <b>{one(f.total)}</b> alerts a week in this file. Today’s rules hold back <b>{one(f.today)}</b>; what’s approved here adds <b>{one(f.approved)}</b>, and open proposals would add <b>{one(f.proposed)}</b>. <b>{one(rest)}</b> still reach a person.
+              <b>{one(f.total)}</b> alerts a week {ingest.mode === 'live' ? 'on the feed' : 'in this file'}. Today’s rules hold back <b>{one(f.today)}</b>; what’s approved here adds <b>{one(f.approved)}</b>, and open proposals would add <b>{one(f.proposed)}</b>. <b>{one(rest)}</b> still reach a person.
             </p>
             <div className="la-ledger-bar" role="img" aria-label="Where a week of alerts goes">
               <i data-part="today" style={{ flexGrow: f.today }} title="Held back by today’s rules" />
@@ -110,7 +110,14 @@ export function Flow(props: VariantProps) {
         )}
       </header>
 
-      <div className="la-board" data-dragging={drag ? '' : undefined} data-open={picked ? '' : undefined}>
+      {/* On a wide screen a lane takes room by how many cards it holds (variants.css): a full lane
+          spreads its cards into columns, an empty one keeps enough for its hint. */}
+      <div
+        className="la-board"
+        data-dragging={drag ? '' : undefined}
+        data-open={picked ? '' : undefined}
+        style={{ '--la-cols': lanes.map((l) => `minmax(0, ${1 + Math.min(l.cards.length, 8) / 4}fr)`).join(' ') } as CSSProperties}
+      >
         {lanes.map((lane) => {
           const waiting = !ready && ingest.phase !== 'empty' && lane.key === 'found';
           const verdicts = lane.key === 'decided' && !!dragged;
