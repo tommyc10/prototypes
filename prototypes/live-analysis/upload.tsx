@@ -25,17 +25,17 @@ const SHAPE: { label: string; example: string; needed: boolean }[] = [
   { label: 'Incident', example: 'false', needed: false },
 ];
 
-/** Nothing read yet. A raised card that asks for the file: its glow breathes while it waits
- *  (border-beam, pulse-outside: the main field on an empty page). With a file over the window
- *  the glow becomes a beam running round the edge, the card lifts, and the columns it will
- *  read light up. */
+/** Nothing read yet. A raised card that asks for the file: a glow breathes inside its edge while
+ *  it waits (border-beam, pulse-inner, as on the Rules page's overnight block). With a file over
+ *  the window the glow becomes a beam running round the inside of the edge, the card lifts, and
+ *  the columns it will read light up. The beam's wrapper clips to the card, so nothing spills out. */
 export function DropWell({ ingest }: { ingest: Ingest }) {
   // Read at render: the page re-renders on a theme switch and the moment a drag starts.
   const theme = document.documentElement.dataset.mnTheme === 'light' ? 'light' : 'dark';
   const over = ingest.dragging;
   return (
     <BorderBeam
-      size={over ? 'md' : 'pulse-outside'}
+      size={over ? 'md' : 'pulse-inner'}
       colorVariant="mono"
       theme={theme}
       {...(theme === 'light' ? LIGHT_TUNING : {})}

@@ -122,23 +122,27 @@ export function Desk(props: VariantProps) {
         ) : picked ? (
           <>
             <div className="la-detail" key={picked.key} data-animate={props.arrive || undefined}>
-              <PatternHead p={picked} status={statusOf(picked.key)} />
+              {/* The decision sits with the pattern's name, where it's read first, and out of the
+               * way of the evidence and of the toasts in the corner. Deciding opens the reason right
+               * under it, so the form arrives where the button was. */}
+              <div className="la-detail-top">
+                <PatternHead p={picked} status={statusOf(picked.key)} />
+                {!(deciding && deciding.key === picked.key) && (
+                  <div className="la-decision">
+                    <Actions p={picked} status={statusOf(picked.key)} role={role} onAct={props.onAct} />
+                    <span className="la-decision-note">
+                      Suppressing stops <b>{perWeek(picked.saved)}</b>, hides <b className={picked.proposal.hidden ? 'mn-bad' : undefined}>{picked.proposal.hidden}</b> real {plural(picked.proposal.hidden, 'incident', 'incidents')}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {deciding && deciding.key === picked.key && <DecisionForm deciding={deciding} p={picked} onCancel={props.onCancelDecision} onDecide={props.onDecide} />}
               <StatWell p={picked} />
               <LensTabs lens={props.lens} onLens={props.onLens} review={reviews[picked.key] ?? { status: 'new', events: [] }} />
               <div className="la-detail-body">
                 <LensBody lens={props.lens} p={picked} a={analysis} ingest={ingest} review={reviews[picked.key] ?? { status: 'new', events: [] }} />
               </div>
             </div>
-            {deciding && deciding.key === picked.key ? (
-              <DecisionForm deciding={deciding} p={picked} onCancel={props.onCancelDecision} onDecide={props.onDecide} />
-            ) : (
-              <div className="la-bar">
-                <span className="la-bar-text mn-truncate">
-                  Suppressing it stops <b>{perWeek(picked.saved)}</b>, hides <b className={picked.proposal.hidden ? 'mn-bad' : undefined}>{picked.proposal.hidden}</b> real {plural(picked.proposal.hidden, 'incident', 'incidents')}
-                </span>
-                <Actions p={picked} status={statusOf(picked.key)} role={role} onAct={props.onAct} />
-              </div>
-            )}
           </>
         ) : (
           <p className="la-none la-none-pane">Pick a pattern to see its evidence.</p>

@@ -580,7 +580,7 @@ const DECIDE_PLACEHOLDER: Partial<Record<Act, string>> = {
   reject: 'What would need to change?',
 };
 
-/** The decision form: glass over the pane, so the evidence stays behind it. A written reason of
+/** The decision form: a card under the pattern's heading, where its button was. A written reason of
  *  at least twelve characters, as on the Rules page. */
 export function DecisionForm({ deciding, p, onCancel, onDecide }: { deciding: Deciding; p: Pattern; onCancel: () => void; onDecide: (note: string) => void }) {
   const [note, setNote] = useState('');

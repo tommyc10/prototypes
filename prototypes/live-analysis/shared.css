@@ -780,6 +780,8 @@
   height: 11px;
   border-radius: 2px;
   background: var(--tint);
+  /* The figures changed (a lookback, a service): the cells re-shade with the bars above them. */
+  transition: background-color 420ms var(--ease-in-out);
 }
 
 /* The three hours the regularity figure is counted over. */
@@ -1261,53 +1263,18 @@
   color: var(--fg-3);
 }
 
-/* The glass bar under a pattern: what the proposal would do, and the decision. */
-.la-bar-text {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--fg-2);
-}
-
-.la-bar-text b {
-  font-weight: 600;
-  color: var(--fg);
-}
-
-.la-bar-text b.mn-bad {
-  color: var(--red);
-}
-
-.la-decide,
-.la-bar {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  left: 24px;
-  z-index: 2;
-  border-radius: 14px;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  backdrop-filter: blur(20px) saturate(1.2);
-  box-shadow:
-    inset 0 1px 0 var(--glass-edge),
-    0 0 0 1px var(--line-2),
-    var(--shadow-float);
-}
-
-.la-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 54px;
-  padding: 10px 10px 10px 18px;
-}
-
+/* The reason for a decision: a raised card under the pattern's heading, in the flow, so the
+ * evidence moves down for it rather than sitting behind it. */
 .la-decide {
   display: flex;
+  flex: none;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow: inset 0 1px 0 var(--card-edge);
 }
 
 .la-decide[data-animate] {
@@ -1407,7 +1374,7 @@
   }
 }
 
-/* Nothing read yet: a raised card, opaque with a 1px edge so the pulse can bloom around it. */
+/* Nothing read yet: a raised card, opaque with a 1px edge; the pulse breathes just inside it. */
 .la-drop {
   display: flex;
   flex-direction: column;
@@ -1925,6 +1892,7 @@
   }
   .la-wk i,
   .la-wk b,
+  .la-heat-row i,
   .la-meter i,
   .la-diff-bar i,
   .la-ledger-bar i {
@@ -1937,15 +1905,6 @@
     animation: none;
     background: none;
     color: var(--fg);
-  }
-}
-
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  .la-decide,
-  .la-bar {
-    background: var(--l4);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
 }
 

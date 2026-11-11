@@ -141,8 +141,44 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  /* Room for the glass bar to float over the last of it. */
-  padding-bottom: 98px;
+  padding-bottom: 24px;
+}
+
+/* The pattern's name on the left, the decision on the right: read the one, act on it. */
+.la-detail-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px 32px;
+}
+
+.la-detail-top > .la-head {
+  flex: 1;
+}
+
+.la-decision {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex: none;
+  max-width: 50%;
+}
+
+.la-decision-note {
+  font-size: 12px;
+  color: var(--fg-3);
+  text-align: right;
+  text-wrap: balance;
+}
+
+.la-decision-note b {
+  font-weight: 600;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.la-decision-note b.mn-bad {
+  color: var(--red);
 }
 
 .la-none-pane {
@@ -159,10 +195,6 @@
   .la-detail {
     padding: 20px 20px 0;
   }
-  .la-desk-pane > :is(.la-bar, .la-decide) {
-    right: 12px;
-    left: 12px;
-  }
 }
 
 @container desk-pane (max-width: 620px) {
@@ -175,8 +207,19 @@
   .la-well > div:nth-child(n + 3) {
     border-top: 1px solid var(--line);
   }
-  .la-bar-text {
-    display: none;
+  /* Narrow: the decision goes under the name, left-aligned with it. */
+  .la-detail-top {
+    flex-direction: column;
+  }
+  .la-decision {
+    align-items: flex-start;
+    max-width: none;
+  }
+  .la-decision .la-actions {
+    justify-content: flex-start;
+  }
+  .la-decision-note {
+    text-align: left;
   }
 }
 
@@ -215,10 +258,13 @@
   }
 }
 
-/* One width for everything in the detail, so the figures, the tabs and the chart line up. */
-.la-detail > :not(.la-bar, .la-decide) {
+/* One width for everything in the detail, so the figures, the tabs and the chart line up. On a
+ * big screen it fills the pane up to the cap, and past it sits in the middle, so the spare room
+ * is split either side rather than all left on the right. */
+.la-detail > * {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1800px;
+  margin-inline: auto;
 }
 
 @container la-page (min-width: 1800px) {
