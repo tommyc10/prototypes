@@ -5,7 +5,7 @@
 
 import type { ReactNode } from 'react';
 import { Moon, ShieldCheck } from 'lucide-react';
-import { shortDate } from '../../../../lib/format';
+import { nightDate } from '../../model/suggestions';
 import { groupById } from '../../data/mockData';
 import type { Decision } from '../../hooks/useDecision';
 import type { PaneMode } from '../../hooks/usePaneMode';
@@ -64,7 +64,7 @@ export function RuleDetail({
         {rule.fromRefresh && (
           <span className="mn-detail-from">
             <Moon size={13} />
-            Moved from the nightly refresh, found {shortDate(rule.fromRefresh)}
+            Moved from the nightly refresh, found {nightDate(rule.fromRefresh)}
           </span>
         )}
       </div>

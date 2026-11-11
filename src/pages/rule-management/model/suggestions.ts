@@ -2,13 +2,35 @@
  * covers yet. A suggestion is not a rule. A person either proposes it, which makes it one
  * (waiting for approval like any other), or dismisses it. If neither happens within three
  * refreshes it moves to the rules by itself, proposed, so the block only ever holds recent finds.
- * Plain functions with no React in them, like policy.ts. */
+ *
+ * Its life, counted in successful refreshes from the one that found it:
+ *   1  it appears under the night that found it
+ *   2  it stays under that night. Seeing the pattern again updates its evidence, not its age
+ *   3  its night says it moves at the next refresh
+ *   4  it becomes a proposed rule, which hides nothing until someone approves it
+ * A failed run ages nothing, and running the same night twice counts once.
+ *
+ * Nights are UTC, 22:00 to 06:00, and every date here is written in UTC so a night keeps its
+ * name in every time zone. Plain functions with no React in them, like policy.ts. */
 
-import { shortDate } from '../../../lib/format';
 import type { Condition, Resolution, Rule, RuleSource } from './types';
 
 /** How many refreshes a suggestion stays in the overnight block, counted from the one that found it. */
 export const REFRESH_WINDOW = 3;
+
+/** One run of the nightly refresh. Only a run that succeeds counts. */
+export interface RefreshRun {
+  at: string;
+  ok: boolean;
+  /** Why it failed. */
+  note?: string;
+}
+
+/** An ISO date → "26 Sept", in UTC: the night's own date wherever the reader is. */
+export const nightDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+/** An ISO date → "06:41", in UTC, the clock the nights are counted in. */
+export const nightTime = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
 
 /** One incident from its night that sits near a pattern: matched by it, or a near miss. */
 export interface NightIncident {
@@ -48,6 +70,8 @@ export interface Suggestion {
   nights: number;
   /** How many refreshes ago it was first found: 0 is this morning's. Seeing it again doesn't reset this. */
   daysAgo: number;
+  /** How many refreshes ago it was last seen. Below `daysAgo` when a later night saw it again. */
+  lastSeen: number;
   /** The refresh that found it. */
   foundAt: string;
   /** The 22:00 its incidents are counted from. */
@@ -103,14 +127,28 @@ export const canTighten = (s: Suggestion, match: SuggestionMatch, threshold: num
   match.real.length > 0 && s.threshold.safe !== undefined && threshold > s.threshold.safe;
 
 /** Its night, as a sentence says it. */
-export const nightWords = (s: Suggestion) => (s.daysAgo === 0 ? 'last night' : `on the night of ${shortDate(s.nightStart)}`);
+export const nightWords = (s: Suggestion) => (s.daysAgo === 0 ? 'last night' : `on the night of ${nightDate(s.nightStart)}`);
 
-/** When it moves to the rules if nobody decides, as a sentence says it. */
+/** Successful refreshes left before it moves to the rules: 3, 2, then 1. */
+export const refreshesLeft = (s: Suggestion) => REFRESH_WINDOW - s.daysAgo;
+
+/** When it moves to the rules if nobody decides, as a sentence says it. The date assumes every
+ * refresh between now and then succeeds; one that fails pushes it back a night. */
 export function movesWords(s: Suggestion) {
-  if (s.daysAgo === REFRESH_WINDOW - 1) return "at tomorrow's refresh";
+  const left = refreshesLeft(s);
+  if (left <= 1) return 'at the next refresh';
   const at = new Date(s.foundAt);
   at.setUTCDate(at.getUTCDate() + REFRESH_WINDOW);
-  return `on ${shortDate(at.toISOString())}`;
+  return `in ${left} refreshes (${nightDate(at.toISOString())})`;
+}
+
+/** When a later night saw it again, as a sentence says it, or null if none has. */
+export function seenAgainWords(s: Suggestion) {
+  if (s.lastSeen >= s.daysAgo) return null;
+  if (s.lastSeen === 0) return 'last night';
+  const night = new Date(s.nightStart);
+  night.setUTCDate(night.getUTCDate() + s.daysAgo - s.lastSeen);
+  return `on the night of ${nightDate(night.toISOString())}`;
 }
 
 /** The suggestion in the shape of the rule it would become, so the page's own sections

@@ -441,7 +441,9 @@ colour (what the rule caught, in green); every other series is a grey from the t
   and it travels slowly (5 to 9 seconds a lap). Never on a button, never as decoration.
 - **The overnight block breathes** with the Border beam package (`border-beam`,
   libraries.dev/beam): `size="pulse-inner"`, `colorVariant="mono"`, `theme` from the app's
-  theme, `active` until its last suggestion is dealt with. On light it also takes
+  theme, `duration={4.5}` (the default 2.3s pulse fidgets on a page open all shift), `active`
+  until someone opens the block after a refresh; it goes still once looked at, and breathes
+  again when the next refresh lands. On light it also takes
   `brightness={0.45}` and `glowSize={1.4}`: the default brightness washes mono's greys out
   to white on a light card. It waits on a decision, so it
   breathes in place rather than travels, and it's grey because colour here means status. The
@@ -502,11 +504,17 @@ toast.
 **Feedback.** Hover within 120ms, press immediately, result as a toast. Errors appear
 beside the field that caused them, in a sentence that says what to do.
 
-**The overnight block.** Holds what the last three refreshes found, newest night first, each
-under its date; the oldest night says "Moves to rules tomorrow". A pattern's three refreshes
-count from the one that first found it. With no decision it moves to the rule list as a proposed
-rule, so it hides nothing, and its row and header say it came from the nightly refresh. A
-dismissed pattern doesn't move.
+**The overnight block.** Holds what the last three *successful* refreshes found, newest night
+first, each under its UTC date. A failed run ages nothing, and running a night twice counts
+once. The refresh's health is kept apart from what it found: the heading says when it ran
+("Refreshed 06:41", orange "Refresh failed 07:30" when the latest run failed), and one quiet
+line under it says how many incidents it read and whether a run was retried. Each night carries
+three grey pips, one per refresh it has used; the oldest is full and says "Moves to rules at next
+refresh". A pattern's three refreshes count from the one that first found it: seeing it again
+adds evidence ("Seen again last night") but never resets its age. With no decision it moves to
+the rule list as a proposed rule, so it hides nothing, and its row and header say it came from
+the nightly refresh. A dismissed pattern doesn't move. A night with nothing left says why:
+"Ran, nothing new" or "All decided".
 
 **Empty and waiting.** An empty list says what would appear here and how to get it, in
 `fg-3`, centred, with no illustration. Waiting states say what is being computed.

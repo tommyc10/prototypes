@@ -4,9 +4,18 @@
  * the real backend replaces. */
 
 import { NOW } from '../../../lib/clock';
-import { shortDate } from '../../../lib/format';
 import type { Condition, Resolution, RuleSource } from '../model/types';
-import { REFRESH_WINDOW, asRule, matchSuggestion, movedFrom, type NightIncident, type Suggestion, type Threshold } from '../model/suggestions';
+import {
+  REFRESH_WINDOW,
+  asRule,
+  matchSuggestion,
+  movedFrom,
+  nightDate,
+  type NightIncident,
+  type RefreshRun,
+  type Suggestion,
+  type Threshold,
+} from '../model/suggestions';
 import type { Rule } from '../model/types';
 
 function atDay(daysAgo: number, hours: number, minutes = 0) {
@@ -16,11 +25,18 @@ function atDay(daysAgo: number, hours: number, minutes = 0) {
   return at.toISOString();
 }
 
-/** The refresh on a morning, and the 22:00 before it that its night is counted from. */
-const refreshOf = (daysAgo: number) => atDay(daysAgo, 6, 2);
+/** This morning's runs of the refresh, in order. The first timed out; the retry is the one that
+ * counts. A failed run ages nothing, and running the same night twice counts once. */
+export const MORNING_RUNS: RefreshRun[] = [
+  { at: atDay(0, 6, 2), ok: false, note: 'Timed out reading the incident store' },
+  { at: atDay(0, 6, 41), ok: true },
+];
+
+/** The successful refresh on a morning, and the 22:00 before it that its night is counted from. */
+const refreshOf = (daysAgo: number) => (daysAgo === 0 ? MORNING_RUNS.filter((run) => run.ok).at(-1)!.at : atDay(daysAgo, 6, 2));
 const nightOf = (daysAgo: number) => atDay(daysAgo + 1, 22);
 
-/** A night the block has room for. */
+/** A night the block has room for: one successful refresh. */
 export interface RefreshNight {
   daysAgo: number;
   /** "Last night", or the day it fell on. */
@@ -28,16 +44,11 @@ export interface RefreshNight {
   date: string;
   /** Every incident that came in that night, in a pattern or not. */
   total: number;
+  /** How many patterns its refresh found, decided on or not. 0 is a night that ran and found nothing new. */
+  found: number;
 }
 
 const NIGHT_TOTALS = [214, 187, 203];
-
-export const REFRESH_NIGHTS: RefreshNight[] = NIGHT_TOTALS.slice(0, REFRESH_WINDOW).map((total, daysAgo) => ({
-  daysAgo,
-  label: daysAgo === 0 ? 'Last night' : new Date(nightOf(daysAgo)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }),
-  date: shortDate(nightOf(daysAgo)),
-  total,
-}));
 
 /* ---------- deterministic generation helpers ---------- */
 
@@ -81,6 +92,8 @@ interface Spec {
   nights: number;
   /** Which refresh found it, counting back from this morning's. */
   daysAgo: number;
+  /** The last refresh that saw it again, if one did after the first. */
+  lastSeen?: number;
   summary: string;
   conditions: Condition[];
   threshold: Threshold;
@@ -135,6 +148,7 @@ const SPECS: Spec[] = [
     confidence: 0.93,
     nights: 5,
     daysAgo: 1,
+    lastSeen: 0,
     summary: 'One hatch sensor raises the same fault every few minutes until someone closes the first ticket.',
     conditions: [
       { field: 'ci', op: '=', value: 'chute-05-hatch-sensor' },
@@ -196,6 +210,7 @@ const SPECS: Spec[] = [
     confidence: 0.88,
     nights: 6,
     daysAgo: 2,
+    lastSeen: 0,
     summary: 'The tractor lock misses on its first attempt around shift change and passes on the retry.',
     conditions: [
       { field: 'ci', op: 'matches', value: 'dock-tractor-*' },
@@ -430,6 +445,7 @@ function build(): Suggestion[] {
     });
   return SPECS.map(({ title: _title, cis: _cis, decimals: _decimals, when: _when, batches: _batches, ...spec }, i) => ({
     ...spec,
+    lastSeen: spec.lastSeen ?? spec.daysAgo,
     ruleId: `RUL-${String(441 + i).padStart(4, '0')}`,
     foundAt: refreshOf(spec.daysAgo),
     nightStart: nightOf(spec.daysAgo),
@@ -438,6 +454,14 @@ function build(): Suggestion[] {
 }
 
 const ALL: Suggestion[] = build();
+
+export const REFRESH_NIGHTS: RefreshNight[] = NIGHT_TOTALS.slice(0, REFRESH_WINDOW).map((total, daysAgo) => ({
+  daysAgo,
+  label: daysAgo === 0 ? 'Last night' : new Date(nightOf(daysAgo)).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }),
+  date: nightDate(nightOf(daysAgo)),
+  total,
+  found: ALL.filter((s) => s.daysAgo === daysAgo).length,
+}));
 
 /** What's waiting in the overnight block, newest night first. */
 export const SUGGESTIONS = ALL.filter((s) => s.daysAgo < REFRESH_WINDOW).sort((a, b) => a.daysAgo - b.daysAgo);

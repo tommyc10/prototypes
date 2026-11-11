@@ -4,7 +4,8 @@
 
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { AlertTriangle, Moon, Search } from 'lucide-react';
-import { pct, shortDate } from '../../../../lib/format';
+import { pct } from '../../../../lib/format';
+import { nightDate } from '../../model/suggestions';
 import type { Pin } from '../../hooks/usePinnedGroups';
 import { STATUS_TABS, groupName, type StatusFilter, type ViewState } from '../../model/browse';
 import { statusLabel } from '../../model/labels';
@@ -109,7 +110,7 @@ export function RuleList({
                 {rule.fromRefresh ? (
                   <span className="mn-row-from">
                     <Moon size={12} />
-                    Nightly refresh, {shortDate(rule.fromRefresh)}
+                    Nightly refresh, {nightDate(rule.fromRefresh)}
                   </span>
                 ) : (
                   <span>{groupName(rule, view.groupBy)}</span>

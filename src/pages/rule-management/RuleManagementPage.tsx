@@ -33,7 +33,7 @@ import { TOUR_STEPS } from '../../../tours/rule-management';
 import { Tour } from '../../../tours/Tour';
 import { tourMode, useTour } from '../../../tours/useTour';
 import { CURRENT_USER, groupById } from './data/mockData';
-import { REFRESH_NIGHTS } from './data/overnightData';
+import { MORNING_RUNS, REFRESH_NIGHTS, SUGGESTIONS } from './data/overnightData';
 import { useDecision } from './hooks/useDecision';
 import { usePaneMode } from './hooks/usePaneMode';
 import { usePinnedGroups, type Pin } from './hooks/usePinnedGroups';
@@ -47,6 +47,9 @@ import type { RelatedIncident, RuleAction } from './model/types';
 
 /** How long the overnight block takes to fade out; its exit in OvernightBlock.css is the same length. */
 const BLOCK_EXIT_MS = 150;
+
+/** How long a single suggestion's row takes to go; its exit in OvernightBlock.css is the same length. */
+const ROW_EXIT_MS = 150;
 
 /** How long an arrival stays marked: long enough to play once, then it is an ordinary row again. */
 const ARRIVE_MS = 600;
@@ -77,6 +80,8 @@ export function RuleManagementPage({
   const [arrivedId, setArrivedId] = useState<string | null>(null);
   const [retuned, setRetuned] = useState(0);
   const [leavingBlock, setLeavingBlock] = useState<Suggested[] | null>(null);
+  //   leavingRow     a suggestion just dealt with by pointer, kept in its place while it fades
+  const [leavingRow, setLeavingRow] = useState<Suggested | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [incidentsOpen, setIncidentsOpen] = useState(false);
   // The incident that's open, and the rule it was opened from.
@@ -123,6 +128,14 @@ export function RuleManagementPage({
     openIncident(owner.related[Math.min(owner.related.length - 1, Math.max(0, at + by))]);
   };
 
+  // What the block draws: the open suggestions, plus one on its way out, back in its own place.
+  // (Undone before its exit ends, it's open again, so it isn't drawn twice.)
+  const order = (item: Suggested) => SUGGESTIONS.findIndex((s) => s.id === item.suggestion.id);
+  const blockItems =
+    leavingRow && !suggestions.some((item) => item.suggestion.id === leavingRow.suggestion.id)
+      ? [...suggestions, leavingRow].sort((a, b) => order(a) - order(b))
+      : suggestions;
+
   // Every row J and K can reach, top to bottom: the overnight block, then the rules.
   const rows = [...(overnightCollapsed ? [] : suggestions.map((item) => item.suggestion.id)), ...visible.map((r) => r.id)];
   const rowKey = rows.join();
@@ -155,6 +168,11 @@ export function RuleManagementPage({
     if (via === 'pointer' && rest.length === 0) {
       setLeavingBlock(suggestions);
       setTimeout(() => setLeavingBlock(null), BLOCK_EXIT_MS);
+    } else if (via === 'pointer') {
+      // Not the last: just its row goes, before the rows below close up.
+      const item = suggestions.find((s) => s.suggestion.id === suggestion.id)!;
+      setLeavingRow(item);
+      setTimeout(() => setLeavingRow((row) => (row === item ? null : row)), ROW_EXIT_MS);
     }
     const next = rest[suggestions.findIndex((item) => item.suggestion.id === suggestion.id)] ?? rest[rest.length - 1];
     setOpened(null);
@@ -319,9 +337,11 @@ export function RuleManagementPage({
         pinned={
           (leavingBlock ?? suggestions).length > 0 && (
             <OvernightBlock
-              items={leavingBlock ?? suggestions}
+              items={leavingBlock ?? blockItems}
               leaving={leavingBlock !== null}
+              leavingId={leavingBlock ? null : leavingRow?.suggestion.id}
               nights={REFRESH_NIGHTS}
+              runs={MORNING_RUNS}
               collapsed={overnightCollapsed}
               onToggle={() => setOvernightCollapsed((collapsed) => !collapsed)}
               selectedId={selectedId}

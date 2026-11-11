@@ -41,7 +41,9 @@
   background: none;
   font-size: 12px;
   text-align: left;
-  transition: transform 160ms var(--ease-out);
+  transition:
+    background-color 120ms ease,
+    transform 160ms var(--ease-out);
 }
 
 /* A wide control, so it gives a little less than a button does. */
@@ -54,7 +56,7 @@
   outline-offset: -2px;
 }
 
-.mn-overnight-head svg {
+.mn-overnight-head > svg {
   flex: none;
   /* The chevron sits where the rows' dots do. */
   margin: 0 2px 0 -1px;
@@ -62,11 +64,12 @@
   transition: transform 160ms var(--ease-out);
 }
 
-.mn-overnight[data-collapsed] .mn-overnight-head svg {
+.mn-overnight[data-collapsed] .mn-overnight-head > svg {
   transform: rotate(-90deg);
 }
 
 .mn-overnight-title {
+  flex: none;
   font-weight: 500;
   color: var(--fg);
 }
@@ -78,11 +81,55 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Folded away, the heading says whether to open it now: a red warning and a count for patterns
+ * that hide a real incident, or else how many move at the next refresh. */
+.mn-overnight-urgent {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  white-space: nowrap;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+
+.mn-overnight-urgent[data-bad] {
+  color: var(--danger-fg);
+}
+
 .mn-overnight-sum {
-  flex: 1;
+  flex: 1 0 auto;
   color: var(--fg-3);
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* The refresh is the one thing in the heading that can fail. Only then does it take a colour. */
+.mn-overnight-sum[data-failed] {
+  color: var(--orange);
+}
+
+/* How the refresh went, apart from what it found: one quiet line under the heading. */
+.mn-overnight-status {
+  display: flex;
+  min-width: 0;
+  padding: 0 10px 6px 12px;
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-overnight-status > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* A refresh that failed and wasn't retried: a sentence, so it wraps and reads in fg-2. */
+.mn-overnight-status .mn-overnight-status-warn {
+  white-space: normal;
+  color: var(--fg-2);
 }
 
 /* A night: its date, then the patterns it found. */
@@ -109,8 +156,45 @@
 
 .mn-overnight-night-note {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* The lifecycle: a pip for each of a night's three refreshes, filled as they pass. A meter, so
+ * it's grey; the night that moves next fills a shade brighter. */
+.mn-overnight-age {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.mn-overnight-age i {
+  width: 8px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--tint-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.mn-overnight-age i[data-on] {
+  background: var(--fg-3);
+  box-shadow: none;
+}
+
+.mn-overnight-age[data-full] i[data-on] {
+  background: var(--fg-2);
+}
+
+/* A pattern a later night saw again. Its evidence grew; its age didn't. */
+.mn-overnight-seen {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .mn-overnight-night-note[data-last] {
@@ -126,12 +210,28 @@
   color: var(--danger-fg);
 }
 
+.mn-overnight .mn-row-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A row just proposed or dismissed with the pointer: it goes, quickly, before the rows close up. */
+.mn-overnight .mn-row[data-leaving] {
+  opacity: 0;
+  transform: scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .mn-overnight .mn-row:hover:not([data-selected]) {
     background: var(--tint);
   }
-  .mn-overnight-head:hover .mn-overnight-title {
-    color: var(--fg);
+  .mn-overnight-head:hover {
+    background: var(--tint);
   }
 }
 
@@ -148,11 +248,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mn-overnight {
+  .mn-overnight-beam {
     transition: opacity 150ms ease;
   }
-  .mn-overnight[data-leaving] {
+  .mn-overnight-beam[data-leaving] {
     transform: none;
+  }
+  .mn-overnight .mn-row[data-leaving] {
+    transform: none;
+    transition: opacity 150ms ease;
   }
   .mn-overnight-head {
     transition: none;
@@ -160,7 +264,7 @@
   .mn-overnight-head:active {
     transform: none;
   }
-  .mn-overnight-head svg {
+  .mn-overnight-head > svg {
     transition: none;
   }
 }
