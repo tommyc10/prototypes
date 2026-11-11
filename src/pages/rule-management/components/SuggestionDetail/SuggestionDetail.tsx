@@ -4,12 +4,12 @@
 
 import type { ReactNode } from 'react';
 import { AlertTriangle, Bot, ShieldCheck } from 'lucide-react';
-import { ago, shortDate } from '../../../../lib/format';
+import { ago } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
 import type { Suggested } from '../../hooks/useSuggestions';
 import type { PaneMode } from '../../hooks/usePaneMode';
 import { SOURCE_LABEL } from '../../model/labels';
-import { canTighten, movesWords, nightWords, thresholdLabel } from '../../model/suggestions';
+import { canTighten, movesWords, nightDate, nightWords, seenAgainWords, thresholdLabel } from '../../model/suggestions';
 import type { RelatedIncident, Rule } from '../../model/types';
 import { NightSwarm } from '../common/NightSwarm';
 import { IncidentList } from '../Incidents/IncidentList';
@@ -47,6 +47,7 @@ export function SuggestionDetail({
   const group = groupById(rule.groupId);
   const wide = mode !== 'narrow';
   const { safe, suggested } = suggestion.threshold;
+  const seen = seenAgainWords(suggestion);
   const tighten = canTighten(suggestion, match, threshold) && safe !== undefined ? () => onThreshold(safe) : null;
 
   const header = (
@@ -65,7 +66,8 @@ export function SuggestionDetail({
         Would be scoped to <strong>{group.name}</strong>
         <span className="mn-subtle">· {group.unit}</span>
         <span className="mn-sep" />
-        {SOURCE_LABEL[suggestion.source]} · found in the {suggestion.daysAgo === 0 ? '06:00' : shortDate(suggestion.foundAt)} refresh
+        {SOURCE_LABEL[suggestion.source]} · found in {suggestion.daysAgo === 0 ? "this morning's" : `the ${nightDate(suggestion.foundAt)}`} refresh
+        {seen && `, seen again ${seen}`}
       </div>
     </>
   );
@@ -139,8 +141,13 @@ export function SuggestionDetail({
                 <div className="mn-decide-title">Suggestion</div>
                 <p>
                   Not a rule yet. Proposing adds it to the queue as <span className="mn-mono">{suggestion.ruleId}</span>. With no decision, it moves there by itself{' '}
-                  {movesWords(suggestion)}.
+                  {movesWords(suggestion)}, as a proposal that hides nothing until it's approved. Only refreshes that succeed count.
                 </p>
+                {seen && (
+                  <p className="mn-decide-note">
+                    Seen again {seen}. That adds to its evidence but doesn't reset its place in line.
+                  </p>
+                )}
                 <div className="mn-decide-actions">{buttons}</div>
                 {tighten && safe !== undefined && (
                   <p className="mn-decide-note mn-suggest-risk">
