@@ -40,7 +40,8 @@ export function RunHead({ eyebrow, note, lead, steps, step, done, waiting }: { e
           return (
             <li key={i} data-state={state}>
               <span className="ol-ledger-mark" aria-hidden>
-                {state === 'done' ? <Check size={11} strokeWidth={2.5} /> : <i />}
+                <i className="ol-ledger-dot" />
+                <Check size={11} className="ol-ledger-tick" />
               </span>
               <span className="ol-ledger-text">{state === 'done' ? s.done : s.running}</span>
             </li>

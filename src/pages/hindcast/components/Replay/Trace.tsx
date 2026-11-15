@@ -117,6 +117,7 @@ export function Trace({ replayed, onClose, animate, basis }: { replayed: Replaye
       // Only a mostly sideways pull is a drag; anything else is the reader scrolling.
       if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(e.clientY - d.y)) return;
       d.on = true;
+      ref.current!.dataset.dragging = '';
       e.currentTarget.setPointerCapture(e.pointerId);
     }
     // Pulled the wrong way it gives a little, then stops.
@@ -130,6 +131,7 @@ export function Trace({ replayed, onClose, animate, basis }: { replayed: Replaye
   const onUp = () => {
     const d = drag.current;
     if (!d) return;
+    delete ref.current?.dataset.dragging;
     if (!d.on) {
       drag.current = null;
       return;
