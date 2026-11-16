@@ -13,14 +13,12 @@ import { HomePage } from './pages/home/HomePage';
 import { LoginPage } from './pages/login/LoginPage';
 import { IncidentsPage } from './pages/incidents/IncidentsPage';
 import { RuleManagementPage } from './pages/rule-management/RuleManagementPage';
-import { ServicesPage } from './pages/services/ServicesPage';
-import { FeatureBanner } from './components/FeatureBanner/FeatureBanner';
 import { HalloweenCard, useHalloweenCard } from './components/Halloween/HalloweenCard';
 import { Haunting } from './components/Halloween/Haunting';
 import { useHalloween } from './hooks/useHalloween';
 import { pinFromParam } from './pages/rule-management/hooks/usePinnedGroups';
 
-const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', services: 'Services', rules: 'Rules', hindcast: 'Hindcast', forecast: 'Forecast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents', access: 'Access' };
+const TITLE: Record<PageId, string> = { home: 'Home', login: 'Sign in', rules: 'Rules', hindcast: 'Hindcast', forecast: 'Forecast', alerts: 'Alerts', changes: 'Change windows', incidents: 'Incidents', access: 'Access' };
 
 export function App() {
   const route = useRoute();
@@ -31,14 +29,11 @@ export function App() {
   }, [route.page]);
   return (
     <div className="mn mn-app">
-      {route.page !== 'login' && (halloweenCard.shown ? <HalloweenCard onDismiss={halloweenCard.dismiss} /> : <FeatureBanner />)}
+      {route.page !== 'login' && halloweenCard.shown && <HalloweenCard onDismiss={halloweenCard.dismiss} />}
       {route.page === 'login' ? (
         <LoginPage />
       ) : route.page === 'home' ? (
         <HomePage />
-      ) : route.page === 'services' ? (
-        // The key gives a link to another service a fresh page, opened on that service.
-        <ServicesPage key={route.parts[0] ?? ''} initialId={route.parts[0]} />
       ) : route.page === 'incidents' ? (
         // The key gives a link to another incident a fresh page, opened on that incident.
         <IncidentsPage key={route.parts[0] ?? ''} initialId={route.parts[0]} />

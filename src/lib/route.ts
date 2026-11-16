@@ -2,8 +2,6 @@
  *
  *   #/                       home (also what any address it doesn't know opens)
  *   #/login                  the sign-in page (a mock; nothing is gated behind it)
- *   #/services               every service, ranked by what it raised: the top talkers
- *   #/services/holonet       …opened on one service
  *   #/rules                  the rule list
  *   #/rules/RUL-0428         …opened on one rule
  *   #/rules?group=assignment.reactor   …filtered to one group (a pinned group in the sidebar)
@@ -28,9 +26,9 @@
 
 import { useEffect, useState } from 'react';
 
-export type PageId = 'home' | 'login' | 'services' | 'rules' | 'hindcast' | 'forecast' | 'alerts' | 'changes' | 'incidents' | 'access';
+export type PageId = 'home' | 'login' | 'rules' | 'hindcast' | 'forecast' | 'alerts' | 'changes' | 'incidents' | 'access';
 
-const PAGES: PageId[] = ['login', 'services', 'rules', 'hindcast', 'forecast', 'alerts', 'changes', 'incidents', 'access'];
+const PAGES: PageId[] = ['login', 'rules', 'hindcast', 'forecast', 'alerts', 'changes', 'incidents', 'access'];
 
 export interface Route {
   page: PageId;
@@ -53,7 +51,6 @@ function parse(hash: string): Route {
  *  shows each pair in its item's tooltip. */
 export const GO: Record<string, { page: PageId; to: string }> = {
   h: { page: 'home', to: '#/' },
-  s: { page: 'services', to: '#/services' },
   i: { page: 'incidents', to: '#/incidents' },
   a: { page: 'alerts', to: '#/alerts' },
   c: { page: 'changes', to: '#/changes' },

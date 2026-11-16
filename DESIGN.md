@@ -211,7 +211,7 @@ end says so and says which value wins.
 
 ## Overview
 
-Imperial Ops is an operations dashboard: the services that raise the most, alert rules, incidents, change windows, and a
+Imperial Ops is an operations dashboard: alert rules, incidents, change windows, and a
 hindcast and forecast: what past tickets were caused by, and what the next weeks should hold. The person using it is on
 shift, making decisions that hide or surface real pages. The look follows from that:
 
@@ -248,7 +248,7 @@ The product is plain CSS. No Tailwind, no CSS-in-JS.
   attribute** (`data-variant="primary"`, `data-active`, `data-selected`, `data-status`),
   and its colours from **tokens** (`var(--l3)`). Never a raw hex in a component.
 - Shared pieces are prefixed `mn-`. Each page has its own prefix for its own pieces:
-  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `sv-` Services, `lg-` Sign in,
+  `ol-` Hindcast and Forecast (one shared family), `al-` Alerts, `cw-` Change windows, `ic-` Incidents, `hm-` Home, `lg-` Sign in,
   `hw-` Halloween mode.
 - Tokens: `src/styles/theme.css`. Shared pieces: `src/styles/ui.css`. Page frame:
   `src/styles/shell.css`. Command palette: `src/styles/palette.css`. OS preferences:
@@ -311,7 +311,7 @@ One family, Geist, at a 14px base; Geist Mono for identifiers and code. Three we
 **The shell** is a three-column grid filling the viewport: sidebar 240px, list 380px,
 detail `1fr`.
 
-**The sidebar** groups pages by the question someone comes with: Home and Services first
+**The sidebar** groups pages by the question someone comes with: Home first
 with no heading (where to start), then *Live* (Incidents, Alerts, Change windows), *Tuning*
 (Rules, Hindcast, Forecast), *Pinned* (your groups, on every page), and *Admin* (Access,
 Audit log) pushed to the bottom above the user. Section labels are 12px/500 `fg-3`,
@@ -489,10 +489,9 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `A` `X` `E` `D` | Approve, reject, activate, deactivate (Rules) |
 | `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
 | `M` | Plan maintenance for the picked window (Change windows) |
-| `S` `H` `R` | Rank by the next measure; open the picked service in the Hindcast, or its rules (Services) |
 | `1` to `5` `B` `T` | Jump to a chapter; group the tickets by the next field; widen the ticket dock (Hindcast) |
 | `[` `]` | Tuck away the sidebar / the list |
-| `G` then a letter | Go to a page: `H` Home, `S` Services, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
+| `G` then a letter | Go to a page: `H` Home, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
 | `?` | Start the guided tour |
 | `Esc` | Step back one layer |
 | `⌘↵` | Submit the open decision |

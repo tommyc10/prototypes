@@ -3,7 +3,7 @@
  *
  * The pages are grouped by the question you come with:
  *
- *   (none)   Home, Services     where to start: this hour, or one service
+ *   (none)   Home               where to start: this hour
  *   Live     Incidents, Alerts, Change windows     what's happening now
  *   Tuning   Rules, Hindcast, Forecast            cutting the noise, and the evidence for it
  *   Pinned   your groups, on every page
@@ -14,7 +14,7 @@
  * Whatever a page wants under the pins comes in as children. */
 
 import type { ComponentType, ReactNode } from 'react';
-import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { goKey, type PageId } from '../../lib/route';
 import { BrandMark } from '../BrandMark';
 import type { Theme } from '../../hooks/useTheme';
@@ -61,7 +61,6 @@ export function Sidebar({
 
   const START: Item[] = [
     { page: 'home', label: 'Home', Icon: House },
-    { page: 'services', label: 'Services', Icon: LayoutGrid },
   ];
   const LIVE: Item[] = [
     { page: 'incidents', label: 'Incidents', Icon: Siren, count: counts.open ? { n: counts.open, word: 'open', tone: 'red', title: `${counts.open} real incidents with the team now` } : undefined },
