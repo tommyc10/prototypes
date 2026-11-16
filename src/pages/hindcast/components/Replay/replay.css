@@ -1,5 +1,6 @@
-/* The hindcast's replay: its header and run, the report's grid, the bars, the week chart, the
- * lists, the ticket table, the trace drawer and the extract's diagnostics. Shares the ol-
+/* The hindcast's replay: its header and run, the extract's grid, the bars, the week chart, the
+ * lists, the trace drawer and the extract's diagnostics. The chapters and the ticket dock keep
+ * their own files (Chapters/chapters.css, Replay/dock.css). Shares the ol-
  * family with the forecast (Panel, charts.css, layout.css) and adds what only a replay needs.
  *
  * Colour is status only. Green is what a rule or window would explain (caught). Red is a real
@@ -17,7 +18,7 @@
   flex-direction: column;
   gap: 10px;
   box-sizing: border-box;
-  max-width: 1480px;
+  max-width: 2400px;
   margin: 0 auto;
   padding: 18px 20px 28px;
 }
@@ -75,7 +76,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .ol-kind {
@@ -103,9 +104,8 @@
 
 .ol-lead-1 {
   margin: 0;
-  font-size: 17px;
-  line-height: 1.55;
-  letter-spacing: -0.005em;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--fg-2);
   text-wrap: pretty;
 }
@@ -147,7 +147,7 @@
   align-items: center;
   width: fit-content;
   max-width: 100%;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   padding: 4px;
   border-radius: 9px;
   background: var(--well-2);
@@ -261,42 +261,6 @@
   min-height: 0;
 }
 
-.ol-rgrid[data-view='replay'] > [data-area='pop'] {
-  grid-column: 1 / -1;
-}
-.ol-rgrid[data-view='replay'] > [data-area='part'] {
-  grid-column: 1 / 8;
-}
-.ol-rgrid[data-view='replay'] > [data-area='sources'] {
-  grid-column: 8 / 13;
-  grid-row: span 2;
-  /* Its rows scroll inside it; its height comes from the two cards beside it, not from its list. */
-  contain: size;
-}
-.ol-rgrid[data-view='replay'] > [data-area='weeks'] {
-  grid-column: 1 / 8;
-}
-.ol-rgrid[data-view='replay'] > [data-area='gaps'] {
-  grid-column: 1 / 6;
-  height: 360px;
-}
-.ol-rgrid[data-view='replay'] > [data-area='hypo'] {
-  grid-column: 6 / 10;
-  height: 360px;
-}
-.ol-rgrid[data-view='replay'] > [data-area='unknowns'] {
-  grid-column: 10 / 13;
-  height: 360px;
-}
-.ol-rgrid[data-view='replay'] > [data-area='tickets'] {
-  grid-column: 1 / -1;
-  height: 600px;
-}
-
-.ol-rgrid[data-view='replay'] > [data-area='weeks'] .ol-panel-body {
-  min-height: 210px;
-}
-
 .ol-rgrid[data-view='diagnostics'] > [data-area='rows'],
 .ol-rgrid[data-view='diagnostics'] > [data-area='fields'] {
   grid-column: 1 / 7;
@@ -313,30 +277,6 @@
   height: 220px;
 }
 
-@container analysis (max-width: 1040px) {
-  .ol-rgrid[data-view='replay'] > [data-area='part'],
-  .ol-rgrid[data-view='replay'] > [data-area='weeks'],
-  .ol-rgrid[data-view='replay'] > [data-area='sources'] {
-    grid-column: 1 / -1;
-    grid-row: auto;
-  }
-  .ol-rgrid[data-view='replay'] > [data-area='sources'] {
-    contain: none;
-    max-height: 420px;
-  }
-  .ol-rgrid[data-view='replay'] > [data-area='gaps'] {
-    grid-column: 1 / 7;
-  }
-  .ol-rgrid[data-view='replay'] > [data-area='hypo'] {
-    grid-column: 7 / 13;
-  }
-  .ol-rgrid[data-view='replay'] > [data-area='unknowns'] {
-    grid-column: 1 / -1;
-    height: auto;
-    max-height: 320px;
-  }
-}
-
 @container analysis (max-width: 760px) {
   .ol-rpage {
     padding: 14px 14px 24px;
@@ -345,23 +285,6 @@
   .ol-rgrid > .ol-skel-panel {
     grid-column: 1 / -1 !important;
   }
-  .ol-lead-1 {
-    font-size: 15px;
-  }
-}
-
-.ol-panel-note {
-  margin: 12px 0 0;
-  text-wrap: pretty;
-  max-width: 88ch;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--fg-3);
-}
-
-.ol-panel-note b {
-  font-weight: 500;
-  color: var(--fg-2);
 }
 
 /* ---------- bars: population and partition ---------- */
@@ -476,14 +399,12 @@
   transform: scale(0.97);
 }
 
-.ol-key-btn:focus-visible,
-.ol-part-head:focus-visible {
+.ol-key-btn:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: -2px;
 }
 
-.ol-key-btn[data-picked],
-.ol-part-head[data-picked] {
+.ol-key-btn[data-picked] {
   background: var(--l4);
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -516,85 +437,6 @@
 
 .ol-pop-key .ol-key-btn {
   width: auto;
-}
-
-.ol-part-key {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr 1fr;
-  gap: 18px;
-  margin-top: 14px;
-}
-
-.ol-part-group ul {
-  margin: 4px -8px 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ol-part-group .ol-key-label {
-  flex: 1;
-}
-
-.ol-part-head {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 2px 8px;
-  width: calc(100% + 16px);
-  margin: 0 -8px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--fg);
-  text-align: left;
-  transition:
-    background-color 120ms ease,
-    transform 160ms var(--ease-out);
-}
-
-.ol-part-head:active {
-  transform: scale(0.98);
-}
-
-.ol-part-name {
-  width: 100%;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fg-3);
-}
-
-.ol-part-count {
-  font-size: 26px;
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.ol-part-group[data-group='explained'] .ol-part-count {
-  color: var(--green);
-}
-
-.ol-part-share {
-  font-size: 12px;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-}
-
-.ol-part-note {
-  margin: 8px 0 0;
-  max-width: 38ch;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--fg-3);
-}
-
-@container analysis (max-width: 760px) {
-  .ol-part-key {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
 }
 
 /* ---------- week by week ---------- */
@@ -726,152 +568,15 @@
 
 /* ---------- what explains them ---------- */
 
-.ol-src {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.ol-src-scroll {
-  flex: 1;
-  min-height: 0;
-  margin: 0 -6px;
-  overflow: auto;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
-}
-
-.ol-src-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.ol-src-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  width: 64px;
-  padding: 0 8px 6px;
-  background: var(--l3);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--fg-3);
-  text-align: right;
-  white-space: nowrap;
-}
-
-.ol-src-table thead th:first-child {
-  width: auto;
-  text-align: left;
-}
-
-.ol-src-table thead th:nth-child(2) {
-  width: 96px;
-}
-
-.ol-src-row {
-  border-top: 1px solid var(--line);
-  cursor: pointer;
-  transition: background-color 120ms ease;
-}
-
-.ol-src-row > td {
-  padding: 7px 8px;
-  color: var(--fg-2);
-  text-align: right;
-  white-space: nowrap;
-}
-
-.ol-src-row > th {
-  padding: 3px 4px;
-  font-weight: 400;
-  text-align: left;
-}
-
-.ol-src-row > td[data-bad] {
-  font-weight: 600;
-  color: var(--red);
-}
-
-.ol-src-row[data-picked] {
-  background: var(--l4);
-}
-
-.ol-src-name {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: 100%;
-  min-width: 0;
-  height: 28px;
-  padding: 0 4px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--row-name);
-  font-size: 13px;
-  text-align: left;
-}
-
-.ol-src-name svg {
-  flex: none;
-  color: var(--fg-3);
-}
-
-.ol-src-name code,
 .ol-row code,
 .ol-check code,
 .ol-trace code,
-.ol-tix code,
 .ol-diag-list code,
 .ol-fields code {
   flex: none;
   font-family: 'Geist Mono Variable', ui-monospace, monospace;
   font-size: 12px;
   color: var(--fg-3);
-}
-
-.ol-src-row[data-picked] .ol-src-name {
-  color: var(--fg);
-}
-
-.ol-src-name:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: -2px;
-}
-
-.ol-src-meter {
-  display: inline-block;
-  width: 30px;
-  height: 4px;
-  margin-right: 8px;
-  overflow: hidden;
-  vertical-align: 2px;
-  border-radius: 4px;
-  background: var(--tint-2);
-}
-
-.ol-src-meter i {
-  display: block;
-  height: 100%;
-  background: var(--fg-2);
-  transform-origin: left;
-}
-
-.ol-src-foot {
-  margin: 10px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--fg-3);
-}
-
-.ol-src-foot b {
-  font-weight: 600;
-  color: var(--fg-2);
-  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- lists: gaps, hypothetical, unknowns ---------- */
@@ -1100,65 +805,7 @@
   border-top: 0;
 }
 
-.ol-skel-key {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin-top: 16px;
-}
-
-.ol-skel-cols {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr 1fr;
-  gap: 18px;
-  margin-top: 18px;
-}
-
-.ol-skel-cols > div {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 /* ---------- tickets ---------- */
-
-.ol-tix {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  min-height: 0;
-}
-
-.ol-tix-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.ol-tix-tabs {
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
-}
-
-.ol-tix-tabs .mn-tab {
-  flex: none;
-  white-space: nowrap;
-}
-
-.ol-tix-tabs .mn-tab:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: -2px;
-}
-
-.ol-tix-search {
-  flex: none;
-  width: 260px;
-}
 
 .ol-clear {
   display: grid;
@@ -1169,184 +816,6 @@
   border-radius: 4px;
   background: var(--tint);
   color: var(--fg-2);
-}
-
-.ol-focus {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  height: 30px;
-  padding: 0 4px 0 10px;
-  border-radius: 9px;
-  background: var(--tint);
-  box-shadow: inset 0 0 0 1px var(--line);
-  transition:
-    opacity 180ms var(--ease-out),
-    transform 180ms var(--ease-out);
-}
-
-@starting-style {
-  .ol-focus {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-.ol-focus-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  font-size: 12px;
-  color: var(--fg-2);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ol-focus-clear {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex: none;
-  height: 22px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--fg-2);
-  font-size: 12px;
-  font-weight: 500;
-  transition:
-    background-color 120ms ease,
-    transform 160ms var(--ease-out);
-}
-
-.ol-focus-clear:active {
-  transform: scale(0.97);
-}
-
-.ol-focus-clear:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
-}
-
-.ol-tix-scroll {
-  flex: 1;
-  min-height: 0;
-  margin: 0 -6px;
-  overflow: auto;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
-}
-
-.ol-tix-table {
-  width: 100%;
-  min-width: 760px;
-  table-layout: fixed;
-  border-collapse: collapse;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.ol-tix-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 6px 8px;
-  background: var(--l3);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--fg-3);
-  text-align: left;
-  white-space: nowrap;
-}
-
-.ol-tix-table thead th:nth-child(1) {
-  width: 34%;
-}
-.ol-tix-table thead th:nth-child(2) {
-  width: 104px;
-}
-.ol-tix-table thead th:nth-child(4) {
-  width: 13%;
-}
-.ol-tix-table thead th:nth-child(5) {
-  width: 170px;
-}
-.ol-tix-table thead th:nth-child(6) {
-  width: 160px;
-}
-
-.ol-tix-row {
-  border-top: 1px solid var(--line);
-  cursor: pointer;
-  transition: background-color 120ms ease;
-}
-
-.ol-tix-row > th,
-.ol-tix-row > td {
-  padding: 0 8px;
-  height: 36px;
-  overflow: hidden;
-  color: var(--fg-2);
-  font-weight: 400;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ol-tix-row > th {
-  padding: 0 2px;
-}
-
-.ol-tix-row[data-selected] {
-  background: var(--l4);
-}
-
-.ol-tix-id {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-width: 0;
-  height: 30px;
-  padding: 0 6px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--row-name);
-  font-size: 13px;
-  text-align: left;
-}
-
-.ol-tix-row[data-selected] .ol-tix-id {
-  color: var(--fg);
-}
-
-.ol-tix-id:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: -2px;
-}
-
-.ol-tix-ci {
-  display: flex;
-}
-
-.ol-tix-row > .ol-tix-ci {
-  display: table-cell;
-}
-
-.ol-tix-ci span {
-  margin-right: 8px;
-}
-
-.ol-tix-when {
-  color: var(--fg-3) !important;
-  font-size: 12px;
-}
-
-.ol-tix-life .ol-bad {
-  margin-left: 6px;
-  font-size: 12px;
 }
 
 .ol-life {
@@ -1370,18 +839,6 @@
 .ol-life[data-life='open'] {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--line-3);
-}
-
-.ol-verdict {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  color: var(--fg-3);
-}
-
-.ol-verdict[data-hand] {
-  color: var(--fg-2);
 }
 
 .ol-more {
@@ -1943,12 +1400,8 @@
 /* These draw their own pressed, picked or brushing state; the browser's grey tap flash would double it. */
 .ol-segment,
 .ol-key-btn,
-.ol-part-head,
 .ol-weeks-plot,
-.ol-src-row,
-.ol-row,
-.ol-focus-clear,
-.ol-tix-row {
+.ol-row {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1956,15 +1409,10 @@
 
 @media (hover: hover) and (pointer: fine) {
   .ol-key-btn:hover:not([data-picked]),
-  .ol-part-head:hover:not([data-picked]),
-  .ol-row:hover:not([data-picked]),
-  .ol-focus-clear:hover {
+  .ol-row:hover:not([data-picked]) {
     background: var(--tint);
   }
-  .ol-src-row:hover:not([data-picked]),
-  .ol-tix-row:hover:not([data-selected]) {
-    background: var(--tint);
-  }
+  
   .ol-trace:hover .ol-trace-grip {
     background: var(--line-3);
   }
@@ -1995,18 +1443,14 @@
     .ol-trace[data-animate] {
       transform: none;
     }
-    .ol-focus {
-      transform: none;
-    }
+    
   }
   .ol-ledger-tick {
     transform: none;
     filter: none;
   }
   .ol-key-btn:active,
-  .ol-part-head:active,
-  .ol-row:active,
-  .ol-focus-clear:active {
+  .ol-row:active {
     transform: none;
   }
 }

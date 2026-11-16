@@ -28,7 +28,7 @@ import { Diagnostics } from './components/Replay/Diagnostics';
 import { ReplayBar, snapNextThumb, type ExtractView, type Mode } from './components/Replay/ReplayBar';
 import { Report } from './components/Replay/Report';
 import { Fig, RunHead } from './components/Replay/RunHead';
-import { PAGE } from './components/Replay/Tickets';
+import { PAGE, Tickets, type Chip } from './components/Replay/Tickets';
 import { Trace } from './components/Replay/Trace';
 import { serviceName } from './data/mockData';
 import { EXTRACTS, WINDOWS, extractById, rulesFrom, source } from './data/replayData';
@@ -38,14 +38,17 @@ import { useScope } from './hooks/useScope';
 import { snapNextChange } from './hooks/useTween';
 import { runExtract } from './model/extract';
 import { DEFAULT_LOOKBACK, TODAY, WEEK, dayMonth, plural } from './model/labels';
-import { focusWords, lifeCounts, narrow, type Focus, type Narrowing } from './model/narrow';
+import { CHAPTERS, GROUP_BYS, groupTickets, visibleRows, type ChapterId, type GroupBy } from './model/chapters';
+import { focusWords, narrow, type Focus, type Narrowing } from './model/narrow';
 import { isLive, replay, type Replay } from './model/replay';
 import { LIFECYCLE } from './model/words';
 import './components/charts/charts.css';
 import './layout.css';
 import './components/Replay/replay.css';
 
-const EMPTY: Narrowing = { focus: null, life: null, weeks: null, query: '' };
+/* The dock opens on the tickets closed by hand: the only ones that get a verdict, so its
+ * groups agree with every figure in the chapters. */
+const EMPTY: Narrowing = { focus: null, life: 'closedByHand', weeks: null, query: '' };
 
 const longDay = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
@@ -61,6 +64,10 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
   const [limit, setLimit] = useState(PAGE);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [hideSide, setHideSide] = useState(false);
+  const [chapter, setChapter] = useState<ChapterId>('verdict');
+  const [groupBy, setGroupBy] = useState<GroupBy>('verdict');
+  const [chosen, setChosen] = useState<Record<string, boolean>>({});
+  const [wide, setWide] = useState(false);
   const [theme, toggleTheme] = useTheme();
   const searchRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -92,6 +99,7 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
   const reset = () => {
     setNarrowing(EMPTY);
     setLimit(PAGE);
+    setChosen({});
     setOpen(null);
   };
 
@@ -109,22 +117,29 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
   }, [landed]);
 
   const rows = useMemo(() => (shown ? narrow(shown, narrowing) : []), [shown, narrowing]);
-  const counts = useMemo(() => (shown ? lifeCounts(shown, narrowing) : { closedByHand: 0, closedAuto: 0, cancelled: 0, open: 0, other: 0 }), [shown, narrowing]);
+  const groups = useMemo(() => groupTickets(rows, groupBy, shown?.scope.from ?? 0), [rows, groupBy, shown]);
+  const visible = useMemo(() => visibleRows(groups, rows.length, chosen), [groups, rows.length, chosen]);
   const openRow = open && shown ? shown.tickets.find((r) => r.ticket.id === open.id) : undefined;
-
-  const chip = shown
-    ? [
-        narrowing.focus && focusWords(shown, narrowing.focus),
-        narrowing.weeks && `weeks of ${dayMonth(shown.weeks[narrowing.weeks[0]].start)} to ${dayMonth(shown.weeks[narrowing.weeks[1]].start)}`,
-      ]
-        .filter(Boolean)
-        .join(', ')
-    : '';
 
   const patch = (p: Partial<Narrowing>) => {
     setNarrowing((n) => ({ ...n, ...p }));
     setLimit(PAGE);
+    setChosen({});
   };
+
+  // What's narrowing the dock, each with its own way out. "By hand" has its own toggle.
+  const chips: Chip[] = [];
+  if (shown && narrowing.focus) chips.push({ key: 'focus', label: focusWords(shown, narrowing.focus), onClear: () => patch({ focus: null }) });
+  if (shown && narrowing.weeks)
+    chips.push({ key: 'weeks', label: `Weeks of ${dayMonth(shown.weeks[narrowing.weeks[0]].start)} to ${dayMonth(shown.weeks[narrowing.weeks[1]].start)}`, onClear: () => patch({ weeks: null }) });
+  if (narrowing.life && narrowing.life !== 'closedByHand') chips.push({ key: 'life', label: LIFECYCLE[narrowing.life], onClear: () => patch({ life: null }) });
+
+  const regroup = (g: GroupBy) => {
+    setGroupBy(g);
+    setChosen({});
+    setLimit(PAGE);
+  };
+  const nextGroup = () => regroup(GROUP_BYS[(GROUP_BYS.findIndex((b) => b.id === groupBy) + 1) % GROUP_BYS.length].id);
 
   // A view picked with the pointer rises in; one picked with a key shows at once.
   const [arrive, setArrive] = useState(false);
@@ -142,12 +157,17 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
     setView(v);
   };
 
+  // J and K walk the tickets that are showing. With every group folded, the first one opens.
   const step = (by: number) => {
     if (rows.length === 0) return;
-    const at = selected ? rows.findIndex((r) => r.ticket.id === selected) : -1;
-    const next = Math.max(0, Math.min(rows.length - 1, at < 0 ? (by > 0 ? 0 : rows.length - 1) : at + by));
+    if (visible.length === 0) {
+      setChosen((c) => ({ ...c, [groups[0].key]: true }));
+      return;
+    }
+    const at = selected ? visible.findIndex((r) => r.ticket.id === selected) : -1;
+    const next = Math.max(0, Math.min(visible.length - 1, at < 0 ? (by > 0 ? 0 : visible.length - 1) : at + by));
     if (next >= limit) setLimit((l) => l + PAGE);
-    const id = rows[next].ticket.id;
+    const id = visible[next].ticket.id;
     setSelected(id);
     // With the drawer open, J and K walk it through the tickets without closing it.
     if (open) setOpen({ id, animate: false });
@@ -168,16 +188,29 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
       e: () => changeMode('extract', true),
       a: () => mode === 'extract' && changeView('aggregate', true),
       d: () => mode === 'extract' && changeView('diagnostics', true),
-      // Esc steps back one layer: the drawer, then what's picked, then the weeks, then the tab, then the search.
+      // Esc steps back one layer: the drawer, the widened dock, what's picked, the weeks, the outcome, the search.
       Escape: () => {
         if (open) setOpen(null);
+        else if (wide) setWide(false);
         else if (narrowing.focus) patch({ focus: null });
         else if (narrowing.weeks) patch({ weeks: null });
-        else if (narrowing.life) patch({ life: null });
+        else if (narrowing.life && narrowing.life !== 'closedByHand') patch({ life: 'closedByHand' });
         else if (narrowing.query) patch({ query: '' });
         else setSelected(null);
       },
       '[': () => setHideSide((h) => !h),
+      t: () => setWide((w) => !w),
+      b: nextGroup,
+      ...Object.fromEntries(
+        CHAPTERS.map((c) => [
+          c.key,
+          () => {
+            setWide(false);
+            if (mode === 'extract' && view === 'diagnostics') changeView('aggregate', true);
+            setChapter(c.id);
+          },
+        ]),
+      ),
     },
   });
 
@@ -197,15 +230,6 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
       : { sources: next.sources.length, hypothetical: next.hypothetical.length };
   const scopeWords = (id: string) => (id === 'all' ? 'across every service' : `for ${serviceName(id)}`);
 
-  const verdictLine = (
-    <p className="ol-lead-2">
-      Of <Fig value={next.population.closedByHand} ready={run.step >= 1} before={before((r) => r.population.closedByHand)} /> closed by hand,{' '}
-      <Fig value={next.groups.explained} ready={run.done} before={before((r) => r.groups.explained)} /> would be explained,{' '}
-      <Fig value={next.groups.unexplained} ready={run.done} before={before((r) => r.groups.unexplained)} /> nothing running today explains, and{' '}
-      <Fig value={next.groups.unknown} ready={run.done} before={before((r) => r.groups.unknown)} /> couldn’t be checked.
-    </p>
-  );
-
   const head =
     mode === 'replay' ? (
       <RunHead
@@ -221,7 +245,6 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
               <Fig value={next.windows} ready={run.step >= 2} before={before((r) => r.windows)} /> approved change {plural(next.windows, 'window', 'windows')}, replayed over{' '}
               <Fig value={next.population.total} ready={run.step >= 1} before={before((r) => r.population.total)} /> {plural(next.population.total, 'ticket')} {scopeWords(serviceId)} in the last {weeks} weeks.
             </p>
-            {verdictLine}
           </>
         }
         steps={[
@@ -243,7 +266,6 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
               <code>{extract.id}</code> replayed <Fig value={next.population.total} ready={run.step >= 1} before={before((r) => r.population.total)} /> tickets {scopeWords(extract.serviceId)},{' '}
               {dayMonth(extract.from)} to {dayMonth(extract.to - 1)}, with the <Fig value={next.activeRules} ready={run.step >= 2} before={before((r) => r.activeRules)} /> {plural(next.activeRules, 'rule')} active on {dayMonth(extract.ranAt)}.
             </p>
-            {verdictLine}
           </>
         }
         steps={[
@@ -263,18 +285,38 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
       onFocus={(focus) => patch({ focus })}
       onLife={(life) => patch({ life })}
       onWeeks={(w) => patch({ weeks: w })}
+      chapter={chapter}
+      onChapter={setChapter}
+      basis={mode === 'replay' ? 'Today’s rules and windows' : `Rules as of ${dayMonth(extract.ranAt)}`}
+      land={land}
+    />
+  );
+
+  const dock = (
+    <Tickets
+      rows={rows}
+      groups={groups}
+      total={shown?.population.total ?? 0}
+      groupBy={groupBy}
+      onGroupBy={regroup}
+      chosen={chosen}
+      onToggleGroup={(key, on) => setChosen((c) => ({ ...c, [key]: on }))}
+      chips={chips}
+      handOnly={narrowing.life === 'closedByHand'}
+      onHandOnly={() => patch({ life: narrowing.life === 'closedByHand' ? null : 'closedByHand' })}
+      query={narrowing.query}
       onQuery={(query) => patch({ query })}
-      tickets={rows}
-      ticketCounts={counts}
-      focusChip={chip || null}
-      onClearFocus={() => patch({ focus: null, weeks: null })}
       searchRef={searchRef}
       selected={selected}
       onSelect={setSelected}
       onOpen={(id, how) => setOpen({ id, animate: how === 'pointer' })}
       limit={limit}
-      onMore={() => setLimit((l) => l + PAGE)}
-      land={land}
+      onMore={() => setLimit((l) => (l < visible.length ? l + PAGE : l))}
+      stale={!run.done}
+      wide={wide}
+      onWide={() => setWide((w) => !w)}
+      showService={shown?.scope.serviceId === 'all'}
+      ready={shown !== null}
     />
   );
 
@@ -308,7 +350,8 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
           asOf={TODAY}
         />
 
-        <div className="ol-scroll">
+        <div className="ol-desk" data-wide={wide || undefined}>
+        <div className="ol-scroll ol-desk-main">
           <div className="ol-rpage" data-enter={entrance === 'story' || undefined} data-arrive={arrive || undefined} data-mode={mode} key={`${mode}:${view}`}>
             {head}
             {mode === 'extract' && view === 'diagnostics' ? (
@@ -338,6 +381,8 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
             )}
           </div>
         </div>
+        {dock}
+        </div>
 
         {openRow && <Trace key={openRow.ticket.id} replayed={openRow} animate={open!.animate} onClose={() => setOpen(null)} basis={mode === 'replay' ? 'today' : extract.ranAt} />}
 
@@ -353,8 +398,18 @@ export function HindcastPage({ serviceId: a0, weeks: a1, focus: a2 }: { serviceI
             </span>
           )}
           <span>
+            <kbd>1</kbd>
+            <kbd>5</kbd> Chapter
+          </span>
+          <span>
             <kbd>J</kbd>
             <kbd>K</kbd> Ticket
+          </span>
+          <span>
+            <kbd>B</kbd> Group
+          </span>
+          <span>
+            <kbd>T</kbd> Widen
           </span>
           <span>
             <kbd>↵</kbd> Its replay
