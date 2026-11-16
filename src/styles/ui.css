@@ -50,12 +50,12 @@
 
 .mn-dot[data-status='active'] {
   background: var(--green);
-  box-shadow: 0 0 0 3px rgba(69, 196, 122, 0.14);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 14%, transparent);
 }
 
 .mn-dot[data-status='proposed'] {
   background: var(--amber);
-  box-shadow: 0 0 0 3px rgba(224, 169, 62, 0.14);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 14%, transparent);
 }
 
 .mn-dot[data-status='inactive'] {
@@ -75,7 +75,7 @@
   gap: 8px;
   height: 34px;
   padding: 0 8px 0 11px;
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--l3);
   box-shadow: inset 0 0 0 1px var(--line);
   color: var(--fg-3);
@@ -103,7 +103,7 @@
 }
 
 :root[data-mn-theme='light'] .mn-search {
-  background: #ffffff;
+  background: var(--chip);
 }
 
 /* ---------- tabs ---------- */
@@ -152,10 +152,10 @@
 }
 
 :root[data-mn-theme='light'] .mn-tab[data-active] {
-  background: #ffffff;
+  background: var(--chip);
   box-shadow:
     inset 0 0 0 1px var(--line),
-    0 1px 2px rgba(0, 0, 0, 0.05);
+    var(--shadow-chip);
 }
 
 /* ---------- icon button ---------- */
@@ -250,12 +250,12 @@
 
 .mn-btn[data-variant='danger'] {
   background: var(--red-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.35);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 35%, transparent);
   color: var(--danger-fg);
 }
 
 .mn-btn[data-variant='danger'] kbd {
-  background: rgba(240, 86, 92, 0.12);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
   box-shadow: none;
   color: var(--danger-fg);
 }
@@ -279,7 +279,7 @@
     background: var(--primary-hover);
   }
   .mn-btn[data-variant='danger']:hover:not(:disabled) {
-    background: rgba(240, 86, 92, 0.14);
+    background: color-mix(in srgb, var(--red) 14%, transparent);
   }
 }
 
@@ -329,11 +329,10 @@
   padding: 0 7px;
   border-radius: 999px;
   background: var(--orange-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 20%, transparent);
   color: var(--orange);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.01em;
 }
 
 .mn-empty {

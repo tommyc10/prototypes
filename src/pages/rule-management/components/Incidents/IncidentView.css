@@ -44,7 +44,7 @@
 
 /* The dimmed page behind it. */
 .mn-inc-modal::backdrop {
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay);
   opacity: 0;
   transition:
     opacity 150ms var(--ease-out),
@@ -60,9 +60,6 @@
   }
 }
 
-:root[data-mn-theme='light'] .mn-inc-modal::backdrop {
-  background: rgba(0, 0, 0, 0.2);
-}
 
 @media (prefers-reduced-motion: reduce) {
   .mn-inc-modal {
@@ -116,7 +113,7 @@
 
 .mn-badge[data-res='escalated'] {
   background: var(--red-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.35);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 35%, transparent);
   color: var(--red);
 }
 

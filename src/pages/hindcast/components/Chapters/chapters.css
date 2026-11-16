@@ -18,6 +18,13 @@
   min-width: 0;
 }
 
+/* The chapter strip's backdrop reaches past the page's gutter to cover what scrolls under it.
+ * Clip, not hidden: it stops at the page's edge without making a scroll box, so the strip
+ * still sticks and the pane can't be nudged sideways. */
+.ol-desk-main > .ol-rpage {
+  overflow-x: clip;
+}
+
 .ol-desk[data-wide] {
   grid-template-columns: 0 minmax(0, 1fr);
 }
@@ -61,7 +68,7 @@
 .ol-chnav {
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 10;
   display: grid;
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
   padding: 3px;
@@ -94,21 +101,22 @@
   position: absolute;
   top: 3px;
   bottom: 3px;
-  left: calc(3px + var(--at) * (100% - 6px) / var(--n));
+  left: 3px;
   width: calc((100% - 6px) / var(--n));
+  transform: translateX(calc(var(--at) * 100%));
   border-radius: 9px;
   background: var(--l4);
   box-shadow:
     inset 0 1px 0 var(--card-edge),
     inset 0 0 0 1px var(--line-2);
-  transition: left 240ms var(--ease-in-out);
+  transition: transform 240ms var(--ease-in-out);
 }
 
 :root[data-mn-theme='light'] .ol-chnav-thumb {
-  background: #ffffff;
+  background: var(--chip);
   box-shadow:
     inset 0 0 0 1px var(--line),
-    0 1px 2px rgba(0, 0, 0, 0.05);
+    var(--shadow-chip);
 }
 
 .ol-chnav-item {
@@ -243,7 +251,7 @@
 }
 
 .ol-vbar .ol-segment {
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .ol-vboard {
@@ -916,10 +924,12 @@ span.ol-caught-link {
 .ol-step-left {
   position: relative;
   display: block;
+  width: 100%;
   height: 100%;
   border-radius: 2px;
   background: var(--tone-3);
-  transition: width 420ms var(--ease-out);
+  transform-origin: left;
+  transition: transform 420ms var(--ease-out);
 }
 
 .ol-step-left i {
@@ -927,8 +937,10 @@ span.ol-caught-link {
   top: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
   border-radius: 2px;
-  transition: width 420ms var(--ease-out);
+  transform-origin: right;
+  transition: transform 420ms var(--ease-out);
 }
 
 .ol-step-left i[data-group='explained'] {

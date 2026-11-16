@@ -61,13 +61,13 @@
 }
 
 .ic-badge[data-tone='wait'] {
-  box-shadow: inset 0 0 0 1px rgba(224, 169, 62, 0.4);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--amber) 40%, transparent);
   color: var(--amber);
 }
 
 .ic-badge[data-tone='bad'] {
   background: var(--red-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.35);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 35%, transparent);
   color: var(--red);
 }
 
@@ -123,7 +123,7 @@
 .ic-head h2 {
   max-width: 22em;
   margin: 0 0 8px;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -155,10 +155,10 @@
 .ic-verdict {
   max-width: 38em;
   margin: 20px 0 0;
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 500;
   line-height: 1.4;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.02em;
   text-wrap: pretty;
   color: var(--fg-2);
 }
@@ -265,7 +265,7 @@
     padding: 6px 24px 80px;
   }
   .ic-head h2 {
-    font-size: 23px;
+    font-size: 20px;
   }
   .ic-verdict {
     font-size: 17px;

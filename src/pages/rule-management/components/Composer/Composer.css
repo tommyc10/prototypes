@@ -144,7 +144,7 @@
 }
 
 .mn-field textarea[aria-invalid] {
-  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.6);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 60%, transparent);
 }
 
 .mn-field-foot {
@@ -171,11 +171,11 @@
   padding: 12px 12px 12px 14px;
   border-radius: 10px;
   background: var(--orange-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.22);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 22%, transparent);
 }
 
 .mn-override[data-invalid] {
-  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.6);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 60%, transparent);
 }
 
 .mn-override-icon {

@@ -43,8 +43,8 @@ export function Method({ r, focus, onFocus, basis }: { r: Replay; focus: Focus |
               <span className="ol-step-n">{i + 1}</span>
               <span className="ol-step-ask">{s.ask}</span>
               <span className="ol-step-bar" aria-hidden>
-                <span className="ol-step-left" style={{ width: `${(s.before / hand) * 100}%` }}>
-                  <i data-group={s.group} style={{ width: s.before ? `${(s.count / s.before) * 100}%` : 0 }} />
+                <span className="ol-step-left" style={{ transform: `scaleX(${s.before / hand})` }}>
+                  <i data-group={s.group} style={{ transform: `scaleX(${s.before ? s.count / s.before : 0})` }} />
                 </span>
               </span>
               <span className="ol-step-exit">
