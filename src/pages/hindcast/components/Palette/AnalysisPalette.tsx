@@ -3,6 +3,7 @@
  * go elsewhere. cmdk handles the search and arrow keys; the look is shared (styles/palette.css).
  * It opens with no animation: it's used all day. */
 
+import type { ReactNode } from 'react';
 import { Command } from 'cmdk';
 import { Bell, CalendarClock, Filter, History, LayoutGrid, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
 import { HalloweenCommand } from '../../../../components/Halloween/HalloweenCommand';
@@ -22,6 +23,7 @@ export function AnalysisPalette({
   onNavigate,
   theme,
   onToggleTheme,
+  children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,6 +37,8 @@ export function AnalysisPalette({
   onNavigate: (to: string) => void;
   theme: Theme;
   onToggleTheme: () => void;
+  /** A page's own groups, after the scope. Given `run`, so an item can close the palette. */
+  children?: (run: (fn: () => void) => () => void) => ReactNode;
 }) {
   const run = (fn: () => void) => () => {
     fn();
@@ -92,6 +96,8 @@ export function AnalysisPalette({
               </Command.Item>
             ))}
         </Command.Group>
+
+        {children?.(run)}
 
         <Command.Group heading="Go to">
           {page === 'hindcast' ? (

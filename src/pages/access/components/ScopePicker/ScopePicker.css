@@ -504,7 +504,7 @@
   background: var(--l2);
   box-shadow:
     inset 0 0 0 1px var(--line-2),
-    0 1px 2px rgba(0, 0, 0, 0.05);
+    var(--shadow-chip);
 }
 
 @media (prefers-reduced-motion: reduce) {

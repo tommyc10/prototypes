@@ -19,7 +19,7 @@
   height: 38px;
   padding: 0 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   font-size: 13px;
   text-align: left; /* buttons centre their text by default */
@@ -76,7 +76,7 @@
     background: var(--tint);
   }
   button.mn-inc-row[data-escalated]:hover {
-    background: rgba(240, 86, 92, 0.14);
+    background: color-mix(in srgb, var(--red) 14%, transparent);
   }
 }
 

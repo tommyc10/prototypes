@@ -41,7 +41,7 @@
 
 .al-status[data-live] i {
   background: var(--green);
-  box-shadow: 0 0 0 3px rgba(69, 196, 122, 0.14);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 14%, transparent);
   animation: al-breathe 2.4s ease-in-out infinite;
 }
 

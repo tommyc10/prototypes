@@ -14,7 +14,7 @@
 
 .cw-groups-main h2[data-mono] {
   font-family: 'Geist Mono Variable', ui-monospace, monospace;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: -0.02em;
 }
 
@@ -209,7 +209,7 @@
 .cw-gl-strip .cw-gl-track i {
   flex: 1;
   min-width: 0;
-  border-radius: 1px 1px 0 0;
+  border-radius: 2px 2px 0 0;
   background: var(--cw-held);
 }
 
@@ -237,7 +237,7 @@
 .cw-gl-key i {
   width: 14px;
   height: 8px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--cw-active);
 }
 
@@ -259,7 +259,7 @@
   top: calc(50% - 9px);
   display: flex;
   height: 18px;
-  border-radius: 5px;
+  border-radius: 4px;
   overflow: hidden;
   /* Drawn in by uncovering it from its left, each lane 30ms after the one above. */
   animation: cw-gl-draw 360ms var(--ease-out) backwards;

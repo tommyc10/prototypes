@@ -43,7 +43,7 @@
   flex: none;
   width: 14px;
   height: 6px;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .cw i[data-status='active'] {

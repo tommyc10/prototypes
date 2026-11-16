@@ -36,10 +36,10 @@
 }
 
 .al-trace-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.015em;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
@@ -58,7 +58,7 @@
   padding: 11px 14px;
   border-radius: 10px;
   background: var(--orange-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 138, 75, 0.2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 20%, transparent);
   font-size: 13px;
   color: var(--orange-strong);
 }
@@ -82,7 +82,7 @@
 
 .al-callout[data-tone='bad'] {
   background: var(--red-wash);
-  box-shadow: inset 0 0 0 1px rgba(240, 86, 92, 0.2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 20%, transparent);
   color: var(--red-text);
 }
 

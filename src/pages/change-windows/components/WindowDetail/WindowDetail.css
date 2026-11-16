@@ -39,7 +39,7 @@
 .cw-note {
   max-width: 68ch;
   margin: 0;
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.6;
   color: var(--fg-2);
 }
@@ -110,7 +110,7 @@
 .cw-run-plot span {
   width: 100%;
   max-width: 44px; /* a short window has few strips: its columns stay columns, not slabs */
-  border-radius: 3px 3px 0 0; /* rounded at the data end, square on the baseline */
+  border-radius: 2px 2px 0 0; /* rounded at the data end, square on the baseline */
   background: var(--cw-held);
   transition: background-color 100ms ease;
 }
@@ -146,7 +146,7 @@
   width: auto;
   max-width: none;
   background: none;
-  font-size: 11.5px;
+  font-size: 11px;
   font-style: normal;
   line-height: 1.2;
   white-space: nowrap;
@@ -296,7 +296,7 @@
   height: 36px;
   padding: 0 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   font-size: 13px;
   text-align: left;

@@ -61,6 +61,6 @@
 }
 
 :root[data-mn-theme='light'] .mn-group[data-active] {
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 0 0 1px var(--line);
+  background: var(--chip);
+  box-shadow: var(--shadow-chip), inset 0 0 0 1px var(--line);
 }

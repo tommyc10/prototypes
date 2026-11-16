@@ -11,6 +11,19 @@ import { useHalloween, writeHalloween } from './useHalloween';
 
 export type Theme = 'dark' | 'light';
 
+/** Every colour on the page changes at once in a theme switch. Left on, each component's own
+ *  colour transition would fire with it and the page would smear, most visibly in browsers
+ *  without the View Transitions dissolve. So transitions are off for the swap, the new styles
+ *  are flushed, and they come back after the next frame. */
+function withoutTransitions(change: () => void) {
+  const off = document.createElement('style');
+  off.textContent = '*, *::before, *::after { transition: none !important; }';
+  document.head.appendChild(off);
+  change();
+  void getComputedStyle(document.documentElement).color;
+  requestAnimationFrame(() => requestAnimationFrame(() => off.remove()));
+}
+
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('mn-theme') === 'light' ? 'light' : 'dark'));
   const halloween = useHalloween();
@@ -27,10 +40,12 @@ export function useTheme() {
   const toggle = () => {
     // flushSync makes React update the page immediately, inside the transition's "after" snapshot.
     const apply = () =>
-      flushSync(() => {
-        writeHalloween(false);
-        setTheme(shown === 'dark' ? 'light' : 'dark');
-      });
+      withoutTransitions(() =>
+        flushSync(() => {
+          writeHalloween(false);
+          setTheme(shown === 'dark' ? 'light' : 'dark');
+        }),
+      );
     if (!document.startViewTransition) return apply();
     document.startViewTransition(apply);
   };

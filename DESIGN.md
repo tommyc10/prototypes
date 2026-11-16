@@ -73,7 +73,7 @@ colors:
     text: { fg: "#171717", fg-2: "#525252", fg-3: "#737373", row-name: "#262626" }
     status: { green: "#1f9d55", amber: "#d4940f", orange: "#c2570c", red: "#d42a31", orange-wash: "rgba(194,87,12,0.07)", red-wash: "rgba(212,42,49,0.06)", danger-fg: "#c8232a", red-text: "#9f1d22", red-strong: "#7f1116", orange-strong: "#9a3f07" }
     accent: { primary: "#171717", primary-fg: "#ffffff", primary-hover: "#333333" }
-    material: { glass: "rgba(255,255,255,0.8)", glass-menu: "rgba(255,255,255,0.88)", glass-palette: "rgba(255,255,255,0.6)", glass-toast: "rgba(255,255,255,0.9)", glass-edge: "rgba(255,255,255,0.9)", card-edge: "rgba(255,255,255,0.8)", tint: "rgba(0,0,0,0.04)", tint-2: "rgba(0,0,0,0.05)", sheen: "rgba(255,255,255,0.85)", well: "rgba(255,255,255,0.9)", well-2: "rgba(0,0,0,0.025)", scrim: "rgba(0,0,0,0.08)", overlay: "rgba(0,0,0,0.2)" }
+    material: { chip: "#ffffff", shadow-chip: "0 1px 2px rgba(0,0,0,0.05)", glass: "rgba(255,255,255,0.8)", glass-menu: "rgba(255,255,255,0.88)", glass-palette: "rgba(255,255,255,0.6)", glass-toast: "rgba(255,255,255,0.9)", glass-edge: "rgba(255,255,255,0.9)", card-edge: "rgba(255,255,255,0.8)", tint: "rgba(0,0,0,0.04)", tint-2: "rgba(0,0,0,0.05)", sheen: "rgba(255,255,255,0.85)", well: "rgba(255,255,255,0.9)", well-2: "rgba(0,0,0,0.025)", scrim: "rgba(0,0,0,0.08)", overlay: "rgba(0,0,0,0.2)" }
     focus: { focus-ring: "rgba(0,0,0,0.4)", focus-glow: "rgba(0,0,0,0.05)", selection: "rgba(0,0,0,0.12)" }
     chart: { tone-1: "#171717", tone-2: "#737373", tone-3: "#b0b0b0", tone-4: "#dedede" }
 
@@ -96,6 +96,7 @@ typography:
     micro: { size: 11px, weight: 500, color: fg-2, use: "chips, key caps, axis labels" }
     id: { family: mono, size: 12px, color: fg-3, use: "RUL-0435, INC-40355" }
     stat: { size: 26px, weight: 600, line-height: 1.1, tracking: -0.03em, use: "the number in a stat card" }
+    stat-sm: { size: 20px, weight: 600, line-height: 1.25, tracking: -0.02em, use: "a number in a tile or well under a lead sentence, so the sentence stays the headline" }
 
 rounded:
   xs: 4px # key caps, meters, checkboxes
@@ -391,7 +392,10 @@ number. Hover is `l3`, selected is `l4` with a ring. Unselected names are `row-n
 shade under `fg`, so the selected row reads brightest without colour.
 
 **Stat card and metric well.** Label small and quiet (12px/500 `fg-3`), number big and
-tight (26px/600, tracking -0.03em). A meter is a 4px track filled with `fg`, scaled with
+tight (26px/600, tracking -0.03em). Under a lead sentence that already gives the answer (a
+report's chapter, a scoreboard tile that also lists its breakdown), a number is `stat-sm`,
+20px/600, so the sentence stays the headline and a row of tiles doesn't shout. A meter is
+a 4px track filled with `fg`, scaled with
 `transform: scaleX()`. When a number is a problem, only the number changes colour.
 
 **Callout.** A wash with a ring at 20%: red for "this would have hidden a real incident",
@@ -426,9 +430,12 @@ colour (what the rule caught, in green); every other series is a grey from the t
   the decision form, 240ms shell columns. Interface transitions stay under 320ms; only data
   stories (the incident journey, a chart drawing itself, a chart morphing to new figures)
   run longer. A page that draws itself in does so once per load, not on every visit.
-- **Only `transform`, `opacity`, `filter` and colour animate.** Two exceptions: the shell's
-  `grid-template-columns`, and a chart morphing to new figures, which re-draws its marks
-  each frame from the in-between figures (see Charts).
+- **Only `transform`, `opacity`, `filter` and colour animate.** Three exceptions: the shell's
+  `grid-template-columns`, a chart morphing to new figures, which re-draws its marks
+  each frame from the in-between figures (see Charts), and the sliding thumb of a segmented control whose options
+  differ in width, which moves by `transform` and changes `width` with it (240ms, in-out),
+  because `scaleX` would squash its corners. A thumb over options of equal width only
+  translates. A bar that grows is a fixed-width mark scaled with `scaleX` from its anchored end.
 - **Press:** `scale(0.97)` on `:active`. **Hover** only inside
   `@media (hover: hover) and (pointer: fine)`.
 - **Arriving:** `@starting-style { opacity: 0; transform: translateY(8px) scale(0.99);
@@ -483,6 +490,7 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `O` `P` `X` `T` | Jump to the overnight suggestions; propose, dismiss or tighten the one selected (Rules) |
 | `M` | Plan maintenance for the picked window (Change windows) |
 | `S` `H` `R` | Rank by the next measure; open the picked service in the Hindcast, or its rules (Services) |
+| `1` to `5` `B` `T` | Jump to a chapter; group the tickets by the next field; widen the ticket dock (Hindcast) |
 | `[` `]` | Tuck away the sidebar / the list |
 | `G` then a letter | Go to a page: `H` Home, `S` Services, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
 | `?` | Start the guided tour |
@@ -543,6 +551,13 @@ No chart library. Bars are divs, lines are SVG, everything is drawn with the sam
   flash. (Hindcast and Forecast: `hooks/useTween.ts`, `hooks/useFlip.ts`.)
 - The ramp carries an *order* (caught, partly caught, missed), not unrelated categories.
   Three series at most; beyond that, split into small charts.
+- **A part-to-whole bar may shade within its groups.** It still has three groups at most,
+  in ramp order, but each group may split into the kinds inside it, as shades of that
+  group's own colour: the Hindcast's verdict bar runs three greens (caught by a rule, by
+  both, by a window), two greys (nothing, only a proposed rule) and two hatches (couldn't
+  read, no data). Allowed only when a key beside the bar names every shade with its count,
+  each shade is pressable on its own, and 2px gaps keep neighbouring shades apart. This beats
+  splitting into small charts when the point is that the parts add up to one whole.
 
 ## Voice
 
@@ -704,27 +719,30 @@ one-word utilities: `surface-card`, `surface-lead`, `surface-well`, `surface-rai
 Honest notes from auditing the shipped CSS. The scale above is the rule; these are where
 the app has drifted from it. Match the scale, not the drift.
 
-- **Font-size half steps.** The app uses 11.5px (22 times), 12.5px (20 times) and 13.5px
-  (6 times) alongside 11, 12, 13 and 14. Treat them as the nearest whole step, except the
-  code block's 12.5px, which is deliberate.
-- **Radius 8px** appears 12 times (search box, palette items, the hold button) between
-  `md` 7px and `lg` 9px. New work uses `lg`. 5px and 3px appear on a few chart marks.
-- **Status alphas are written by hand.** `rgba(240, 86, 92, 0.35)` and friends repeat
-  across files instead of deriving from `--red`. In CSS, prefer
-  `color-mix(in srgb, var(--red) 35%, transparent)`; in Tailwind, `ring-red/35`.
+- **Closed in November 2026:** font-size half steps (11.5, 13.5 and em sizes now sit on the
+  scale; the code block's 12.5px stays, on purpose), radius 8px, 5px and 3px (now `lg`, `xs`,
+  `sm` or the 2px data radius), and hand-written status alphas (every wash and ring is
+  `color-mix(in srgb, var(--red) 35%, transparent)` and friends, so light gets its own
+  status colour; in Tailwind, `ring-red/35`). Keep them closed: the checklist covers each.
 - **The chart tones are not a categorical palette.** Checked for colour-vision
   deficiency, green against `tone-2` scores 7.5 (acceptable only with a second cue) and
   `tone-3` is 2.9:1 against the surface. That is why direct labels, a legend, 2px gaps and
   a table view are requirements, not polish.
 - **Per-page chart tokens duplicate each other.** `--al-paged` and friends name the same
   greys as `tone-1` to `tone-4`, which are now tokens in `theme.css`. New charts use those.
-- **Light-theme chips are raw `#ffffff`** in five component files. The port names it `chip`.
+- **Light-theme chips** (a selected row, an active tab or nav item, a sliding thumb, the
+  search box) use `--chip` and `--shadow-chip`, defined for light only in `theme.css` and
+  matching the port's `chip`. Dark has no chip: the same things are `l4` with a `line` ring.
+  The dialog's dim is `--overlay`, in both themes.
 - **`fg-3` on dark surfaces is 4.0:1** (3.8:1 on a card), under the 4.5:1 that WCAG AA asks
   of small text. It is used for labels and meta, never for sentences; `prefers-contrast:
   more` lifts it to `#9a9a9a` (about 6.8:1). Do not use `fg-3` for anything a person must read to do their job.
 - **`primary-hover` is the only hover with its own token.** Every other hover is a rung.
 - **z-index is ad hoc** (1, 2, 5, 10, 50, 51, 100). The values in `elevation.z-index` are
-  the ones in use; do not add new ones between them.
+  the ones in use; do not add new ones between them. A sticky strip is 10. Negative values
+  (-1, -2) are allowed only for layers behind content inside an element that makes its own
+  stacking context (`isolation: isolate`, or positioned with a z-index), where they can't
+  reach anything else on the page.
 - **No form library, and one loading state.** Sheen (`mn-skel`, see Motion) is the loading
   state, shipped on the Incidents page. The port's `Field` and `Skeleton` are styled to fit,
   but nothing has checked the port's `Skeleton` against the sheen's shapes and band.

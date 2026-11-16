@@ -1,0 +1,1172 @@
+/* The desk and its chapters. The desk is two columns under the bar: the report on the left,
+ * scrolling on its own, and the ticket dock on the right (Replay/dock.css). Widened, the dock
+ * takes the desk. On a narrow pane the dock drops under the report and both scroll.
+ *
+ * The report is an index strip (sticky) over one chapter at a time. Each chapter is laid out
+ * to land in one screen on a laptop, so reading it is looking, not scrolling. */
+
+/* ---------- the desk ---------- */
+
+.ol-desk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 30%, 600px);
+  flex: 1;
+  min-height: 0;
+}
+
+.ol-desk-main {
+  min-width: 0;
+}
+
+/* The chapter strip's backdrop reaches past the page's gutter to cover what scrolls under it.
+ * Clip, not hidden: it stops at the page's edge without making a scroll box, so the strip
+ * still sticks and the pane can't be nudged sideways. */
+.ol-desk-main > .ol-rpage {
+  overflow-x: clip;
+}
+
+.ol-desk[data-wide] {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.ol-desk[data-wide] .ol-desk-main {
+  visibility: hidden;
+}
+
+.ol-desk[data-wide] .ol-dock {
+  border-left: 0;
+  animation: ol-arrive 220ms var(--ease-out) both;
+}
+
+@container analysis-bar (max-width: 980px) {
+  .ol-desk,
+  .ol-desk[data-wide] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 48%;
+  }
+  .ol-desk[data-wide] {
+    grid-template-rows: 0 minmax(0, 1fr);
+  }
+  .ol-dock {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+
+/* ---------- the report and its index ---------- */
+
+/* The report fills the pane's height, so a chapter ends at the bottom of the screen rather
+ * than partway down it. A chapter with a chart (data-fill) gives the chart the spare room;
+ * the others keep their own height and their cards hug their content. */
+.ol-report {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 16px;
+}
+
+.ol-chnav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  padding: 3px;
+}
+
+/* Two layers behind the strip: the page colour, so the chapter scrolls under it cleanly,
+ * then the strip's own well. */
+.ol-chnav::before,
+.ol-chnav::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.ol-chnav::before {
+  inset: -18px -20px -10px;
+  z-index: -2;
+  background: var(--l2);
+}
+
+.ol-chnav::after {
+  inset: 0;
+  z-index: -1;
+  border-radius: 12px;
+  background: var(--l1);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ol-chnav-thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--n));
+  transform: translateX(calc(var(--at) * 100%));
+  border-radius: 9px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-2);
+  transition: transform 240ms var(--ease-in-out);
+}
+
+:root[data-mn-theme='light'] .ol-chnav-thumb {
+  background: var(--chip);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-chip);
+}
+
+.ol-chnav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 12px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ol-chnav-item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ol-chnav-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ol-chnav-name {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--fg-2);
+  transition: color 150ms ease;
+}
+
+.ol-chnav-fig {
+  overflow: hidden;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-chnav-item[data-active] .ol-chnav-name {
+  color: var(--fg);
+}
+
+.ol-chnav-item[data-active] .ol-chnav-fig {
+  color: var(--fg-2);
+}
+
+/* A chapter arrives softly when it's picked. */
+.ol-chapter {
+  animation: ol-arrive 200ms var(--ease-out) both;
+}
+
+.ol-ch {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ol-ch[data-fill] {
+  flex: 1;
+}
+
+/* A chapter's one-line summary, in the lead's voice. */
+.ol-ch-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ol-ch-sum p {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.ol-ch-sum b {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-ch-h {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.ol-ch-h span {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+/* ---------- 1. verdict ---------- */
+
+/* The verdict as one sentence at body size: the share carries the weight, not the size. */
+.ol-vline {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+.ol-vline b {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ol-vline span {
+  color: var(--fg-3);
+}
+
+.ol-vbar.ol-seg-bar {
+  height: 12px;
+  margin-top: -2px;
+}
+
+.ol-vbar .ol-segment {
+  border-radius: 2px;
+}
+
+.ol-vboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ol-vtile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 4px 4px 6px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+  transition: box-shadow 150ms ease;
+}
+
+.ol-vtile[data-picked] {
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-3);
+}
+
+.ol-vtile ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ol-vtile-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.ol-vtile-head:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ol-vtile-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+.ol-vtile-num {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ol-vtile-num b {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-vtile[data-group='explained'] .ol-vtile-num b {
+  color: var(--green);
+}
+
+.ol-vtile-num small {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-vgrid {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 14px;
+  max-height: 760px;
+}
+
+.ol-vgrid > .ol-panel {
+  flex: 1;
+}
+
+.ol-vweeks {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 180px;
+}
+
+/* ---------- 2. sources ---------- */
+
+/* Two short cards on the left, the longer list on the right running beside both, so the
+ * chapter is one even block instead of three cards of three heights. */
+.ol-ch-sources {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-areas:
+    'read ran-out'
+    'logic ran-out';
+  grid-template-rows: auto 1fr;
+  align-content: start;
+}
+
+.ol-ch-sources > [data-area='read'] {
+  grid-area: read;
+}
+
+.ol-ch-sources > [data-area='logic'] {
+  grid-area: logic;
+}
+
+.ol-ch-sources > [data-area='ran-out'] {
+  grid-area: ran-out;
+}
+
+.ol-chip-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-chip-note b {
+  font-weight: 500;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ol-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 9px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ol-stat-icon {
+  margin-bottom: 6px;
+  color: var(--fg-3);
+}
+
+.ol-stat b {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.ol-stat small {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--fg-3);
+}
+
+/* ---------- 3. caught by ---------- */
+
+.ol-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ol-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.ol-legend-note {
+  margin-left: auto;
+  padding: 0 8px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+
+:is(.ol-legend, .ol-caught-track) i[data-part='only'] {
+  background: var(--green);
+}
+
+:is(.ol-legend, .ol-caught-track) i[data-part='shared'] {
+  background: color-mix(in srgb, var(--green) 38%, var(--l3));
+}
+
+:is(.ol-legend, .ol-caught-track) i[data-part='unread'] {
+  background: repeating-linear-gradient(135deg, var(--tone-3) 0 1.5px, transparent 1.5px 4px), var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.ol-caught-cols,
+.ol-caught-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) 64px;
+  align-items: center;
+  column-gap: 16px;
+}
+
+.ol-caught-cols {
+  padding: 0 44px 6px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-caught-cols > :last-child {
+  text-align: right;
+}
+
+.ol-caught-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ol-caught {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ol-caught li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ol-caught-row {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.ol-caught-row[data-picked] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ol-caught-row:focus-visible,
+.ol-gap:focus-visible,
+.ol-hypo-main:focus-visible,
+.ol-step-chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.ol-caught-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--row-name);
+}
+
+.ol-caught-name svg {
+  flex: none;
+  color: var(--fg-3);
+}
+
+.ol-caught-name code,
+.ol-gap code,
+.ol-hypo code {
+  flex: none;
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+.ol-caught-row[data-picked] .ol-caught-name {
+  color: var(--fg);
+}
+
+.ol-caught-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ol-caught-track {
+  display: flex;
+  flex: 1;
+  gap: 1px;
+  height: 10px;
+}
+
+.ol-caught-track i {
+  flex-basis: 0;
+  min-width: 0;
+  border-radius: 2px;
+}
+
+.ol-caught-bar b,
+.ol-caught-inc {
+  min-width: 3ch;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-caught-bar b {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ol-caught-inc {
+  color: var(--fg-3);
+}
+
+.ol-caught-inc[data-bad] {
+  font-weight: 500;
+  color: var(--red);
+}
+
+.ol-caught-link,
+.ol-hypo-link {
+  flex: none;
+  color: var(--fg-3);
+}
+
+span.ol-caught-link {
+  width: 28px;
+}
+
+/* ---------- 4. tune next ---------- */
+
+.ol-tune {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.ol-gaps,
+.ol-hypos {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ol-gaps {
+  gap: 2px;
+}
+
+.ol-gap {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 76px 40px;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.ol-gaps li + li .ol-gap {
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+.ol-gap[data-picked] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ol-gap-rank {
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-gap-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ol-gap-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--row-name);
+}
+
+.ol-gap .ol-gap-title code {
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.ol-gap-meta {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.ol-gap-spark {
+  height: 26px;
+}
+
+.ol-gap-spark .ol-spark {
+  width: 100%;
+  height: 100%;
+}
+
+.ol-gap-num {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-hypos {
+  gap: 8px;
+}
+
+.ol-hypo {
+  display: flex;
+  align-items: flex-start;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+  transition: box-shadow 150ms ease;
+}
+
+.ol-hypo[data-picked] {
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line-3);
+}
+
+.ol-hypo-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 4px 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ol-hypo-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ol-hypo-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--fg);
+}
+
+.ol-hypo-figs {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-hypo-figs b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-hypo-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--red);
+}
+
+.ol-hypo-link {
+  margin: 8px 8px 0 0;
+}
+
+/* ---------- 5. method ---------- */
+
+.ol-method {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.ol-path-start {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--well-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.ol-path-start b {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-path-start small {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-path-arrow {
+  position: relative;
+  width: 18px;
+  height: 1px;
+  margin: 0 2px;
+  background: var(--fg-3);
+}
+
+.ol-path-arrow::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: 0;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--fg-3);
+  border-right: 1px solid var(--fg-3);
+  transform: rotate(45deg);
+}
+
+.ol-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ol-step {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'n ask exit'
+    '. bar bar';
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ol-step-n {
+  grid-area: n;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-step-ask {
+  grid-area: ask;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.ol-step[data-last] .ol-step-ask {
+  color: var(--fg-2);
+}
+
+.ol-step-bar {
+  grid-area: bar;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--tint);
+}
+
+.ol-step-left {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tone-3);
+  transform-origin: left;
+  transition: transform 420ms var(--ease-out);
+}
+
+.ol-step-left i {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  border-radius: 2px;
+  transform-origin: right;
+  transition: transform 420ms var(--ease-out);
+}
+
+.ol-step-left i[data-group='explained'] {
+  background: var(--green);
+}
+
+.ol-step-left i[data-group='unexplained'] {
+  background: var(--tone-2);
+}
+
+.ol-step-left i[data-group='unknown'] {
+  background: repeating-linear-gradient(135deg, var(--tone-3) 0 1.5px, transparent 1.5px 4px), var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.ol-step-exit {
+  grid-area: exit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ol-step-group {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.ol-step-group[data-group='explained'] {
+  color: var(--green);
+}
+
+.ol-step-group[data-group='unexplained'] {
+  color: var(--fg-2);
+}
+
+.ol-step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font: inherit;
+  font-size: 12px;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.ol-step-chip b {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-step-chip[data-picked] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+}
+
+.ol-rules ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ol-rule-card {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 12px 14px 12px 12px;
+  border-radius: 12px;
+  background: var(--l3);
+  box-shadow:
+    inset 0 1px 0 var(--card-edge),
+    inset 0 0 0 1px var(--line);
+}
+
+.ol-rule-icon {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-2);
+}
+
+.ol-rule-card b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.ol-rule-card span:last-child {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--fg-3);
+}
+
+/* ---------- hover, narrow panes, preferences ---------- */
+
+@media (hover: hover) and (pointer: fine) {
+  .ol-chnav-item:not([data-active]):hover .ol-chnav-name {
+    color: var(--fg);
+  }
+  .ol-vtile-head:hover,
+  .ol-caught-row:not([data-picked]):hover,
+  .ol-gap:not([data-picked]):hover,
+  .ol-hypo-main:hover {
+    background: var(--tint);
+  }
+  .ol-caught-row:not([data-picked]):hover {
+    background: var(--l3);
+  }
+  .ol-step-chip:not([data-picked]):hover {
+    background: var(--l4);
+  }
+}
+
+/* A wide desk: chapters lay their blocks side by side instead of stacking them, so a big
+ * screen shows more at once rather than longer lines. */
+@container analysis (min-width: 1400px) {
+  .ol-vtile {
+    flex-direction: row;
+    align-items: center;
+  }
+  .ol-vtile-head {
+    flex: none;
+    width: 38%;
+  }
+  .ol-vtile ul {
+    flex: 1;
+    min-width: 0;
+  }
+  .ol-vgrid .ol-vweeks {
+    min-height: 260px;
+  }
+  .ol-caught-lists {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    align-items: start;
+  }
+  .ol-tune {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .ol-hypos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 10px;
+  }
+  .ol-gaps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(var(--rows, 4), auto);
+    grid-auto-flow: column;
+    column-gap: 20px;
+  }
+  .ol-method {
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    gap: 32px;
+  }
+}
+
+@container analysis (max-width: 900px) {
+  .ol-method,
+  .ol-tune {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container analysis (max-width: 700px) {
+  .ol-vboard,
+  .ol-stats,
+  .ol-ch-sources {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ol-ch-sources {
+    grid-template-areas: 'read' 'logic' 'ran-out';
+    grid-template-rows: none;
+  }
+  .ol-chnav-fig {
+    display: none;
+  }
+  .ol-chnav-item {
+    padding: 7px 8px;
+  }
+  .ol-caught-cols,
+  .ol-caught-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+  }
+  .ol-legend-note {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ol-chapter,
+  .ol-desk[data-wide] .ol-dock {
+    animation: none;
+  }
+  .ol-chnav-thumb,
+  .ol-step-left,
+  .ol-step-left i {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ol-chnav-thumb,
+  .ol-vtile[data-picked],
+  .ol-caught-row[data-picked],
+  .ol-gap[data-picked],
+  .ol-hypo[data-picked] {
+    outline: 1px solid CanvasText;
+  }
+}

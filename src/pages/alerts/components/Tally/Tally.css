@@ -26,9 +26,9 @@
 
 .al-tally dd {
   margin: 2px 0 0;
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   color: var(--fg-2);
