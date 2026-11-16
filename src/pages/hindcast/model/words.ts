@@ -45,13 +45,15 @@ export const GROUP_NOTE: Record<VerdictGroup, string> = {
   unknown: 'The replay couldn’t tell. Not a miss, and not counted as one.',
 };
 
-/** How each verdict is drawn: which group's colour, and how strong. */
+/** How each verdict is drawn: which group's colour, and how strong. "Nothing explains it" is
+ *  most of most charts, so it takes the middle grey: the green and the hatching read against
+ *  it, and a full-width slab of the brightest tone never becomes the loudest thing on screen. */
 export const VERDICT_TONE: Record<Verdict, string> = {
   rule: 'caught',
   both: 'caught-2',
   window: 'caught-3',
-  hypothetical: 'tone-2',
-  none: 'tone-1',
+  hypothetical: 'tone-3',
+  none: 'tone-2',
   unevaluable: 'hatch',
   unavailable: 'hatch-2',
 };

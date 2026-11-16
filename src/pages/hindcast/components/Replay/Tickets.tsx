@@ -233,7 +233,7 @@ export function Tickets({
             ))}
             {folded && (
               <p className="ol-dock-hint">
-                Open a group, or pick anything in a chapter and the tickets it counted land here. <span className="ol-bad">Red</span> counts became incidents.
+                Open a group, or pick anything in a chapter and the tickets it counted land here. A <span className="ol-dock-hint-dot" aria-hidden /> marks how many became incidents.
               </p>
             )}
             <div ref={endRef} className="ol-dock-end">

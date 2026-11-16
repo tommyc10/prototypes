@@ -48,9 +48,13 @@
 
 /* ---------- the report and its index ---------- */
 
+/* The report fills the pane's height, so a chapter ends at the bottom of the screen rather
+ * than partway down it. A chapter with a chart (data-fill) gives the chart the spare room;
+ * the others keep their own height and their cards hug their content. */
 .ol-report {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 16px;
 }
 
@@ -172,6 +176,10 @@
   min-width: 0;
 }
 
+.ol-ch[data-fill] {
+  flex: 1;
+}
+
 /* A chapter's one-line summary, in the lead's voice. */
 .ol-ch-sum {
   display: flex;
@@ -230,8 +238,8 @@
 }
 
 .ol-vbar.ol-seg-bar {
-  height: 22px;
-  margin-top: -4px;
+  height: 12px;
+  margin-top: -2px;
 }
 
 .ol-vbar .ol-segment {
@@ -323,25 +331,46 @@
 .ol-vgrid {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 14px;
+  max-height: 760px;
+}
+
+.ol-vgrid > .ol-panel {
+  flex: 1;
 }
 
 .ol-vweeks {
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 180px;
+  min-height: 180px;
 }
 
 /* ---------- 2. sources ---------- */
 
+/* Two short cards on the left, the longer list on the right running beside both, so the
+ * chapter is one even block instead of three cards of three heights. */
 .ol-ch-sources {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-areas:
+    'read ran-out'
+    'logic ran-out';
+  grid-template-rows: auto 1fr;
+  align-content: start;
 }
 
 .ol-ch-sources > [data-area='read'] {
-  grid-column: 1 / -1;
+  grid-area: read;
+}
+
+.ol-ch-sources > [data-area='logic'] {
+  grid-area: logic;
+}
+
+.ol-ch-sources > [data-area='ran-out'] {
+  grid-area: ran-out;
 }
 
 .ol-chip-note {
@@ -907,7 +936,7 @@ span.ol-caught-link {
 }
 
 .ol-step-left i[data-group='unexplained'] {
-  background: var(--tone-1);
+  background: var(--tone-2);
 }
 
 .ol-step-left i[data-group='unknown'] {
@@ -1033,24 +1062,20 @@ span.ol-caught-link {
 /* A wide desk: chapters lay their blocks side by side instead of stacking them, so a big
  * screen shows more at once rather than longer lines. */
 @container analysis (min-width: 1400px) {
-  .ol-vgrid {
-    display: grid;
-    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 2.2fr);
-    gap: 10px;
+  .ol-vtile {
+    flex-direction: row;
+    align-items: center;
   }
-  .ol-vgrid .ol-vboard {
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
+  .ol-vtile-head {
+    flex: none;
+    width: 38%;
+  }
+  .ol-vtile ul {
+    flex: 1;
+    min-width: 0;
   }
   .ol-vgrid .ol-vweeks {
-    height: auto;
     min-height: 260px;
-  }
-  .ol-ch-sources {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .ol-ch-sources > [data-area='read'] {
-    grid-column: auto;
   }
   .ol-caught-lists {
     display: grid;
@@ -1092,6 +1117,10 @@ span.ol-caught-link {
   .ol-stats,
   .ol-ch-sources {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .ol-ch-sources {
+    grid-template-areas: 'read' 'logic' 'ran-out';
+    grid-template-rows: none;
   }
   .ol-chnav-fig {
     display: none;

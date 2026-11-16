@@ -324,8 +324,7 @@
   min-width: 4ch;
   justify-content: flex-end;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--red);
+  color: var(--fg-3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -334,7 +333,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: currentColor;
+  background: var(--red);
 }
 
 /* Every group folded: a quiet line under them saying what to do next. */
@@ -343,6 +342,16 @@
   font-size: 12px;
   line-height: 1.5;
   color: var(--fg-3);
+}
+
+.ol-dock-hint-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 2px;
+  border-radius: 999px;
+  background: var(--red);
+  vertical-align: 2px;
 }
 
 .ol-dock-hint kbd {

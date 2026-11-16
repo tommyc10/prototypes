@@ -17,9 +17,9 @@ import type { WeekVerdicts } from '../../model/replay';
 export type WeekRange = [number, number];
 
 const STACK = ['explained', 'unknown', 'unexplained'] as const;
-const TONE: Record<(typeof STACK)[number], string> = { explained: 'caught', unknown: 'hatch', unexplained: 'tone-1' };
+const TONE: Record<(typeof STACK)[number], string> = { explained: 'caught', unknown: 'hatch', unexplained: 'tone-2' };
 const LABEL: Record<(typeof STACK)[number], string> = { explained: 'Would be explained', unknown: 'Unknown', unexplained: 'Not explained' };
-const TIP_TONE: Record<(typeof STACK)[number], string> = { explained: 'var(--green)', unknown: 'var(--tone-3)', unexplained: 'var(--tone-1)' };
+const TIP_TONE: Record<(typeof STACK)[number], string> = { explained: 'var(--green)', unknown: 'var(--tone-3)', unexplained: 'var(--tone-2)' };
 
 export function WeekChart({ weeks, range, onRange }: { weeks: WeekVerdicts[]; range: WeekRange | null; onRange: (r: WeekRange | null) => void }) {
   const frames = useTweenedSeries(weeks.map((w) => ({ key: w.start, values: { explained: w.explained, unknown: w.unknown, unexplained: w.unexplained } })));

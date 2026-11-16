@@ -44,7 +44,7 @@ export function VerdictChapter({ r, focus, onFocus, range, onRange }: { r: Repla
   if (hand === 0) return <p className="ol-empty">Nothing in this scope was closed by hand, so there’s nothing for the replay to judge.</p>;
 
   return (
-    <div className="ol-ch">
+    <div className="ol-ch" data-fill>
       <p className="ol-vline ol-fade">
         <b>{words.lead}</b> {words.rest} <span>{num(r.groups.explained)} would be explained and {num(r.groups.unknown)} couldn’t be checked, of {num(hand)}.</span>
       </p>
