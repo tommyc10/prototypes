@@ -1,0 +1,43 @@
+/* Only the "In plain CSS" lessons need this file. It is not part of the design system. */
+
+/* A stage holds plain HTML drawn by the product's own CSS, so Tailwind's reset is switched
+ * off inside it and the few base rules from the product's base.css are put back. Everything
+ * here is wrapped in :where(), which weighs nothing, so any class in a lesson wins over it.
+ * Icons are left alone: `revert` would also throw away their width and height attributes. */
+:where(.product-stage) :where(*:not(svg, svg *), ::before, ::after) {
+  all: revert;
+  box-sizing: border-box;
+}
+:where(.product-stage) :where(svg) {
+  display: revert;
+  vertical-align: revert;
+}
+:where(.product-stage) :where(button, input, textarea) {
+  font: inherit;
+  color: inherit;
+}
+:where(.product-stage) :where(button) {
+  cursor: pointer;
+}
+:where(.product-stage) :where(.i) {
+  flex: none;
+}
+
+/* Hindcast's three chart tones. The product keeps these per page (see Known gaps in DESIGN.md). */
+:root,
+.light {
+  --hc-rule: #171717;
+  --hc-window: #737373;
+  --hc-missed: #b0b0b0;
+}
+.dark {
+  --hc-rule: #ededed;
+  --hc-window: #8c8c8c;
+  --hc-missed: #4d4d4d;
+}
+
+/* In light, a raised chip is white, not a darker grey. */
+:root:not(.dark) :is(.mn-search, .mn-tab[data-active], .mn-row[data-selected], .mn-nav-item[data-active]),
+.light :is(.mn-search, .mn-tab[data-active], .mn-row[data-selected], .mn-nav-item[data-active]) {
+  background: #ffffff;
+}

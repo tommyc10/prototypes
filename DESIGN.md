@@ -7,9 +7,8 @@ description: >
   one white accent, colour only for status. Calm until something needs a person.
 source_of_truth:
   product: src/styles/theme.css, src/styles/ui.css, src/styles/shell.css (plain CSS, classes prefixed mn-)
-  tailwind_port: ../../design-guides/imperial-ops-tailwind (Tailwind v4, hand-written components, no component library)
-  shadcn_port: ../../design-guides/imperial-ops-design-system (Tailwind v4 + shadcn on Base UI)
-  css_lessons: ../../design-guides/style-cheatsheet.html
+  tailwind_port: design-system/ (Tailwind v4, hand-written components, no component library)
+  shadcn_port: ../../ui-ux-inspiration/design-guides/imperial-ops-design-system (Tailwind v4 + shadcn on Base UI, not in this repo)
 
 colors:
   dark: # the home theme
@@ -202,8 +201,8 @@ components:
 
 This file is the contract. If you are an agent asked to build or change something for
 Imperial Ops, read it once from the top, then keep to it. If you are a person learning how
-the system works, the lessons live in `design-guides/imperial-ops-design-system` (run it,
-it teaches each idea beside a live demo) and `design-guides/style-cheatsheet.html`.
+the system works, the lessons live in `design-system/` (`npm run dev` there: it teaches
+each idea beside a live demo).
 
 The values above are extracted from the shipped app (`src/`, ten thousand lines of CSS
 across six pages), not invented. Where the app disagrees with itself, "Known gaps" at the
@@ -262,9 +261,9 @@ The product is plain CSS. No Tailwind, no CSS-in-JS.
   palette, `sonner` for toasts, `lucide-react` for icons, `zustand` for the rules store.
   No chart library and no router: charts are divs and SVG, routes are the URL hash.
 
-Building in Tailwind or shadcn instead? Use the port in
-`design-guides/imperial-ops-design-system`: its `src/index.css` carries these same tokens
-under the same names, and the table in "Using this with shadcn" maps every role.
+Building in Tailwind instead? Use the port in `design-system/`: its `src/index.css` carries
+these same tokens under the same names (see "Using this with Tailwind"). For shadcn, the
+table in "Using this with shadcn" maps every role.
 
 ## Colors
 
@@ -643,19 +642,21 @@ Rules it keeps:
 
 ## Using this with Tailwind
 
-`design-guides/imperial-ops-tailwind` is the same system as Tailwind v4 classes with no
+`design-system/` is the same system as Tailwind v4 classes with no
 component library. Its `src/index.css` carries these tokens under the same names, each
 registered as a class (`bg-l3`, `text-fg-2`, `inset-ring-line`, `rounded-lg`, `shadow-pop`,
 `ease-out`), plus the materials and type styles as one-word utilities (`surface-card`,
 `surface-well`, `glass-bar`, `glass-menu`, `type-title`, `type-meta`). Its `src/components`
 are short hand-written files: a base class string, a lookup table of variants, and
 `className` for placement only. `<Button>` with no variant is the everyday grey button;
-`variant="primary"` is the single main action. Behaviour for menus, popovers, tooltips and
+`variant="primary"` is the single main action. `<Skeleton>` and `useSheen` are the sheen.
+Behaviour for menus, popovers, tooltips and
 dialogs comes from Base UI, the palette from `cmdk`, toasts from `sonner`, as in the product.
 
 ## Using this with shadcn
 
-The port in `design-guides/imperial-ops-design-system` is shadcn's `base-nova` style on
+The port in `../../ui-ux-inspiration/design-guides/imperial-ops-design-system` (outside this
+repo) is shadcn's `base-nova` style on
 Base UI, with all components installed and restyled. Its `src/index.css` is the theme.
 
 | Imperial Ops token | shadcn variable | Tailwind class |
@@ -743,5 +744,6 @@ the app has drifted from it. Match the scale, not the drift.
   stacking context (`isolation: isolate`, or positioned with a z-index), where they can't
   reach anything else on the page.
 - **No form library, and one loading state.** Sheen (`mn-skel`, see Motion) is the loading
-  state, shipped on the Incidents page. The port's `Field` and `Skeleton` are styled to fit,
-  but nothing has checked the port's `Skeleton` against the sheen's shapes and band.
+  state, shipped on the Incidents page. The Tailwind port's `Skeleton` and `useSheen` are the
+  same shapes, band and clock. The shadcn port's `Field` and `Skeleton` are styled to fit,
+  but nothing has checked its `Skeleton` against the sheen.

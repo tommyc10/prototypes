@@ -1,0 +1,605 @@
+/* Imperial Ops design system, Tailwind edition: the whole theme lives in this one file.
+ * No component library. Tailwind turns the tokens below into classes; the components
+ * in src/components are ordinary React files that use those classes.
+ *
+ * Read it top to bottom, it is in the order a design system is built:
+ *   1. TOKENS      the raw values, named for what they are (--l3, --line, --fg-2).
+ *                  Same names as the app's src/styles/theme.css (one folder up).
+ *   2. @theme      tells Tailwind which tokens become classes (bg-l3, text-fg-2).
+ *   3. SCALES      radius, type, shadow and easing, pinned to the Imperial Ops values.
+ *   4. RECIPES     the repeated moves (card, well, glass) as one-word utilities.
+ *   5. BEHAVIOUR   focus, reduced motion, reduced transparency.
+ */
+
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/* `dark:` classes apply inside .dark, unless a nearer .light band switches them off. */
+@custom-variant dark (&:is(.dark *):not(.light *));
+
+/* Design system page only: lets a demo pin hover, focus and pressed without a mouse
+ * (data-preview="hover"). Not needed in a real app, harmless if left in. */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+  &[data-preview~="hover"] {
+    @slot;
+  }
+}
+@custom-variant focus-visible (&:focus-visible, &[data-preview~="focus"]);
+@custom-variant active (&:active, &[data-preview~="active"]);
+
+/* ==========================================================================
+   1. TOKENS
+   Dark is the product's home theme. Light redefines the same names, so no
+   component ever needs to know which theme it is in.
+   ========================================================================== */
+
+:root,
+.light {
+  /* surfaces: the ladder. In light the sidebar is the darkest grey, the page is paper. */
+  --l0: #efefef; /* sidebar: heaviest material */
+  --l1: #f7f7f7; /* list pane, code blocks */
+  --l2: #ffffff; /* detail pane: the page itself */
+  --l3: #fafafa; /* cards */
+  --l4: #ececec; /* raised controls */
+  --l5: #e2e2e2; /* hover on a raised control */
+  /* edges: black at three strengths */
+  --line: rgba(0, 0, 0, 0.07);
+  --line-2: rgba(0, 0, 0, 0.1);
+  --line-3: rgba(0, 0, 0, 0.2);
+  /* text: three tones */
+  --fg: #171717;
+  --fg-2: #525252;
+  --fg-3: #737373;
+  --row-name: #262626;
+  --code-val: #171717;
+  /* status: the only colour */
+  --green: #1f9d55;
+  --amber: #d4940f;
+  --orange: #c2570c;
+  --red: #d42a31;
+  --orange-wash: rgba(194, 87, 12, 0.07);
+  --red-wash: rgba(212, 42, 49, 0.06);
+  --red-text: #9f1d22;
+  --red-strong: #7f1116;
+  --danger-fg: #c8232a;
+  --orange-strong: #9a3f07;
+  --hold-fg: #ffffff;
+  /* the accent: near-black on white */
+  --primary: #171717;
+  --primary-fg: #ffffff;
+  --primary-hover: #333333;
+  --primary-kbd: rgba(255, 255, 255, 0.14);
+  --primary-kbd-line: rgba(255, 255, 255, 0.16);
+  --primary-kbd-fg: #d4d4d4;
+  /* glass: white at different opacities */
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-menu: rgba(255, 255, 255, 0.88);
+  --glass-palette: rgba(255, 255, 255, 0.6);
+  --glass-toast: rgba(255, 255, 255, 0.9);
+  --glass-edge: rgba(255, 255, 255, 0.9);
+  --card-edge: rgba(255, 255, 255, 0.8);
+  /* washes and wells */
+  --tint: rgba(0, 0, 0, 0.04);
+  --tint-2: rgba(0, 0, 0, 0.05);
+  --well: rgba(255, 255, 255, 0.9);
+  --well-2: rgba(0, 0, 0, 0.025);
+  --scrim: rgba(0, 0, 0, 0.08); /* behind the command palette */
+  --overlay: rgba(0, 0, 0, 0.2); /* behind a dialog */
+  --sheen: rgba(255, 255, 255, 0.85); /* the band of light that crosses a waiting page */
+  --focus-glow: rgba(0, 0, 0, 0.05);
+  --focus-ring: rgba(0, 0, 0, 0.4);
+  --selection: rgba(0, 0, 0, 0.12);
+  --avatar: linear-gradient(145deg, #e8e8e8, #cfcfcf);
+  /* raised chips (selected row, active tab) are white with a whisper of shadow in light */
+  --chip: #ffffff;
+  --shadow-chip: 0 1px 2px rgba(0, 0, 0, 0.05);
+  /* shadows: only floating things get one */
+  --shadow-float: 0 16px 40px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-palette: 0 24px 64px rgba(0, 0, 0, 0.16);
+  /* chart tones: one grey ramp, darkest = most important */
+  --tone-1: #171717;
+  --tone-2: #737373;
+  --tone-3: #b0b0b0;
+  --tone-4: #dedede;
+  color-scheme: light;
+}
+
+.dark {
+  --l0: #050505;
+  --l1: #0b0b0b;
+  --l2: #101010;
+  --l3: #161616;
+  --l4: #1c1c1c;
+  --l5: #242424;
+  /* edges: white at three strengths */
+  --line: rgba(255, 255, 255, 0.07); /* dividers, card rings */
+  --line-2: rgba(255, 255, 255, 0.11); /* buttons, floating things */
+  --line-3: rgba(255, 255, 255, 0.18); /* focused field, chart baseline */
+  --fg: #ededed; /* what you read */
+  --fg-2: #a3a3a3; /* supporting sentences */
+  --fg-3: #737373; /* labels, meta, placeholders */
+  --row-name: #d6d6d6;
+  --code-val: #d9d9d9;
+  --green: #45c47a;
+  --amber: #e0a93e;
+  --orange: #f08a4b;
+  --red: #f0565c;
+  --orange-wash: rgba(240, 138, 75, 0.08);
+  --red-wash: rgba(240, 86, 92, 0.08);
+  --red-text: #f3b4b6; /* text on a red wash */
+  --red-strong: #fbd5d6; /* bold text on a red wash */
+  --danger-fg: #f68a8e;
+  --orange-strong: #f7c3a2;
+  --hold-fg: #1a0d05;
+  /* the accent: white on near-black. The one high-contrast thing on screen. */
+  --primary: #fafafa;
+  --primary-fg: #0a0a0a;
+  --primary-hover: #e2e2e2;
+  --primary-kbd: rgba(0, 0, 0, 0.08);
+  --primary-kbd-line: rgba(0, 0, 0, 0.1);
+  --primary-kbd-fg: #404040;
+  /* glass: the same dark grey at different opacities */
+  --glass: rgba(24, 24, 24, 0.78); /* action bar, decision form */
+  --glass-menu: rgba(28, 28, 28, 0.86);
+  --glass-palette: rgba(22, 22, 22, 0.6); /* thinnest tint, heaviest blur */
+  --glass-toast: rgba(28, 28, 28, 0.88);
+  --glass-edge: rgba(255, 255, 255, 0.07); /* lit top edge on glass */
+  --card-edge: rgba(255, 255, 255, 0.03); /* lit top edge on cards */
+  --tint: rgba(255, 255, 255, 0.06); /* hover wash, key caps, empty tracks */
+  --tint-2: rgba(255, 255, 255, 0.07);
+  --well: rgba(0, 0, 0, 0.35); /* sunken: text fields */
+  --well-2: rgba(0, 0, 0, 0.3); /* sunken: metric wells */
+  --scrim: rgba(0, 0, 0, 0.3);
+  --overlay: rgba(0, 0, 0, 0.45);
+  --sheen: rgba(255, 255, 255, 0.13);
+  --focus-glow: rgba(255, 255, 255, 0.05);
+  --focus-ring: rgba(255, 255, 255, 0.45);
+  --selection: rgba(255, 255, 255, 0.22);
+  --avatar: linear-gradient(145deg, #3a3a3a, #1a1a1a);
+  --chip: var(--l4);
+  --shadow-chip: 0 0 #0000;
+  --shadow-float: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-palette: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --tone-1: #ededed;
+  --tone-2: #9a9a9a;
+  --tone-3: #646464;
+  --tone-4: #2b2b2b;
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   2. @theme: which tokens become Tailwind classes
+   `--color-l3: var(--l3)` creates bg-l3, text-l3, border-l3, inset-ring-l3.
+   `inline` writes var(--l3) into the class itself, so a nested theme band works.
+   ========================================================================== */
+
+@theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+
+  /* one line per token: --color-NAME makes bg-NAME, text-NAME, border-NAME, inset-ring-NAME */
+  --color-l0: var(--l0);
+  --color-l1: var(--l1);
+  --color-l2: var(--l2);
+  --color-l3: var(--l3);
+  --color-l4: var(--l4);
+  --color-l5: var(--l5);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-3: var(--line-3);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-row-name: var(--row-name);
+  --color-code-val: var(--code-val);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-orange: var(--orange);
+  --color-red: var(--red);
+  --color-orange-wash: var(--orange-wash);
+  --color-red-wash: var(--red-wash);
+  --color-red-text: var(--red-text);
+  --color-red-strong: var(--red-strong);
+  --color-danger-fg: var(--danger-fg);
+  --color-orange-strong: var(--orange-strong);
+  --color-hold-fg: var(--hold-fg);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-kbd: var(--primary-kbd);
+  --color-primary-kbd-line: var(--primary-kbd-line);
+  --color-primary-kbd-fg: var(--primary-kbd-fg);
+  --color-glass: var(--glass);
+  --color-glass-menu: var(--glass-menu);
+  --color-glass-palette: var(--glass-palette);
+  --color-glass-toast: var(--glass-toast);
+  --color-tint: var(--tint);
+  --color-tint-2: var(--tint-2);
+  --color-well: var(--well);
+  --color-well-2: var(--well-2);
+  --color-scrim: var(--scrim);
+  --color-overlay: var(--overlay);
+  --color-chip: var(--chip);
+  --color-sheen: var(--sheen);
+  --color-focus: var(--focus-ring);
+  --color-focus-glow: var(--focus-glow);
+  --color-tone-1: var(--tone-1);
+  --color-tone-2: var(--tone-2);
+  --color-tone-3: var(--tone-3);
+  --color-tone-4: var(--tone-4);
+
+  /* the lit top edge: faint on cards, brighter on glass */
+  --inset-shadow-edge: inset 0 1px 0 var(--card-edge);
+  --inset-shadow-glass: inset 0 1px 0 var(--glass-edge);
+
+  /* ==== 3. SCALES ==== */
+
+  /* Radius: seven steps and a pill. Tailwind name -> Imperial Ops value -> who uses it. */
+  --radius-xs: 4px; /* key caps, meters, checkboxes */
+  --radius-sm: 6px; /* menu items, the brand mark */
+  --radius-md: 7px; /* tabs, nav items, icon buttons */
+  --radius-lg: 9px; /* buttons, inputs, list rows, wells */
+  --radius-xl: 10px; /* text areas, callouts, code blocks, menus */
+  --radius-2xl: 12px; /* cards, tables, toasts */
+  --radius-3xl: 14px; /* glass bars, the palette, dialogs, lead cards */
+  --radius-4xl: 9999px; /* pills, dots, avatars */
+}
+
+@theme {
+  /* Type: 13px is the control size, 14px the reading size. Tailwind's own names are
+   * re-pointed, so text-sm is always a control and text-base is always body copy. */
+  --text-xs: 0.75rem; /* 12px: meta, labels */
+  --text-xs--line-height: 1.35;
+  --text-sm: 0.8125rem; /* 13px: buttons, tabs, rows, menu items */
+  --text-sm--line-height: 1.4;
+  --text-base: 0.875rem; /* 14px: body */
+  --text-base--line-height: 1.5;
+
+  /* Shadows: the three floating shadows, under the app's own names. Their values are
+   * the primitives above (they differ between themes); these lines just make the classes. */
+  --shadow-chip: 0 0 #0000;
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-float: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-palette: 0 24px 64px rgba(0, 0, 0, 0.6);
+  /* Nothing that sits on the page has a drop shadow, so Tailwind's small ones are off. */
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+
+  /* Easing: three curves. Overriding Tailwind's names means `ease-out` IS the house curve. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* almost everything */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* A to B on screen: the tour spotlight */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* sheets and drawers */
+  --ease-snap: cubic-bezier(0.23, 1, 0.32, 1); /* alias used in the style cheat sheet */
+  --ease-glide: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Type styles: one class per named style in DESIGN.md. They are `type-*`, not `text-*`,
+ * because the class merger would mistake an unknown text-* for a colour and drop one. */
+@utility type-hero {
+  font-size: 88px;
+  font-weight: 600;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+@utility type-display {
+  font-size: clamp(28px, 2.2vw + 12px, 40px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+@utility type-title {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+@utility type-chapter {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+@utility type-lead {
+  font-size: 17px;
+  line-height: 1.62;
+  letter-spacing: -0.005em;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+@utility type-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+@utility type-section {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+@utility type-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+@utility type-control {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+@utility type-meta {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--fg-3);
+}
+@utility type-micro {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fg-2);
+}
+@utility type-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: var(--fg-3);
+}
+@utility type-stat {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+/* A number under a lead sentence that already gives the answer, so the sentence stays the headline. */
+@utility type-stat-sm {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   4. RECIPES
+   The moves the product repeats, as one word each. Every one is only Tailwind
+   classes you could write out yourself; @apply saves the typing.
+   ========================================================================== */
+
+/* Sits on the page: a rung up, a hairline ring, a lit top edge. No drop shadow. */
+@utility surface-card {
+  @apply rounded-2xl bg-l3 inset-shadow-edge inset-ring inset-ring-line;
+}
+/* The one important card on a page: stronger ring, rounder. */
+@utility surface-lead {
+  @apply rounded-3xl bg-l3 inset-shadow-edge inset-ring inset-ring-line-2;
+}
+/* Sunken: darker than what it sits in. Metric strips, tracks, fields. */
+@utility surface-well {
+  @apply rounded-lg bg-well-2 inset-ring inset-ring-line;
+}
+/* Raised: selected rows, active tabs. */
+@utility surface-raised {
+  @apply bg-chip shadow-chip inset-ring inset-ring-line;
+}
+/* Floating: see-through tint, blur what is behind, lit top edge, ring, one big shadow. */
+@utility glass-bar {
+  @apply rounded-3xl bg-glass inset-shadow-glass ring-1 ring-line-2 shadow-float backdrop-blur-[20px] backdrop-saturate-[1.2];
+}
+@utility glass-menu {
+  @apply rounded-xl bg-glass-menu inset-shadow-glass ring-1 ring-line-2 shadow-pop backdrop-blur-[16px] backdrop-saturate-[1.2];
+}
+@utility glass-palette {
+  @apply rounded-3xl bg-glass-palette inset-shadow-glass ring-1 ring-line-2 shadow-palette backdrop-blur-[40px] backdrop-saturate-[1.8];
+}
+@utility glass-toast {
+  @apply rounded-2xl bg-glass-toast inset-shadow-glass ring-1 ring-line-2 shadow-pop backdrop-blur-[20px];
+}
+/* The tooltip: glass edge and shadow on a solid fill, because tiny text needs it. */
+/* A dialog: solid page colour, a ring and the biggest shadow. */
+@utility surface-dialog {
+  @apply rounded-3xl bg-l2 ring-1 ring-line-2 shadow-palette;
+}
+@utility surface-tip {
+  @apply rounded-lg bg-l4 inset-shadow-glass ring-1 ring-line-2 shadow-pop;
+}
+/* A scrolling list fades out at its edges instead of meeting a hard line. */
+@utility scroll-fade {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+}
+
+/* Waiting for something fetched: a soft shape where the content will land, and one band of
+ * light (--sheen) that crosses the window every 2.4s, then rests. Every shape carries a
+ * window-wide slice of the same band, kept in step by useSheen (components/skeleton.tsx),
+ * so two panes waiting side by side read as one page loading. Content about to be replaced
+ * keeps its place, sits back to 55% and takes the same light: data-sheen-stale.
+ * Plain CSS rather than classes, because the band is a pseudo-element. */
+@layer components {
+  .skel {
+    position: relative;
+    display: block;
+    flex: none;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 4px; /* xs */
+    background: var(--tint);
+  }
+  .skel[data-shape="pill"] {
+    border-radius: 9999px;
+  }
+  /* A panel to come: lighter than a line of words, with a hairline, so it reads as "a panel". */
+  .skel[data-shape="card"] {
+    border-radius: 12px; /* 2xl */
+    background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  [data-sheen-stale] {
+    position: relative;
+    overflow: hidden;
+    opacity: 0.55;
+  }
+  .skel::after,
+  [data-sheen-stale]::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(-1 * var(--sheen-x, 0px));
+    width: 100vw;
+    background: linear-gradient(
+      90deg,
+      transparent 32%,
+      color-mix(in srgb, var(--sheen) 50%, transparent) 42%,
+      var(--sheen) 50%,
+      color-mix(in srgb, var(--sheen) 50%, transparent) 58%,
+      transparent 68%
+    );
+    transform: translateX(-62%);
+    animation: io-sheen 2400ms linear infinite;
+    animation-delay: var(--sheen-clock, 0ms);
+    pointer-events: none;
+  }
+  /* Over words, the band is softer. */
+  [data-sheen-stale]::after {
+    opacity: 0.6;
+  }
+}
+/* Constant motion, so linear: the band crosses at a steady pace, then rests. */
+@keyframes io-sheen {
+  0% {
+    transform: translateX(-62%);
+  }
+  68%,
+  100% {
+    transform: translateX(62%);
+  }
+}
+@keyframes io-skel-breathe {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ==========================================================================
+   5. BEHAVIOUR
+   ========================================================================== */
+
+@layer base {
+  /* Any border drawn without a colour is a hairline: `border-t` alone is a divider. */
+  * {
+    border-color: var(--line);
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-l2 text-base text-fg antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--selection);
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
+/* Keyboard focus on anything you press: a 2px outline, 2px away. Not a glow.
+ * Unlayered, so it beats any `outline-none`. Fields keep their glow instead. */
+:is(
+    button,
+    a[href],
+    summary,
+    [role="button"],
+    [role="tab"],
+    [role="checkbox"],
+    [role="radio"],
+    [role="switch"],
+    [role="slider"],
+    [role="menuitem"]
+  ):is(:focus-visible, [data-preview~="focus"]) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+/* The theme switch dissolves the new theme in over the old one. */
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation: io-dissolve 200ms var(--ease-out);
+  mix-blend-mode: normal;
+}
+@keyframes io-dissolve {
+  from {
+    opacity: 0;
+  }
+}
+
+/* People who ask their system for less: honour it. Loaded last so these win. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* Waiting still shows: the band stops and the shapes breathe instead. */
+  .skel::after,
+  [data-sheen-stale]::after {
+    display: none;
+  }
+  .skel {
+    animation: io-skel-breathe 1800ms ease-in-out infinite !important;
+    animation-delay: var(--sheen-clock, 0ms);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  .light,
+  .dark {
+    --glass: var(--l4);
+    --glass-menu: var(--l4);
+    --glass-palette: var(--l4);
+    --glass-toast: var(--l4);
+  }
+}
+@media (prefers-contrast: more) {
+  .dark {
+    --fg-2: #c4c4c4;
+    --fg-3: #9a9a9a;
+    --line: rgba(255, 255, 255, 0.2);
+    --line-2: rgba(255, 255, 255, 0.3);
+  }
+  :root:not(.dark),
+  .light {
+    --fg-2: #333333;
+    --fg-3: #555555;
+    --line: rgba(0, 0, 0, 0.2);
+    --line-2: rgba(0, 0, 0, 0.3);
+  }
+  :root,
+  .light,
+  .dark {
+    --glass: var(--l4);
+    --glass-menu: var(--l4);
+    --glass-palette: var(--l4);
+    --glass-toast: var(--l4);
+  }
+}
