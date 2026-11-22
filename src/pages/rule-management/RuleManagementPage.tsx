@@ -25,6 +25,7 @@ import { RuleList } from './components/RuleList/RuleList';
 import { SuggestionButtons, SuggestionDetail } from './components/SuggestionDetail/SuggestionDetail';
 import { PaneToggles } from '../../components/PaneToggles';
 import { Sidebar } from '../../components/Sidebar/Sidebar';
+import { waveRun, type WaveRun } from '../../components/Wave/WaveSwap';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useTheme } from '../../hooks/useTheme';
 import { NOW } from '../../lib/clock';
@@ -41,7 +42,7 @@ import { useRuleView } from './hooks/useRuleView';
 import { useRulesStore } from './hooks/useRulesStore';
 import { useSuggestions, type Suggested } from './hooks/useSuggestions';
 import { groupKey } from './model/browse';
-import { actionsFor } from './model/policy';
+import { actionsFor, turnsOn } from './model/policy';
 import { canTighten, proposedFrom } from './model/suggestions';
 import type { RelatedIncident, RuleAction } from './model/types';
 
@@ -98,9 +99,19 @@ export function RuleManagementPage({
   // Whether the tour opened the decision form (to show it), so it only closes its own.
   const tourDecision = useRef(false);
 
-  const decision = useDecision((rule, action) => {
-    toast.custom(() => <DecisionToast rule={rule} action={action} />);
+  // A decision just applied. In the wide layout, while its rule stays in the list, a wave
+  // carries the form into the rule's card, which says what was done (green when the rule now
+  // suppresses, as green means active; grey when it stops). Otherwise, a toast says it.
+  const [decided, setDecided] = useState<{ ruleId: string; action: RuleAction; reason: string; run: WaveRun } | null>(null);
+  const decision = useDecision((rule, action, reason) => {
+    const stays = view.status === 'all' || view.status === rule.status;
+    if (mode !== 'narrow' && stays) setDecided({ ruleId: rule.id, action, reason, run: waveRun(null, turnsOn(action) ? 'green' : 'grey') });
+    else toast.custom(() => <DecisionToast rule={rule} action={action} />);
   });
+  // The card says it only while its rule is the one showing.
+  useEffect(() => {
+    if (decided && decided.ruleId !== selectedId) setDecided(null);
+  }, [selectedId]);
 
   // The suggestions the list is showing: they wait with the proposed rules, and follow the
   // group filter and the search like everything else.
@@ -360,6 +371,7 @@ export function RuleManagementPage({
             mode={mode}
             decision={decision}
             composerVia={composerVia}
+            decided={decided?.ruleId === selected.id ? decided : null}
             toolbar={
               <PaneToggles
                 hideSide={hideSide}

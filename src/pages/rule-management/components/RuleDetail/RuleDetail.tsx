@@ -4,6 +4,7 @@
  *   ultra:  two content columns (the full incident list gets its own), plus the rail */
 
 import type { ReactNode } from 'react';
+import { WaveSwap, type WaveRun } from '../../../../components/Wave/WaveSwap';
 import { Moon, ShieldCheck } from 'lucide-react';
 import { nightDate } from '../../model/suggestions';
 import { groupById } from '../../data/mockData';
@@ -17,7 +18,7 @@ import { Composer } from '../Composer/Composer';
 import { IncidentBrowser } from '../Incidents/IncidentBrowser';
 import { IncidentList } from '../Incidents/IncidentList';
 import { AlsoInGroup } from './AlsoInGroup';
-import { DecisionCard } from './DecisionCard';
+import { DecisionCard, type Landed } from './DecisionCard';
 import { Evidence } from './Evidence';
 import { History } from './History';
 import { ImpactCard } from './ImpactCard';
@@ -30,6 +31,7 @@ export function RuleDetail({
   mode,
   decision,
   composerVia,
+  decided,
   toolbar,
   onAction,
   onSelect,
@@ -41,6 +43,9 @@ export function RuleDetail({
   mode: PaneMode;
   decision: Decision;
   composerVia: 'key' | 'pointer';
+  /** A decision just made on this rule: in the wide rail, a wave carries the form into the
+   *  card, which then says what was done (WaveSwap). */
+  decided: (Landed & { run: WaveRun }) | null;
   /** Buttons at the start of the header row (the sidebar and list toggles). */
   toolbar?: ReactNode;
   onAction: (action: RuleAction) => void;
@@ -165,7 +170,9 @@ export function RuleDetail({
             </div>
           )}
           <aside className="mn-rail" aria-label="Decision">
-            <div className="mn-rail-card" data-tour="decision">{composer || <DecisionCard rule={rule} onAction={onAction} />}</div>
+            <WaveSwap className="mn-rail-card" data-tour="decision" run={decided?.run ?? null}>
+              {composer || <DecisionCard rule={rule} landed={decided} onAction={onAction} />}
+            </WaveSwap>
             <ImpactCard rule={rule} />
             <History rule={rule} />
             <AlsoInGroup rule={rule} rules={rules} onSelect={onSelect} />

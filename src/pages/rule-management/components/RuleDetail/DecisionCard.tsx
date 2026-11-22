@@ -1,10 +1,13 @@
 /* The card at the top of the rail: who proposed the rule, what it's doing now, and the
- * buttons to change that. When a decision starts, the Composer takes this card's place. */
+ * buttons to change that. When a decision starts, the Composer takes this card's place.
+ *
+ * A decision just made here (`landed`) heads the card in the proposer's place: what was done,
+ * and the reason given. The wave that carries the form into the card ends on it. */
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Check } from 'lucide-react';
 import { pct } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
-import { LOW_CONFIDENCE, isLowConfidence } from '../../model/policy';
+import { ACTION_PAST, LOW_CONFIDENCE, isLowConfidence, turnsOn } from '../../model/policy';
 import type { Rule, RuleAction } from '../../model/types';
 import { ActionButtons } from '../common/ActionButtons';
 import { Proposer } from './Proposer';
@@ -21,10 +24,31 @@ function currentEffect(rule: Rule) {
   return `Not suppressing. Matching incidents page ${group}.`;
 }
 
-export function DecisionCard({ rule, onAction }: { rule: Rule; onAction: (action: RuleAction) => void }) {
+/** A decision this card has just taken. */
+export interface Landed {
+  action: RuleAction;
+  reason: string;
+}
+
+export function DecisionCard({ rule, landed, onAction }: { rule: Rule; landed?: Landed | null; onAction: (action: RuleAction) => void }) {
   return (
     <div className="mn-decide">
-      <Proposer rule={rule} />
+      {landed ? (
+        <div className="mn-decide-landed" role="status">
+          <span className="mn-decide-check" data-on={turnsOn(landed.action) || undefined}>
+            <Check size={13} strokeWidth={2.5} />
+          </span>
+          <div className="mn-decide-landed-text">
+            <div className="mn-decide-landed-title">
+              {rule.id} {ACTION_PAST[landed.action]}
+            </div>
+            <div className="mn-decide-landed-sub">Just now · reason saved to the audit log</div>
+            <q className="mn-decide-reason">{landed.reason.trim()}</q>
+          </div>
+        </div>
+      ) : (
+        <Proposer rule={rule} />
+      )}
       <div className="mn-decide-title">Decision</div>
       <p>{currentEffect(rule)}</p>
       <div className="mn-decide-actions">

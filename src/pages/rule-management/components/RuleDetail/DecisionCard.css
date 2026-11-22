@@ -46,3 +46,55 @@
   font-size: 12px;
   color: var(--fg-3);
 }
+
+/* A decision just made: what was done and why, where the proposer was. */
+.mn-decide-landed {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mn-decide-check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+/* The rule now suppresses: green, as active is everywhere. */
+.mn-decide-check[data-on] {
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 35%, transparent);
+  color: var(--green);
+}
+
+.mn-decide-landed-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mn-decide-landed-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mn-decide-landed-sub {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.mn-decide .mn-decide-reason {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}

@@ -246,3 +246,29 @@
   flex: 1;
   justify-content: center;
 }
+
+/* Submitted: the rule engine is applying it. The button keeps its look (it isn't disabled,
+ * it's busy) and says what's happening; the reason can't change under it. */
+.mn-composer[data-applying] .mn-composer-foot .mn-btn[data-applying] {
+  cursor: progress;
+}
+
+.mn-composer[data-applying] textarea {
+  opacity: 0.6;
+}
+
+.mn-composer-spin {
+  animation: mn-composer-spin 900ms linear infinite;
+}
+
+@keyframes mn-composer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-composer-spin {
+    animation-duration: 2.4s;
+  }
+}

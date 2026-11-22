@@ -1,0 +1,18 @@
+/* A form and its result in one grid cell (WaveSwap.tsx). Each layer is its own stacking
+ * context only while a wave runs, so the wave's canvas (z-index 1) sits over everything in
+ * them; at rest a layer is a plain wrapper. The root's `display: grid` is inline, so it holds
+ * on an element whose own class sets another display (a flex card). */
+
+.mn-wave {
+  position: relative;
+}
+
+.mn-wave-layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mn-wave[data-running] > .mn-wave-layer {
+  isolation: isolate;
+}

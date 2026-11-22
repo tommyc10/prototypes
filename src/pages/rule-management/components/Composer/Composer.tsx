@@ -2,12 +2,12 @@
  * override, and submit. The state and checks live in useDecision; this is the view.
  * It floats over the page in narrow layouts and sits in the rail (`docked`) in wide ones. */
 
-import { AlertTriangle, Check, CornerDownLeft } from 'lucide-react';
+import { AlertTriangle, Check, CornerDownLeft, Loader } from 'lucide-react';
 import { pct } from '../../../../lib/format';
 import { groupById } from '../../data/mockData';
 import type { Decision } from '../../hooks/useDecision';
 import { useBacktest } from '../../hooks/useBacktest';
-import { ACTION_LABEL } from '../../model/labels';
+import { ACTION_DOING, ACTION_LABEL } from '../../model/labels';
 import { LOW_CONFIDENCE, MIN_REASON, needsOverride, turnsOn } from '../../model/policy';
 import type { Rule, RuleAction } from '../../model/types';
 import { HoldButton } from './HoldButton';
@@ -46,6 +46,8 @@ export function Composer({
       data-docked={docked || undefined}
       data-kind={on ? 'on' : 'off'}
       data-animate={via === 'pointer' || undefined}
+      data-applying={decision.applying || undefined}
+      aria-busy={decision.applying || undefined}
       onSubmit={(e) => {
         e.preventDefault();
         decision.submit();
@@ -88,6 +90,7 @@ export function Composer({
         <textarea
           autoFocus
           rows={3}
+          readOnly={decision.applying}
           value={decision.reason}
           onChange={(e) => decision.setReason(e.target.value)}
           placeholder={PLACEHOLDER[action]}
@@ -120,14 +123,22 @@ export function Composer({
       )}
 
       <div className="mn-composer-foot">
-        <button type="button" className="mn-btn mn-btn-ghost" onClick={decision.close}>
+        <button type="button" className="mn-btn mn-btn-ghost" onClick={decision.close} disabled={decision.applying}>
           Cancel <kbd>Esc</kbd>
         </button>
-        <button type="submit" className="mn-btn" data-variant={on ? 'primary' : 'danger'} disabled={!decision.check?.ok}>
-          {ACTION_LABEL[action]} rule
-          <kbd>
-            ⌘<CornerDownLeft size={11} />
-          </kbd>
+        <button type="submit" className="mn-btn" data-variant={on ? 'primary' : 'danger'} disabled={!decision.check?.ok} data-applying={decision.applying || undefined}>
+          {decision.applying ? (
+            <>
+              <Loader size={15} className="mn-composer-spin" aria-hidden /> {ACTION_DOING[action]}…
+            </>
+          ) : (
+            <>
+              {ACTION_LABEL[action]} rule
+              <kbd>
+                ⌘<CornerDownLeft size={11} />
+              </kbd>
+            </>
+          )}
         </button>
       </div>
     </form>

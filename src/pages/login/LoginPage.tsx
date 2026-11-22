@@ -1,5 +1,6 @@
 /* The sign-in page. One card, one primary action. Enter submits; every failure is a sentence
- * beside what caused it. The auth is a mock (data/mockAuth.ts). */
+ * beside what caused it. The auth is a mock (data/mockAuth.ts). Signed in, it hands the Sign in
+ * button to App, which carries the page into the app with a wave from it (components/Wave). */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Check, Eye, EyeOff, Loader, Moon, Sun, TriangleAlert } from 'lucide-react';
@@ -7,11 +8,13 @@ import { BrandMark } from '../../components/BrandMark';
 import { NightScene } from '../../components/Halloween/NightScene';
 import { useHalloween } from '../../hooks/useHalloween';
 import { useTheme } from '../../hooks/useTheme';
-import { navigate } from '../../lib/route';
 import { AuthError, DEMO, signIn } from './data/mockAuth';
 import './login.css';
 
 type Status = 'idle' | 'submitting' | 'success';
+
+/** Long enough to see the button say "Signed in" before the wave pulls in towards it. */
+const SIGNED_IN_BEAT = 240;
 
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,7 +26,7 @@ function checkFields(email: string, password: string) {
   return errors;
 }
 
-export function LoginPage() {
+export function LoginPage({ onSignedIn }: { onSignedIn: (button: HTMLElement) => void }) {
   const [theme, toggleTheme] = useTheme();
   const halloween = useHalloween();
   const [email, setEmail] = useState('');
@@ -35,6 +38,7 @@ export function LoginPage() {
   const [lockLeft, setLockLeft] = useState(0);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   // A lock counts down, then lifts itself.
   useEffect(() => {
@@ -62,7 +66,7 @@ export function LoginPage() {
     try {
       await signIn(email.trim(), password);
       setStatus('success');
-      setTimeout(() => navigate('#/'), 700);
+      setTimeout(() => submitRef.current && onSignedIn(submitRef.current), SIGNED_IN_BEAT);
     } catch (err) {
       const why = err instanceof AuthError ? err : new AuthError('offline');
       setStatus('idle');
@@ -175,7 +179,7 @@ export function LoginPage() {
             )}
           </div>
 
-          <button className="mn-btn lg-submit" data-variant="primary" type="submit" disabled={locked} data-status={status}>
+          <button ref={submitRef} className="mn-btn lg-submit" data-variant="primary" type="submit" disabled={locked} data-status={status}>
             {status === 'submitting' ? (
               <>
                 <Loader size={15} className="lg-spin" aria-hidden /> Signing in…

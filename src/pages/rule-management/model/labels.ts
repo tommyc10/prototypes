@@ -11,6 +11,14 @@ export const ACTION_LABEL: Record<RuleAction, string> = {
   deactivate: 'Deactivate',
 };
 
+/** What the submit button says while the rule engine applies the decision. */
+export const ACTION_DOING: Record<RuleAction, string> = {
+  approve: 'Approving',
+  reject: 'Rejecting',
+  activate: 'Activating',
+  deactivate: 'Deactivating',
+};
+
 /** The keyboard shortcut for each action. */
 export const ACTION_KEY: Record<RuleAction, string> = { approve: 'A', reject: 'X', activate: 'E', deactivate: 'D' };
 

@@ -24,7 +24,30 @@
   transition: none;
 }
 
-.mn-app > .mn {
+/* Pages share one cell, so the sign-in page can lie over the app while a wave carries one into
+ * the other (components/Wave). Each layer is its own stacking context only during that
+ * handoff, so the wave's canvas (z-index 1) sits over everything inside them; the rest of the
+ * time a page's floating things stack as if the layer weren't there. */
+.mn-stage {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 0;
+}
+
+.mn-stage-layer {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mn-stage[data-handoff] > .mn-stage-layer {
+  isolation: isolate;
+}
+
+.mn-stage-layer > .mn {
   flex: 1;
   min-height: 0;
   height: auto;

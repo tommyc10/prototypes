@@ -258,7 +258,9 @@ The product is plain CSS. No Tailwind, no CSS-in-JS.
   because those render at the end of `<body>` and would not inherit them otherwise.
 - The theme is `data-mn-theme="light"` on `<html>`; dark is the absence of it.
 - Libraries: React 19, Base UI (`@base-ui/react`) for menus and popovers, `cmdk` for the
-  palette, `sonner` for toasts, `lucide-react` for icons, `zustand` for the rules store.
+  palette, `sonner` for toasts, `lucide-react` for icons, `zustand` for the rules store,
+  `border-beam` for the overnight block and `distortion-waves` for the sign-in and rule
+  decision waves.
   No chart library and no router: charts are divs and SVG, routes are the URL hash.
 
 Building in Tailwind instead? Use the port in `design-system/`: its `src/index.css` carries
@@ -371,7 +373,9 @@ design system app. The rules that the values do not carry:
 most one per view. *Secondary* (raised grey) is every other button. *Ghost* is cancel and
 toolbar icons. *Danger* is a red wash with a red ring, never a solid red block. A button's
 shortcut sits inside it as a key cap, on the right. Disabled is 40% opacity. There is no
-loading spinner inside buttons: a decision resolves into a toast.
+loading spinner inside buttons, with two exceptions that wait on real work: Sign in
+("Signing in…") and a rule decision ("Activating…"), each ending in a wave (see Motion).
+Everything else resolves into a toast.
 
 **Status dot, badge, pill, chip.** The dot (8px, with a 3px halo at 14%) carries status in
 a list row; inactive is a hollow ring. The badge (24px, card-coloured) carries a small dot
@@ -455,6 +459,39 @@ colour (what the rule caught, in green); every other series is a grey from the t
   breathes in place rather than travels, and it's grey because colour here means status. The
   beam's wrapper is the block's outer box, so the glow leaves with it. Reduced motion: the
   package shows no glow at all; the heading ("Found overnight 3") carries the state.
+- **Two things that resolve are carried into their result by a wave** (`distortion-waves`,
+  libraries.dev/waves; `components/Wave/`): signing in, and a decision on a rule. Only these.
+  They're the only moves longer than the interface's 320ms outside a data story, because each
+  marks something that now holds: the shift starting, a rule suppressing or not. Never on
+  navigation, a pick in a list, a menu, the palette or any other form: those stay instant.
+  - **The order: work, then wave, then result.** Press the button and it says what's
+    happening ("Signing in…", "Activating…", with a spinner); nothing can change or close
+    meanwhile. When the work is done, the wave pulls in towards the button and rises up the
+    view, bending the form into its result. The wave is the work landing, so it never runs
+    before the work has finished, and the result is already true when it ends.
+  - **What it looks like.** Grey: the chart ramp's `tone-2` and `tone-3`, `tone-1` at the
+    leading edge, read from the theme, so light on dark and dark on paper. Green only when the
+    result is what green means: a rule approved or activated, now suppressing. Never red, never
+    decorative colour. No chromatic aberration (it splits text into red, green and blue), the
+    band and rim dimmed, half the library's swell.
+  - **Sign in** (`useHandoff.ts`): across the window. The button says "Signed in" for 240ms,
+    then the wave carries the sign-in page into the page behind it. That page is the real
+    one, mounted under the sign-in page (both lie in one cell, `mn-stage`), so nothing redraws
+    once the wave has gone. The front crosses in 1.3s, the edges clear by 2s, 36 sparks. Aide
+    and the Halloween card wait until it has gone.
+  - **A decision on a rule** (`WaveSwap.tsx`): in the rail's decision card only. The rule
+    engine takes a moment (0.9s in the mock) while the button says "Approving…"; then the wave
+    carries the form into the card, which now heads with what was done ("RUL-0447 activated",
+    a check, "Just now · reason saved to the audit log", the reason quoted) in the proposer's
+    place, above the rule's new state and buttons. The check is green when the rule now
+    suppresses and grey when it stops. That heading is the confirmation, so there's no toast;
+    it stays while the rule is showing. The front crosses in 0.9s, the edges clear by 1.4s, 20
+    sparks; the card keeps the form's height until then. In narrow layouts the form floats as
+    glass, which a picture can't hold, so there it closes as before and a toast says it; a toast
+    also says it when the rule leaves the list (approved while the list shows only proposed).
+    Moving on mid-wave (J, K, another pick) stops it and shows the result at once.
+  - It runs after `⌘↵` and Enter too: it isn't something opened, it's the result arriving.
+    Reduced motion or no WebGL 2: the library crossfades instead (about 330ms).
 - **Waiting for something fetched sheens.** What's already known shows at once; a soft
   shape (`mn-skel`) stands wherever fetched content will land, cut to that content's size so
   nothing jumps when it arrives; and one band of light (`sheen`) crosses the window every
@@ -501,11 +538,12 @@ not shown does not exist.
 **List and detail.** The list drives the detail pane. Selection is in the URL
 (`#/rules/RUL-0428`), so every state is linkable and Back works.
 
-**Making a decision.** Pressing Approve opens a glass form over the detail pane; it never
-navigates away from the evidence. Every change needs a written reason of at least 12
+**Making a decision.** Pressing Approve opens a glass form over the detail pane (in wide
+layouts, in the rail's decision card); it never navigates away from the evidence. Every change needs a written reason of at least 12
 characters; a counter shows `7/12` then a green check. If the rule fails a safety check,
-an orange override row appears and the person must hold for two seconds. The result is a
-toast.
+an orange override row appears and the person must hold for two seconds. Submitted, the
+button says "Approving…" while the rule engine applies it; then, in wide layouts, a wave
+carries the form into the card, which says what was done (see Motion). Otherwise a toast.
 
 **Feedback.** Hover within 120ms, press immediately, result as a toast. Errors appear
 beside the field that caused them, in a sentence that says what to do.
