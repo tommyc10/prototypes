@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "imperial-ops",
+      "url": "http://localhost:5188",
+      "port": 5188
+    }
+  ]
+}
