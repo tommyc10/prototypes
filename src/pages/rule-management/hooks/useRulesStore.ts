@@ -5,7 +5,6 @@
 import { create } from 'zustand';
 import { NOW } from '../../../lib/clock';
 import { CURRENT_USER, RULES } from '../data/mockData';
-import { MOVED_RULES } from '../data/overnightData';
 import { ACTION_PAST, NEXT_STATUS, needsOverride } from '../model/policy';
 import type { Rule, RuleAction } from '../model/types';
 
@@ -17,7 +16,7 @@ interface RulesState {
 }
 
 export const useRulesStore = create<RulesState>((set, get) => ({
-  rules: [...MOVED_RULES, ...RULES],
+  rules: RULES,
   propose: (rule) => set({ rules: [rule, ...get().rules] }),
   apply: (id, action, reason, override) => {
     const at = NOW.toISOString();

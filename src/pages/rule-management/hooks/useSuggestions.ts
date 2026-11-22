@@ -1,10 +1,11 @@
 /* The overnight suggestions still waiting for a decision, each with what it catches and the
- * rule it would become. Tightening a threshold recomputes both. In the real app this is a
- * query for the last three refreshes, plus mutations for propose and dismiss. */
+ * rule it would become. Tightening a threshold recomputes both. `recent` are the last three
+ * refreshes' (the overnight block), `unreviewed` the older ones (the Unreviewed tab). In the
+ * real app this is a query for each, plus mutations for propose and dismiss. */
 
 import { useMemo, useState } from 'react';
 import { SUGGESTIONS } from '../data/overnightData';
-import { asRule, matchSuggestion, type Suggestion, type SuggestionMatch } from '../model/suggestions';
+import { asRule, isUnreviewed, matchSuggestion, type Suggestion, type SuggestionMatch } from '../model/suggestions';
 import type { Rule } from '../model/types';
 
 /** A suggestion, ready to show. */
@@ -32,7 +33,8 @@ export function useSuggestions() {
   );
 
   return {
-    open,
+    recent: useMemo(() => open.filter((item) => !isUnreviewed(item.suggestion)), [open]),
+    unreviewed: useMemo(() => open.filter((item) => isUnreviewed(item.suggestion)), [open]),
     handle: (id: string) => setHandled((ids) => [...ids, id]),
     restore: (id: string) => setHandled((ids) => ids.filter((handledId) => handledId !== id)),
     /** `null` puts the threshold back where the rule engine suggested it. */

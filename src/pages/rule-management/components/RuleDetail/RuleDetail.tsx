@@ -5,8 +5,7 @@
 
 import type { ReactNode } from 'react';
 import { WaveSwap, type WaveRun } from '../../../../components/Wave/WaveSwap';
-import { Moon, ShieldCheck } from 'lucide-react';
-import { nightDate } from '../../model/suggestions';
+import { ShieldCheck } from 'lucide-react';
 import { groupById } from '../../data/mockData';
 import type { Decision } from '../../hooks/useDecision';
 import type { PaneMode } from '../../hooks/usePaneMode';
@@ -66,12 +65,6 @@ export function RuleDetail({
           <span className="mn-dot" data-status={rule.status} />
           {statusLabel(rule)}
         </span>
-        {rule.fromRefresh && (
-          <span className="mn-detail-from">
-            <Moon size={13} />
-            Moved from the nightly refresh, found {nightDate(rule.fromRefresh)}
-          </span>
-        )}
       </div>
       <h2 className="mn-title">{rule.name}</h2>
       <div className="mn-scope">

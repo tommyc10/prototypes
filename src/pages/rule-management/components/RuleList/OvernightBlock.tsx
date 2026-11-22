@@ -1,18 +1,16 @@
 /* What the last three refreshes found, pinned above the rules: one row per pattern no rule covers
  * yet, under the night that found it, newest first. A pattern nobody decides on moves to the
- * rules at its fourth refresh; three pips on each night show how far along it is. The refresh's
- * own health (when it ran, whether a run failed) is kept apart from what it found: in the
+ * Unreviewed tab at its fourth refresh; three pips on each night show how far along it is. The
+ * refresh's own health (when it ran, whether a run failed) is kept apart from what it found: in the
  * heading, and on the first line inside. Until someone opens it after a refresh, a grey glow
  * breathes slowly inside its edge (the Border beam package, pulse-inner, mono: it waits on a
  * decision, so it breathes rather than travels). Once it has been looked at, it goes still until
- * the next refresh lands. The block goes away once every suggestion is proposed or dismissed. */
+ * the next refresh lands. The block goes away once nothing in it is left to decide. */
 
 import { useEffect, useState } from 'react';
 import { BorderBeam } from 'border-beam';
-import { AlertTriangle, ChevronDown, Repeat } from 'lucide-react';
+import { AlertTriangle, ChevronDown } from 'lucide-react';
 import type { Theme } from '../../../../hooks/useTheme';
-import { pct } from '../../../../lib/format';
-import { groupById } from '../../data/mockData';
 import type { RefreshNight } from '../../data/overnightData';
 import type { Suggested } from '../../hooks/useSuggestions';
 
@@ -24,8 +22,8 @@ const LIGHT_TUNING = { brightness: 0.45, glowSize: 1.4 };
 /** One breath, in seconds. The package's 2.3 is a pulse; on a dashboard open all shift it reads as
  * fidgeting. This is closer to someone breathing. */
 const BREATH = 4.5;
-import { isLowConfidence } from '../../model/policy';
-import { REFRESH_WINDOW, nightTime, seenAgainWords, type RefreshRun } from '../../model/suggestions';
+import { REFRESH_WINDOW, nightTime, type RefreshRun } from '../../model/suggestions';
+import { SuggestionRow } from './SuggestionRow';
 import './OvernightBlock.css';
 
 export function OvernightBlock({
@@ -74,7 +72,7 @@ export function OvernightBlock({
     risky > 0
       ? { bad: true, short: String(risky), long: `${risky} ${risky === 1 ? 'hides incidents' : 'hide incidents'} that needed a person` }
       : due > 0
-        ? { bad: false, short: `· ${due} due`, long: `${due} ${due === 1 ? 'moves' : 'move'} to the rules at the next refresh` }
+        ? { bad: false, short: `· ${due} due`, long: `${due} ${due === 1 ? 'moves' : 'move'} to Unreviewed at the next refresh` }
         : null;
   return (
     // The beam's wrapper is the block's outer box: it takes the block's place in the list and its
@@ -135,7 +133,7 @@ export function OvernightBlock({
                   <span className="mn-overnight-night-note">{night.found === 0 ? 'Ran, nothing new' : 'All decided'}</span>
                 ) : last ? (
                   <span className="mn-overnight-night-note" data-last>
-                    Moves to rules at next refresh
+                    Moves to Unreviewed at next refresh
                   </span>
                 ) : (
                   <span className="mn-overnight-night-note">
@@ -144,42 +142,15 @@ export function OvernightBlock({
                 )}
                 <Age refresh={night.daysAgo + 1} />
               </div>
-              {here.map(({ suggestion, match, rule }) => {
-                const real = match.real.length;
-                const seen = seenAgainWords(suggestion);
-                return (
-                  <div
-                    key={suggestion.id}
-                    role="option"
-                    aria-selected={suggestion.id === selectedId}
-                    className="mn-row"
-                    data-selected={suggestion.id === selectedId || undefined}
-                    data-leaving={suggestion.id === leavingId || undefined}
-                    onClick={() => onSelect(suggestion.id)}
-                  >
-                    <span className="mn-dot" data-status="suggested" aria-label="Suggested" />
-                    <div className="mn-row-main">
-                      <div className="mn-row-name">{suggestion.name}</div>
-                      <div className="mn-row-meta">
-                        {real > 0 ? <span className="mn-bad">Hides {real} that needed a person</span> : <span>{groupById(suggestion.groupId).name}</span>}
-                        {/* The warning matters more: with one, the re-sighting waits for the detail pane. */}
-                        {seen && real === 0 && (
-                          <span className="mn-overnight-seen">
-                            <Repeat size={12} aria-hidden="true" />
-                            Seen again {seen}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mn-row-side">
-                      <span className="mn-row-conf" data-low={isLowConfidence(rule) || undefined}>
-                        {pct(suggestion.confidence)}
-                      </span>
-                      <span className="mn-subtle">{match.matched.length} inc</span>
-                    </div>
-                  </div>
-                );
-              })}
+              {here.map((item) => (
+                <SuggestionRow
+                  key={item.suggestion.id}
+                  item={item}
+                  selected={item.suggestion.id === selectedId}
+                  leaving={item.suggestion.id === leavingId}
+                  onSelect={onSelect}
+                />
+              ))}
             </section>
           );
         })}

@@ -9,7 +9,7 @@ import { groupById } from '../../data/mockData';
 import type { Suggested } from '../../hooks/useSuggestions';
 import type { PaneMode } from '../../hooks/usePaneMode';
 import { SOURCE_LABEL } from '../../model/labels';
-import { canTighten, movesWords, nightDate, nightWords, seenAgainWords, thresholdLabel } from '../../model/suggestions';
+import { REFRESH_WINDOW, canTighten, isUnreviewed, movesWords, nightDate, nightWords, seenAgainWords, thresholdLabel } from '../../model/suggestions';
 import type { RelatedIncident, Rule } from '../../model/types';
 import { NightSwarm } from '../common/NightSwarm';
 import { IncidentList } from '../Incidents/IncidentList';
@@ -107,7 +107,9 @@ export function SuggestionDetail({
           {sections}
         </div>
         <div className="mn-actionbar">
-          <span className="mn-subtle mn-actionbar-note">With no decision, it moves to the rules {movesWords(suggestion)}</span>
+          <span className="mn-subtle mn-actionbar-note">
+            {isUnreviewed(suggestion) ? 'Unreviewed: it waits here until someone decides' : `With no decision, it moves to Unreviewed ${movesWords(suggestion)}`}
+          </span>
           {tighten && (
             <button className="mn-btn mn-btn-ghost" onClick={tighten}>
               Tighten
@@ -139,10 +141,17 @@ export function SuggestionDetail({
                   </div>
                 </div>
                 <div className="mn-decide-title">Suggestion</div>
-                <p>
-                  Not a rule yet. Proposing adds it to the queue as <span className="mn-mono">{suggestion.ruleId}</span>. With no decision, it moves there by itself{' '}
-                  {movesWords(suggestion)}, as a proposal that hides nothing until it's approved. Only refreshes that succeed count.
-                </p>
+                {isUnreviewed(suggestion) ? (
+                  <p>
+                    Not a rule yet. Its {REFRESH_WINDOW} refreshes passed with no decision, so it waits in Unreviewed. Proposing adds it to the
+                    queue as <span className="mn-mono">{suggestion.ruleId}</span>; dismissing it means it won't be suggested again unless the pattern changes.
+                  </p>
+                ) : (
+                  <p>
+                    Not a rule yet. Proposing adds it to the queue as <span className="mn-mono">{suggestion.ruleId}</span>. With no decision, it moves to
+                    Unreviewed {movesWords(suggestion)}, still a suggestion, out of the overnight block. Only refreshes that succeed count.
+                  </p>
+                )}
                 {seen && (
                   <p className="mn-decide-note">
                     Seen again {seen}. That adds to its evidence but doesn't reset its place in line.

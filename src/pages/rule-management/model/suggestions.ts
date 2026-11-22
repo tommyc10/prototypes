@@ -1,13 +1,14 @@
 /* Overnight suggestions: patterns the rule engine found in a night's incidents that no rule
  * covers yet. A suggestion is not a rule. A person either proposes it, which makes it one
  * (waiting for approval like any other), or dismisses it. If neither happens within three
- * refreshes it moves to the rules by itself, proposed, so the block only ever holds recent finds.
+ * refreshes it leaves the block for the Unreviewed tab, still a suggestion, so the block only
+ * ever holds recent finds and the proposed rules are only ones a person put forward.
  *
  * Its life, counted in successful refreshes from the one that found it:
  *   1  it appears under the night that found it
  *   2  it stays under that night. Seeing the pattern again updates its evidence, not its age
  *   3  its night says it moves at the next refresh
- *   4  it becomes a proposed rule, which hides nothing until someone approves it
+ *   4  it moves to Unreviewed, where it waits until someone proposes or dismisses it
  * A failed run ages nothing, and running the same night twice counts once.
  *
  * Nights are UTC, 22:00 to 06:00, and every date here is written in UTC so a night keeps its
@@ -17,6 +18,9 @@ import type { Condition, Resolution, Rule, RuleSource } from './types';
 
 /** How many refreshes a suggestion stays in the overnight block, counted from the one that found it. */
 export const REFRESH_WINDOW = 3;
+
+/** Out of the block with no decision: it waits in the Unreviewed tab. */
+export const isUnreviewed = (s: { daysAgo: number }) => s.daysAgo >= REFRESH_WINDOW;
 
 /** One run of the nightly refresh. Only a run that succeeds counts. */
 export interface RefreshRun {
@@ -129,10 +133,10 @@ export const canTighten = (s: Suggestion, match: SuggestionMatch, threshold: num
 /** Its night, as a sentence says it. */
 export const nightWords = (s: Suggestion) => (s.daysAgo === 0 ? 'last night' : `on the night of ${nightDate(s.nightStart)}`);
 
-/** Successful refreshes left before it moves to the rules: 3, 2, then 1. */
+/** Successful refreshes left before it moves to Unreviewed: 3, 2, then 1. */
 export const refreshesLeft = (s: Suggestion) => REFRESH_WINDOW - s.daysAgo;
 
-/** When it moves to the rules if nobody decides, as a sentence says it. The date assumes every
+/** When it moves to Unreviewed if nobody decides, as a sentence says it. The date assumes every
  * refresh between now and then succeeds; one that fails pushes it back a night. */
 export function movesWords(s: Suggestion) {
   const left = refreshesLeft(s);
@@ -193,30 +197,6 @@ export function asRule(s: Suggestion, match: SuggestionMatch, threshold: number)
       minutesOpen: i.minutesOpen,
     })),
     audit: [],
-  };
-}
-
-/** The rule a suggestion becomes when its time in the block runs out. Proposed, so it hides nothing. */
-export function movedFrom(s: Suggestion, preview: Rule, match: SuggestionMatch, movedAt: string): Rule {
-  return {
-    ...preview,
-    id: s.ruleId,
-    updatedAt: movedAt,
-    fromRefresh: s.nightStart,
-    audit: [
-      {
-        at: preview.createdAt,
-        actor: s.sourceDetail,
-        action: 'proposed',
-        reason: `Found in the overnight refresh: ${match.matched.length} incidents with the same shape, ${match.noise} of them noise.`,
-      },
-      {
-        at: movedAt,
-        actor: 'Overnight refresh',
-        action: 'proposed',
-        reason: `Moved to the rules after ${REFRESH_WINDOW} refreshes with no decision. It waits for approval like any other proposal.`,
-      },
-    ],
   };
 }
 

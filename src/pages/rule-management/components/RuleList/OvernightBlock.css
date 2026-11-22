@@ -190,13 +190,6 @@
   background: var(--fg-2);
 }
 
-/* A pattern a later night saw again. Its evidence grew; its age didn't. */
-.mn-overnight-seen {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .mn-overnight-night-note[data-last] {
   color: var(--fg-2);
 }
@@ -204,26 +197,6 @@
 /* Rows on a card lift with a tint, and the selected one goes two rungs up, not one. */
 .mn-overnight .mn-row[data-selected] {
   background: var(--l5);
-}
-
-.mn-overnight .mn-row-meta .mn-bad {
-  color: var(--danger-fg);
-}
-
-.mn-overnight .mn-row-meta > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* A row just proposed or dismissed with the pointer: it goes, quickly, before the rows close up. */
-.mn-overnight .mn-row[data-leaving] {
-  opacity: 0;
-  transform: scale(0.98);
-  pointer-events: none;
-  transition:
-    opacity 150ms var(--ease-out),
-    transform 150ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -253,10 +226,6 @@
   }
   .mn-overnight-beam[data-leaving] {
     transform: none;
-  }
-  .mn-overnight .mn-row[data-leaving] {
-    transform: none;
-    transition: opacity 150ms ease;
   }
   .mn-overnight-head {
     transition: none;

@@ -1,22 +1,18 @@
 /* Mock data: what the nightly refreshes found. Each pattern comes with the incidents near it,
  * generated the same way every time. Those from the last three refreshes wait in the overnight
- * block; older ones nobody decided on have moved to the rules. Like mockData.ts, this is a file
+ * block; older ones nobody decided on wait in the Unreviewed tab. Like mockData.ts, this is a file
  * the real backend replaces. */
 
 import { NOW } from '../../../lib/clock';
 import type { Condition, Resolution, RuleSource } from '../model/types';
 import {
   REFRESH_WINDOW,
-  asRule,
-  matchSuggestion,
-  movedFrom,
   nightDate,
   type NightIncident,
   type RefreshRun,
   type Suggestion,
   type Threshold,
 } from '../model/suggestions';
-import type { Rule } from '../model/types';
 
 function atDay(daysAgo: number, hours: number, minutes = 0) {
   const at = new Date(NOW);
@@ -463,11 +459,6 @@ export const REFRESH_NIGHTS: RefreshNight[] = NIGHT_TOTALS.slice(0, REFRESH_WIND
   found: ALL.filter((s) => s.daysAgo === daysAgo).length,
 }));
 
-/** What's waiting in the overnight block, newest night first. */
-export const SUGGESTIONS = ALL.filter((s) => s.daysAgo < REFRESH_WINDOW).sort((a, b) => a.daysAgo - b.daysAgo);
-
-/** What has already moved to the rules, nobody having decided. */
-export const MOVED_RULES: Rule[] = ALL.filter((s) => s.daysAgo >= REFRESH_WINDOW).map((s) => {
-  const match = matchSuggestion(s, s.threshold.suggested);
-  return movedFrom(s, asRule(s, match, s.threshold.suggested), match, refreshOf(s.daysAgo - REFRESH_WINDOW));
-});
+/** Every suggestion nobody has decided on, newest night first: the last three refreshes' in the
+ * overnight block, older ones in Unreviewed (see isUnreviewed). */
+export const SUGGESTIONS = [...ALL].sort((a, b) => a.daysAgo - b.daysAgo);

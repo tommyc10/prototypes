@@ -95,7 +95,7 @@ export function CommandPalette({
         <Command.Group heading="Filter">
           {STATUS_TABS.map((tab) => (
             <Command.Item key={tab.key} value={`show ${tab.label}`} onSelect={run(() => onStatus(tab.key))}>
-              Show {tab.label.toLowerCase()} rules
+              Show {tab.label.toLowerCase()} {tab.key === 'unreviewed' ? 'suggestions' : 'rules'}
             </Command.Item>
           ))}
         </Command.Group>

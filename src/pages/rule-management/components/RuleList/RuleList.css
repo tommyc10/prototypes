@@ -21,11 +21,25 @@
   letter-spacing: -0.02em;
 }
 
-.mn-list-tools {
+/* Five status tabs need the whole row: the list column is wider than the shell's 380px, the sort
+ * sits beside the search, and the tabs are a little tighter than the shared ones. */
+.mn-rules {
+  --mn-list-w: 440px;
+}
+
+.mn-list-find {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
+}
+
+.mn-list-find .mn-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.mn-list-tools .mn-tab {
+  padding: 0 7px;
 }
 
 .mn-rows {
@@ -95,12 +109,6 @@
 }
 
 /* A rule that moved in from the overnight block, nobody having decided on it. */
-.mn-row-from {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .mn-row-side {
   display: flex;
   flex-direction: column;

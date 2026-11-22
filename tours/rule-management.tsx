@@ -39,7 +39,7 @@ export const TOUR_STEPS: RuleTourStep[] = [
     body: (
       <>
         Search rules, CIs and sources with <kbd>/</kbd>. The tabs split proposed rules from active and inactive ones,
-        and you can sort by confidence or volume.
+        Unreviewed holds overnight suggestions nobody decided on in time, and you can sort by confidence or volume.
       </>
     ),
   },

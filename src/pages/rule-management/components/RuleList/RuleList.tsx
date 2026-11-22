@@ -1,11 +1,11 @@
 /* The rule list: title, group filter, search, status tabs, sort, the rows, and keyboard hints.
  * It shows whatever `visible` it's given; filtering and sorting happen in useRuleView.
- * `pinned` is whatever the page wants above the rows (the overnight suggestions). */
+ * `pinned` is whatever the page wants above the rows (the overnight suggestions), or in their
+ * place on the Unreviewed tab, which lists suggestions rather than rules. */
 
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
-import { AlertTriangle, Moon, Search } from 'lucide-react';
+import { AlertTriangle, Search } from 'lucide-react';
 import { pct } from '../../../../lib/format';
-import { nightDate } from '../../model/suggestions';
 import type { Pin } from '../../hooks/usePinnedGroups';
 import { STATUS_TABS, groupName, type StatusFilter, type ViewState } from '../../model/browse';
 import { statusLabel } from '../../model/labels';
@@ -60,16 +60,19 @@ export function RuleList({
           <h1>Rules</h1>
           <GroupPicker rules={rules} view={view} update={update} pins={pins} onTogglePin={onTogglePin} />
         </div>
-        <label className="mn-search">
-          <Search size={14} />
-          <input
-            ref={searchRef}
-            value={view.query}
-            onChange={(e) => update({ query: e.target.value })}
-            placeholder="Search rules, CIs, sources"
-          />
-          <kbd>/</kbd>
-        </label>
+        <div className="mn-list-find">
+          <label className="mn-search">
+            <Search size={14} />
+            <input
+              ref={searchRef}
+              value={view.query}
+              onChange={(e) => update({ query: e.target.value })}
+              placeholder="Search rules, CIs, sources"
+            />
+            <kbd>/</kbd>
+          </label>
+          <SortMenu sort={view.sort} dir={view.dir} onChange={update} />
+        </div>
         <div className="mn-list-tools">
           <div className="mn-tabs" role="tablist">
             {STATUS_TABS.map((tab) => (
@@ -86,7 +89,6 @@ export function RuleList({
               </button>
             ))}
           </div>
-          <SortMenu sort={view.sort} dir={view.dir} onChange={update} />
         </div>
       </header>
 
@@ -107,14 +109,7 @@ export function RuleList({
               <div className="mn-row-name">{rule.name}</div>
               <div className="mn-row-meta">
                 <span className="mn-mono">{rule.id}</span>
-                {rule.fromRefresh ? (
-                  <span className="mn-row-from">
-                    <Moon size={12} />
-                    Nightly refresh, {nightDate(rule.fromRefresh)}
-                  </span>
-                ) : (
-                  <span>{groupName(rule, view.groupBy)}</span>
-                )}
+                <span>{groupName(rule, view.groupBy)}</span>
               </div>
             </div>
             <div className="mn-row-side">

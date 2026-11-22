@@ -3,8 +3,9 @@
  *   Sidebar      navigation (shared with the other pages), with this page's pinned groups in it
  *   RuleList     finding rules: group filter, search, status tabs, sort
  *   OvernightBlock   what the last three refreshes found, pinned above the rules until it is dealt with
+ *   UnreviewedList   the Unreviewed tab: older suggestions nobody decided on, in place of the rules
  *   RuleDetail   the selected rule, and the decision form
- *   SuggestionDetail   the selected overnight suggestion: propose it or dismiss it
+ *   SuggestionDetail   the selected suggestion, overnight or unreviewed: propose it or dismiss it
  *   IncidentsPanel / CommandPalette   on top when opened
  *   IncidentView one incident, in a popup over the page when a row is clicked
  *   Tour         the guided tour, over everything (its code lives in tours/)
@@ -22,6 +23,7 @@ import { IncidentView } from './components/Incidents/IncidentView';
 import { RuleDetail } from './components/RuleDetail/RuleDetail';
 import { OvernightBlock } from './components/RuleList/OvernightBlock';
 import { RuleList } from './components/RuleList/RuleList';
+import { UnreviewedList } from './components/RuleList/UnreviewedList';
 import { SuggestionButtons, SuggestionDetail } from './components/SuggestionDetail/SuggestionDetail';
 import { PaneToggles } from '../../components/PaneToggles';
 import { Sidebar } from '../../components/Sidebar/Sidebar';
@@ -43,7 +45,7 @@ import { useRulesStore } from './hooks/useRulesStore';
 import { useSuggestions, type Suggested } from './hooks/useSuggestions';
 import { groupKey } from './model/browse';
 import { actionsFor, turnsOn } from './model/policy';
-import { canTighten, proposedFrom } from './model/suggestions';
+import { canTighten, isUnreviewed, proposedFrom } from './model/suggestions';
 import type { RelatedIncident, RuleAction } from './model/types';
 
 /** How long the overnight block takes to fade out; its exit in OvernightBlock.css is the same length. */
@@ -72,7 +74,7 @@ export function RuleManagementPage({
   const overnight = useSuggestions();
   // Folded to its heading at first, so a busy night doesn't push the rules down the list. O, the
   // heading, an undo or a link to one of its suggestions opens it.
-  const [overnightCollapsed, setOvernightCollapsed] = useState(() => !overnight.open.some((item) => item.suggestion.id === initialRuleId));
+  const [overnightCollapsed, setOvernightCollapsed] = useState(() => !overnight.recent.some((item) => item.suggestion.id === initialRuleId));
   // Three small arrivals and departures in the overnight flow. Like the decision form, they
   // only play when the action came from the pointer: what the keyboard does happens at once.
   //   arrivedId      the rule a suggestion has just become, so its row can travel into the list
@@ -113,20 +115,20 @@ export function RuleManagementPage({
     if (decided && decided.ruleId !== selectedId) setDecided(null);
   }, [selectedId]);
 
-  // The suggestions the list is showing: they wait with the proposed rules, and follow the
-  // group filter and the search like everything else.
+  // Suggestions follow the group filter and the search like everything else. The overnight
+  // block's wait with the proposed rules; the older, unreviewed ones have a tab of their own.
   const words = view.query.toLowerCase().split(/\s+/).filter(Boolean);
-  const suggestions =
-    view.status === 'all' || view.status === 'proposed'
-      ? overnight.open.filter(
-          ({ suggestion: s, rule }) =>
-            (view.groupId === 'all' || groupKey(rule, view.groupBy) === view.groupId) &&
-            words.every((word) => `${s.id} ${s.name} ${groupById(s.groupId).name}`.toLowerCase().includes(word)),
-        )
-      : [];
+  const inScope = ({ suggestion: s, rule }: Suggested) =>
+    (view.groupId === 'all' || groupKey(rule, view.groupBy) === view.groupId) &&
+    words.every((word) => `${s.id} ${s.name} ${groupById(s.groupId).name}`.toLowerCase().includes(word));
+  const inBlock = overnight.recent.filter(inScope);
+  const suggestions = view.status === 'all' || view.status === 'proposed' ? inBlock : [];
+  const unreviewedAll = overnight.unreviewed.filter(inScope);
+  const onUnreviewed = view.status === 'unreviewed';
+  const unreviewed = onUnreviewed ? unreviewedAll : [];
 
   const selected = rules.find((r) => r.id === selectedId) ?? null;
-  const suggested = suggestions.find((item) => item.suggestion.id === selectedId) ?? null;
+  const suggested = [...suggestions, ...unreviewed].find((item) => item.suggestion.id === selectedId) ?? null;
   // An open incident belongs to one rule (or suggestion): moving to another puts it away.
   const owner = selected ?? suggested?.rule ?? null;
   const incident = owner && opened?.ruleId === owner.id ? opened.incident : null;
@@ -139,16 +141,22 @@ export function RuleManagementPage({
     openIncident(owner.related[Math.min(owner.related.length - 1, Math.max(0, at + by))]);
   };
 
-  // What the block draws: the open suggestions, plus one on its way out, back in its own place.
-  // (Undone before its exit ends, it's open again, so it isn't drawn twice.)
+  // What the block, or the Unreviewed tab, draws: its open suggestions, plus one on its way out,
+  // back in its own place. (Undone before its exit ends, it's open again, so it isn't drawn twice.)
   const order = (item: Suggested) => SUGGESTIONS.findIndex((s) => s.id === item.suggestion.id);
-  const blockItems =
-    leavingRow && !suggestions.some((item) => item.suggestion.id === leavingRow.suggestion.id)
-      ? [...suggestions, leavingRow].sort((a, b) => order(a) - order(b))
-      : suggestions;
+  const withLeaving = (items: Suggested[], unreviewedList: boolean) =>
+    leavingRow &&
+    isUnreviewed(leavingRow.suggestion) === unreviewedList &&
+    !items.some((item) => item.suggestion.id === leavingRow.suggestion.id)
+      ? [...items, leavingRow].sort((a, b) => order(a) - order(b))
+      : items;
+  const blockItems = withLeaving(suggestions, false);
 
-  // Every row J and K can reach, top to bottom: the overnight block, then the rules.
-  const rows = [...(overnightCollapsed ? [] : suggestions.map((item) => item.suggestion.id)), ...visible.map((r) => r.id)];
+  // Every row J and K can reach, top to bottom: the overnight block, then the rules. On the
+  // Unreviewed tab, its suggestions.
+  const rows = onUnreviewed
+    ? unreviewed.map((item) => item.suggestion.id)
+    : [...(overnightCollapsed ? [] : suggestions.map((item) => item.suggestion.id)), ...visible.map((r) => r.id)];
   const rowKey = rows.join();
 
   // Keep the selection valid: if the list no longer shows what's selected, pick its first rule.
@@ -174,18 +182,19 @@ export function RuleManagementPage({
 
   /** After a suggestion is dealt with, step to the next one waiting, or back to the rules. */
   const leave = ({ suggestion }: Suggested, via: 'key' | 'pointer') => {
-    const rest = suggestions.filter((item) => item.suggestion.id !== suggestion.id);
-    // The last one: the block fades out with it, rather than vanishing and jolting the rules up.
-    if (via === 'pointer' && rest.length === 0) {
+    const list = isUnreviewed(suggestion) ? unreviewed : suggestions;
+    const rest = list.filter((item) => item.suggestion.id !== suggestion.id);
+    // The block's last one: the block fades out with it, rather than vanishing and jolting the rules up.
+    if (via === 'pointer' && rest.length === 0 && list === suggestions) {
       setLeavingBlock(suggestions);
       setTimeout(() => setLeavingBlock(null), BLOCK_EXIT_MS);
     } else if (via === 'pointer') {
-      // Not the last: just its row goes, before the rows below close up.
-      const item = suggestions.find((s) => s.suggestion.id === suggestion.id)!;
+      // Otherwise just its row goes, before the rows below close up.
+      const item = list.find((s) => s.suggestion.id === suggestion.id)!;
       setLeavingRow(item);
       setTimeout(() => setLeavingRow((row) => (row === item ? null : row)), ROW_EXIT_MS);
     }
-    const next = rest[suggestions.findIndex((item) => item.suggestion.id === suggestion.id)] ?? rest[rest.length - 1];
+    const next = rest[list.findIndex((item) => item.suggestion.id === suggestion.id)] ?? rest[rest.length - 1];
     setOpened(null);
     setSelectedId(next?.suggestion.id ?? visible[0]?.id ?? null);
   };
@@ -225,7 +234,7 @@ export function RuleManagementPage({
         action="Undo"
         onAction={() => {
           overnight.restore(id);
-          setOvernightCollapsed(false);
+          if (!isUnreviewed(item.suggestion)) setOvernightCollapsed(false);
           setSelectedId(id);
           toast.dismiss(toastId);
         }}
@@ -246,11 +255,12 @@ export function RuleManagementPage({
     setTimeout(() => setRetuned(0), ARRIVE_MS);
   };
 
-  /** Jump to the overnight block, opening it if it was folded away. */
+  /** Jump to the overnight block, opening it if it was folded away (and leaving a tab that hides it). */
   const toOvernight = () => {
-    if (!suggestions.length) return;
+    if (!inBlock.length) return;
+    if (!suggestions.length) update({ status: 'all' });
     setOvernightCollapsed(false);
-    if (!suggested) setSelectedId(suggestions[0].suggestion.id);
+    if (!suggested || isUnreviewed(suggested.suggestion)) setSelectedId(inBlock[0].suggestion.id);
   };
 
   /** Start the tour with everything it points at on screen, on a rule that's waiting for a decision. */
@@ -320,7 +330,7 @@ export function RuleManagementPage({
   });
 
   return (
-    <div className="mn" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
+    <div className="mn mn-rules" inert={tour.open} data-hide-side={hideSide || undefined} data-hide-list={hideList || undefined}>
       <Sidebar
         hidden={hideSide}
         page="rules"
@@ -340,13 +350,23 @@ export function RuleManagementPage({
         pins={pins}
         onTogglePin={togglePin}
         visible={visible}
-        counts={counts}
+        counts={{ ...counts, unreviewed: unreviewedAll.length }}
         selectedId={selectedId}
         onSelect={setSelectedId}
         searchRef={searchRef}
         arrivedId={arrivedId}
         pinned={
-          (leavingBlock ?? suggestions).length > 0 && (
+          onUnreviewed ? (
+            <UnreviewedList
+              items={withLeaving(unreviewed, true)}
+              leavingId={leavingRow?.suggestion.id}
+              filtered={view.query !== '' || view.groupId !== 'all'}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onClear={() => update({ query: '', groupId: 'all' })}
+            />
+          ) : (
+            (leavingBlock ?? suggestions).length > 0 && (
             <OvernightBlock
               items={leavingBlock ?? blockItems}
               leaving={leavingBlock !== null}
@@ -359,6 +379,7 @@ export function RuleManagementPage({
               onSelect={setSelectedId}
               theme={theme}
             />
+            )
           )
         }
       />

@@ -26,6 +26,7 @@ export function useRuleView(rules: Rule[], initial?: Partial<ViewState>) {
   );
 
   const counts = useMemo(() => {
+    // Unreviewed holds suggestions, not rules: the page counts those.
     const c = { all: scoped.length, active: 0, inactive: 0, proposed: 0 };
     scoped.forEach((r) => c[r.status]++);
     return c;

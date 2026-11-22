@@ -4,7 +4,8 @@ import { GROUPS, SERVICE_GROUPS, groupById, serviceGroupById } from '../data/moc
 import { SOURCE_LABEL } from './labels';
 import type { Rule, RuleStatus } from './types';
 
-export type StatusFilter = 'all' | RuleStatus;
+/** A rule status, every rule, or the overnight suggestions nobody decided on in time (not rules). */
+export type StatusFilter = 'all' | RuleStatus | 'unreviewed';
 export type SortKey = 'confidence' | 'purity' | 'incidents' | 'updated' | 'name';
 export type SortDir = 'asc' | 'desc';
 /** What the sidebar lists and filters by. */
@@ -26,6 +27,7 @@ export const STATUS_TABS: { key: StatusFilter; label: string }[] = [
   { key: 'proposed', label: 'Proposed' },
   { key: 'active', label: 'Active' },
   { key: 'inactive', label: 'Inactive' },
+  { key: 'unreviewed', label: 'Unreviewed' },
 ];
 
 export const SORT_LABEL: Record<SortKey, string> = {
@@ -71,7 +73,6 @@ export function matches(rule: Rule, query: string) {
     serviceGroupById(g.serviceGroupId).name,
     SOURCE_LABEL[rule.source],
     rule.sourceDetail,
-    rule.fromRefresh ? 'nightly refresh' : '',
     ...rule.evidence.conditions.map((c) => `${c.field} ${c.value}`),
   ]
     .join(' ')
