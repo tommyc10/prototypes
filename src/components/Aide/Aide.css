@@ -1,0 +1,1245 @@
+/* Aide: the dock, the peek, the chat panel, the floating orb and the pointer.
+ *
+ * Materials follow DESIGN.md: the panel floats, so it's glass (the action bar's recipe); the
+ * peek is a tooltip, so it's solid; the dock sits in the sidebar, so it's a raised row like ⌘K.
+ * Everything is grey: the aide has no colour of its own, because colour here means status. */
+
+/* ---------- the face ---------- */
+
+.mn-aide-mark {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--mk);
+  height: var(--mk);
+}
+
+.mn-aide-mark[data-size='20'] {
+  --mk: 20px;
+}
+
+.mn-aide-mark[data-size='28'] {
+  --mk: 28px;
+}
+
+.mn-aide-mark[data-size='36'] {
+  --mk: 36px;
+}
+
+.mn-aide-look,
+.mn-aide-mood {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  transform-origin: center 85%;
+}
+
+/* Follows the pointer each frame; the transition turns those steps into a glance. */
+.mn-aide-look {
+  transition: transform 240ms var(--ease-out);
+}
+
+.mn-aide-mood {
+  transition: transform 240ms var(--ease-out);
+}
+
+/* You're typing: it leans in to listen. */
+.mn-aide-mark[data-mood='listening'] .mn-aide-mood {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+/* It has something to say: one hop, to draw the eye to the dock. */
+.mn-aide-mark[data-mood='news'] .mn-aide-mood {
+  animation: mn-aide-hop 320ms var(--ease-in-out);
+}
+
+@keyframes mn-aide-hop {
+  45% {
+    transform: translateY(-4px) rotate(-6deg);
+  }
+}
+
+.mn-aide-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  transform-origin: center 80%;
+}
+
+/* Stands in when the picture can't load. */
+.mn-aide-lens {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--line-2);
+  transform-origin: center 80%;
+}
+
+.mn-aide-pupil {
+  width: 30%;
+  height: 30%;
+  border-radius: 999px;
+  background: var(--fg);
+}
+
+/* A finished first shift: a small check on the ring's edge, clear of the face. */
+.mn-aide-complete {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  box-shadow: 0 0 0 2px var(--aide-seat, var(--l3));
+}
+
+.mn-aide-mark[data-size='36'] .mn-aide-complete {
+  width: 13px;
+  height: 13px;
+  right: -3px;
+  bottom: -3px;
+}
+
+/* The droid is in the panel: its seat in the dock stays empty until it hops back. */
+.mn-aide-dock[data-open] .mn-aide-mark,
+.mn-aide-orb[data-open] {
+  opacity: 0;
+}
+
+.mn-aide-panel:not([data-open]) .mn-aide-head .mn-aide-mark {
+  opacity: 0;
+}
+
+/* The copy that flies between seats (Aide.tsx, hop). */
+.mn-aide-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 51;
+  pointer-events: none;
+  transform-origin: center;
+  --aide-seat: var(--l3);
+}
+
+/* ---------- the dock (foot of the sidebar) ---------- */
+
+.mn-aide-dock {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 0 0 10px;
+  padding: 0 6px 0 4px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--l3);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-aide-dock:active {
+  transform: scale(0.98);
+}
+
+.mn-aide-dock:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mn-aide-dock[data-open] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+}
+
+.mn-aide-dock-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.mn-aide-dock-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The face, inside a ring that fills as the first shift does. */
+.mn-aide-face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+}
+
+.mn-aide-orbit {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.mn-aide-orbit circle {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.mn-aide-orbit circle[data-fill] {
+  stroke: var(--fg-2);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 420ms var(--ease-in-out);
+}
+
+:root[data-mn-theme='light'] .mn-aide-dock {
+  --aide-seat: var(--l2);
+  background: var(--l2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-aide-dock:hover {
+    --aide-seat: var(--l4);
+    background: var(--l4);
+    color: var(--fg);
+  }
+  /* Pointed at, it perks up. */
+  .mn-aide-dock:hover .mn-aide-mark[data-mood='idle'] .mn-aide-mood,
+  .mn-aide-orb:hover .mn-aide-mark[data-mood='idle'] .mn-aide-mood {
+    transform: translateY(-1px) rotate(5deg);
+    transition-duration: 160ms;
+  }
+}
+
+/* ---------- the floating orb (sidebar tucked away) ---------- */
+
+.mn-aide-orb {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  --aide-seat: var(--l4);
+  transition:
+    transform 160ms var(--ease-out),
+    opacity 150ms ease;
+}
+
+.mn-aide-orb[data-open] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mn-aide-orb:active {
+  transform: scale(0.95);
+}
+
+.mn-aide-orb:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@starting-style {
+  .mn-aide-orb {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* ---------- the peek: a speech bubble beside the dock ---------- */
+
+.mn-aide-peek {
+  position: fixed;
+  z-index: 50;
+  width: 260px;
+  padding: 10px 12px 10px 12px;
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  background: var(--l4);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-pop);
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.5;
+  transform-origin: left bottom;
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+}
+
+@starting-style {
+  .mn-aide-peek {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.96);
+  }
+}
+
+.mn-aide-peek p {
+  margin: 0 0 8px;
+  text-wrap: pretty;
+}
+
+.mn-aide-peek b {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.mn-aide-peek-acts {
+  display: flex;
+  gap: 6px;
+}
+
+/* ---------- the panel ---------- */
+
+.mn-aide-panel {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--line-2),
+    var(--shadow-float);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.98);
+  transform-origin: left bottom;
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    visibility 0s 220ms;
+}
+
+.mn-aide-panel[data-corner='br'] {
+  transform-origin: right bottom;
+}
+
+.mn-aide-panel[data-corner='tl'] {
+  transform-origin: left top;
+}
+
+.mn-aide-panel[data-corner='tr'] {
+  transform-origin: right top;
+}
+
+.mn-aide-panel[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    visibility 0s;
+}
+
+/* Opened or shut from the keyboard: there and gone at once. While dragged: it is the pointer. */
+.mn-aide-panel[data-instant],
+.mn-aide-panel[data-dragging] {
+  transition: none;
+}
+
+/* A size set by a pointer (double-click, or let go past a limit) glides there. Like the shell's
+ * columns, the panel's box is the one thing here that animates its size. */
+.mn-aide-panel[data-sizing] {
+  transition:
+    width 240ms var(--ease-out),
+    height 240ms var(--ease-out),
+    left 240ms var(--ease-out),
+    top 240ms var(--ease-out);
+}
+
+/* While a hand is on an edge, the panel is the hand: no transition, no text selection. */
+.mn-aide-panel[data-resizing] {
+  transition: none;
+  user-select: none;
+}
+
+/* ---------- resize edges ----------
+ * Only the edges facing away from the panel's corner move (Aide.tsx, FREE). They sit just inside
+ * the panel, which clips, and leave the rounded corners to the corner handle. */
+
+.mn-aide-edge {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+}
+
+.mn-aide-edge[data-edge='n'],
+.mn-aide-edge[data-edge='s'] {
+  right: 14px;
+  left: 14px;
+  height: 5px;
+  cursor: ns-resize;
+}
+
+.mn-aide-edge[data-edge='n'] {
+  top: 0;
+}
+
+.mn-aide-edge[data-edge='s'] {
+  bottom: 0;
+}
+
+.mn-aide-edge[data-edge='e'],
+.mn-aide-edge[data-edge='w'] {
+  top: 14px;
+  bottom: 14px;
+  width: 5px;
+  cursor: ew-resize;
+}
+
+.mn-aide-edge[data-edge='e'] {
+  right: 0;
+}
+
+.mn-aide-edge[data-edge='w'] {
+  left: 0;
+}
+
+/* The corner: a short arc that follows the panel's radius, like a window you can pull. */
+.mn-aide-corner {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.mn-aide-corner:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.mn-aide-corner[data-edge='ne'] {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.mn-aide-corner[data-edge='nw'] {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.mn-aide-corner[data-edge='se'] {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+
+.mn-aide-corner[data-edge='sw'] {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.mn-aide-corner svg {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 150ms ease,
+    color 150ms ease;
+  color: var(--fg-3);
+}
+
+.mn-aide-corner path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.mn-aide-corner[data-edge='ne'] svg {
+  top: 0;
+  right: 0;
+}
+
+.mn-aide-corner[data-edge='nw'] svg {
+  top: 0;
+  left: 0;
+  transform: scaleX(-1);
+}
+
+.mn-aide-corner[data-edge='se'] svg {
+  right: 0;
+  bottom: 0;
+  transform: scaleY(-1);
+}
+
+.mn-aide-corner[data-edge='sw'] svg {
+  bottom: 0;
+  left: 0;
+  transform: scale(-1, -1);
+}
+
+.mn-aide-panel[data-resizing] .mn-aide-corner svg,
+.mn-aide-corner:focus-visible svg {
+  opacity: 1;
+  color: var(--fg-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Shown only when the pointer is on the panel, so the corner is found, not noticed. */
+  .mn-aide-panel:hover .mn-aide-corner svg {
+    opacity: 0.7;
+  }
+  .mn-aide-panel .mn-aide-corner:hover svg {
+    opacity: 1;
+    color: var(--fg-2);
+  }
+}
+
+/* Let go of a drag: it glides to its corner on the drawer curve. */
+.mn-aide-panel[data-settling] {
+  transition: transform 320ms var(--ease-drawer);
+}
+
+.mn-aide-panel[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.mn-aide-head {
+  --aide-seat: var(--l3);
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 10px 12px 14px;
+  border-bottom: 1px solid var(--line);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Says "you can pick this up" without words. */
+.mn-aide-grip {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 32px;
+  height: 4px;
+  margin-left: -16px;
+  border-radius: 999px;
+  background: var(--tint-2);
+  transition: background-color 150ms ease;
+}
+
+.mn-aide-panel[data-dragging] .mn-aide-grip {
+  background: var(--line-3);
+}
+
+.mn-aide-title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.mn-aide-title b {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.mn-aide-title span {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--fg-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mn-aide-chip {
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-aide-chip:active {
+  transform: scale(0.95);
+}
+
+/* ---------- the conversation ---------- */
+
+.mn-aide-thread {
+  position: relative; /* messages measure their place from here */
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 16px 16px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+}
+
+.mn-aide-say {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+  color: var(--fg-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.mn-aide-say p,
+.mn-aide-body p,
+.mn-aide-body ul {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.mn-aide-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mn-aide-body ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 18px;
+}
+
+.mn-aide-say b {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* Each new thing it says inks in, a block at a time, left to right. */
+.mn-aide-say > *,
+.mn-aide-body > * {
+  animation: mn-aide-ink 420ms var(--ease-out) both;
+  -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+  mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+  -webkit-mask-size: 260% 100%;
+  mask-size: 260% 100%;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+}
+
+.mn-aide-say > :nth-child(2),
+.mn-aide-body > :nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.mn-aide-say > :nth-child(3),
+.mn-aide-body > :nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.mn-aide-say > :nth-child(n + 4) {
+  animation-delay: 260ms;
+}
+
+@keyframes mn-aide-ink {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+}
+
+/* What you asked: a raised bubble on the right, rising from the box you typed it in. */
+.mn-aide-you {
+  align-self: flex-end;
+  max-width: 84%;
+  padding: 7px 12px;
+  border-radius: 12px;
+  border-bottom-right-radius: 4px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  transform-origin: right bottom;
+  animation: mn-aide-rise 200ms var(--ease-out);
+}
+
+@keyframes mn-aide-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+:root[data-mn-theme='light'] .mn-aide-you {
+  background: var(--l2);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-chip);
+}
+
+/* ---------- cards inside the conversation ---------- */
+
+.mn-aide-card {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.mn-aide-shift {
+  padding: 12px 6px 6px;
+}
+
+.mn-aide-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.mn-aide-count {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-aide-meter {
+  height: 4px;
+  margin: 8px 8px 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--tint-2);
+}
+
+.mn-aide-meter i {
+  display: block;
+  height: 100%;
+  background: var(--fg);
+  transform-origin: left;
+  transition: transform 420ms var(--ease-in-out);
+}
+
+.mn-aide-missions {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mn-aide-mission,
+.mn-aide-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+  transition:
+    background-color 120ms ease,
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-aide-mission:active,
+.mn-aide-point:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.mn-aide-mission:focus-visible,
+.mn-aide-point:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.mn-aide-mission[data-done] {
+  color: var(--fg-2);
+}
+
+.mn-aide-mission[data-next] {
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg);
+}
+
+.mn-aide-mission > svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--fg-2);
+}
+
+.mn-aide-mission-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mn-aide-why {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+
+/* A hollow ring, then a white check disc. */
+.mn-aide-tick {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--fg-3);
+  color: var(--primary-fg);
+}
+
+[data-done] > .mn-aide-tick,
+.mn-aide-tick[data-done] {
+  background: var(--primary);
+  box-shadow: none;
+  animation: mn-aide-tick 260ms var(--ease-out);
+}
+
+@keyframes mn-aide-tick {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+.mn-aide-done {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mn-aide-point {
+  justify-content: space-between;
+  color: var(--fg-2);
+  font-weight: 400;
+}
+
+.mn-aide-point b {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.mn-aide-point svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--fg-3);
+}
+
+.mn-aide-point:disabled {
+  cursor: default;
+}
+
+/* ---------- things to press in a message ---------- */
+
+.mn-aide-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mn-aide-acts[data-stack] {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.mn-aide-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--l4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-aide-acts[data-stack] .mn-aide-act {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mn-aide-act svg {
+  color: var(--fg-3);
+}
+
+.mn-aide-act:active {
+  transform: scale(0.97);
+}
+
+.mn-aide-act:focus-visible,
+.mn-aide-ask:focus-visible,
+.mn-aide-chip:focus-visible,
+.mn-aide-send:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mn-aide-act[data-strong] {
+  background: var(--primary);
+  box-shadow: none;
+  color: var(--primary-fg);
+}
+
+.mn-aide-act[data-quiet] {
+  background: transparent;
+  box-shadow: none;
+  color: var(--fg-2);
+}
+
+.mn-aide-keys {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* ---------- asking ---------- */
+
+.mn-aide-foot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.mn-aide-asks {
+  display: flex;
+  gap: 6px;
+  margin: 0 -12px;
+  padding: 2px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+}
+
+.mn-aide-ask {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-aide-ask:active {
+  transform: scale(0.97);
+}
+
+.mn-aide-compose {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 3px 0 12px;
+  border-radius: 9px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transition: box-shadow 150ms ease;
+}
+
+.mn-aide-compose:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--line-3),
+    0 0 0 3px var(--focus-glow);
+}
+
+.mn-aide-compose input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.mn-aide-compose input::placeholder {
+  color: var(--fg-3);
+}
+
+/* Send is the one white thing in the panel, and only once there's something to send. */
+.mn-aide-send {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  transition:
+    opacity 150ms ease,
+    transform 160ms var(--ease-out);
+}
+
+.mn-aide-send:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.mn-aide-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: var(--l5);
+  color: var(--fg-3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mn-aide-mission:hover:not([data-next]),
+  .mn-aide-point:hover:not(:disabled) {
+    background: var(--tint-2);
+    color: var(--fg);
+  }
+  .mn-aide-act:hover:not([data-strong]):not([data-quiet]) {
+    background: var(--l5);
+  }
+  .mn-aide-act[data-strong]:hover {
+    background: var(--primary-hover);
+  }
+  .mn-aide-act[data-quiet]:hover {
+    color: var(--fg);
+  }
+  .mn-aide-ask:hover,
+  .mn-aide-chip:hover {
+    background: var(--tint-2);
+    color: var(--fg);
+  }
+}
+
+/* ---------- pointing at the page ---------- */
+
+.mn-aide-pointer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.mn-aide-pointer[data-leaving] {
+  opacity: 0;
+}
+
+.mn-aide-tether {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mn-aide-tether path {
+  fill: none;
+  stroke: var(--fg-3);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  animation: mn-aide-draw 420ms var(--ease-in-out) both;
+}
+
+.mn-aide-tether circle {
+  fill: var(--fg-2);
+  animation: mn-aide-land 200ms var(--ease-out) 360ms both;
+}
+
+@keyframes mn-aide-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes mn-aide-land {
+  from {
+    opacity: 0;
+  }
+}
+
+.mn-aide-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1.5px var(--fg-2),
+    0 0 0 6px var(--tint-2);
+  animation: mn-aide-ring 260ms var(--ease-out) 300ms both;
+}
+
+/* Two soft ripples, then it holds still until it fades. */
+.mn-aide-ring::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1.5px var(--fg-3);
+  animation: mn-aide-ripple 900ms var(--ease-out) 420ms 2 both;
+  content: '';
+}
+
+@keyframes mn-aide-ring {
+  from {
+    opacity: 0;
+    scale: 1.04;
+  }
+}
+
+@keyframes mn-aide-ripple {
+  from {
+    opacity: 0.8;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1.06;
+  }
+}
+
+/* ---------- people who ask for less ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-aide-panel,
+  .mn-aide-panel[data-open] {
+    transform: none;
+  }
+  .mn-aide-say > *,
+  .mn-aide-body > * {
+    animation-name: mn-aide-fade;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .mn-aide-you,
+  .mn-aide-ring,
+  .mn-aide-tick {
+    animation-name: mn-aide-fade;
+  }
+  .mn-aide-tether path {
+    animation: none;
+  }
+  .mn-aide-ring::after,
+  .mn-aide-mark[data-mood] .mn-aide-mood {
+    animation: none;
+  }
+  .mn-aide-mark[data-mood='listening'] .mn-aide-mood {
+    transform: none;
+  }
+  .mn-aide-look {
+    transition: none;
+  }
+  @starting-style {
+    .mn-aide-peek,
+    .mn-aide-orb {
+      transform: none;
+    }
+  }
+}
+
+@keyframes mn-aide-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .mn-aide-panel,
+  .mn-aide-orb {
+    background: var(--l4);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* It takes focus only so Esc reaches it after a press on its header; that's not a place to show. */
+.mn-aide-panel:focus {
+  outline: none;
+}
