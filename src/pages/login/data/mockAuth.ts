@@ -29,11 +29,6 @@ export async function signIn(email: string, password: string): Promise<void> {
   if (email.toLowerCase() === DEMO.offline) throw new AuthError('offline');
   if (email.toLowerCase() === DEMO.email && password === DEMO.password) {
     failures = 0;
-    try {
-      sessionStorage.setItem('mn-session', email);
-    } catch {
-      /* private window: the page still moves on */
-    }
     return;
   }
   failures += 1;

@@ -234,6 +234,165 @@
   clip-path: inset(50%);
 }
 
+/* ---------- sign-in as a loading screen (SsoLoading) ---------- */
+
+/* The brand mark, large, with nothing to fill in. It fades in late, so a cached token that
+ * answers at once never flashes it. */
+.lg-load {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  animation: lg-load-in 300ms var(--ease-out) 400ms forwards;
+}
+
+@keyframes lg-load-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* The sidebar's brand tile, at 56px: primary ground, the ring in primary-fg. */
+.lg-load-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+.lg-load-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.lg-load-status {
+  min-height: 20px;
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+/* Who the provider said this is, once it has said. */
+.lg-load-who {
+  min-height: 18px;
+  color: var(--fg-3);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.lg-load-who[data-shown] {
+  opacity: 1;
+}
+
+/* The ring: an open arc going round while the work runs, closing into the mark when it lands. */
+.lg-ring {
+  flex: none;
+}
+
+.lg-ring-arc {
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 0;
+  transform-origin: center;
+  transition: stroke-dashoffset 300ms var(--ease-out);
+}
+
+.lg-ring[data-spinning] .lg-ring-arc {
+  stroke-dashoffset: 62;
+  animation: lg-spin 900ms linear infinite;
+}
+
+.lg-fine {
+  margin: 12px 0 0;
+  color: var(--fg-2);
+  font-size: 12px;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* ---------- "Continue as" (ContinueAs) ---------- */
+
+.lg-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 9px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.lg-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--avatar);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lg-who-text {
+  min-width: 0;
+  font-weight: 500;
+}
+
+.lg-who-sub {
+  overflow: hidden;
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lg-mono {
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+}
+
+.lg-other {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 12px;
+}
+
+.lg-other:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lg-other:not(:disabled):hover {
+    color: var(--fg-2);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lg-card,
   .lg-note {
@@ -246,7 +405,17 @@
       filter: none;
     }
   }
-  .lg-spin {
+  .lg-spin,
+  .lg-ring[data-spinning] .lg-ring-arc {
     animation-duration: 2.4s;
+  }
+  .lg-load {
+    animation-name: lg-load-fade;
+  }
+}
+
+@keyframes lg-load-fade {
+  to {
+    opacity: 1;
   }
 }

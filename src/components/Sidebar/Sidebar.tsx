@@ -1,5 +1,5 @@
 /* The sidebar every page shares: brand, ⌘K button, the pages, your pinned groups, the admin
- * pages, then the signed-in user, the tour and the theme switch.
+ * pages, the aide's dock (Aide.tsx), then the signed-in user, the tour and the theme switch.
  *
  * The pages are grouped by the question you come with:
  *
@@ -14,13 +14,17 @@
  * Whatever a page wants under the pins comes in as children. */
 
 import type { ComponentType, ReactNode } from 'react';
-import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
-import { goKey, type PageId } from '../../lib/route';
+import { Menu } from '@base-ui/react/menu';
+import { Bell, BookText, CalendarClock, CircleHelp, Filter, History, House, LogOut, Moon, Search, Siren, Sun, Telescope, Users } from 'lucide-react';
+import { goKey, navigate, type PageId } from '../../lib/route';
+import { endSession } from '../../lib/session';
+import { AideDock } from '../Aide/Aide';
 import { BrandMark } from '../BrandMark';
 import type { Theme } from '../../hooks/useTheme';
 import type { Pin } from '../../pages/rule-management/hooks/usePinnedGroups';
 import { useNavCounts } from './navCounts';
 import { PinnedGroups } from './PinnedGroups';
+import '../../pages/rule-management/components/RuleList/SortMenu.css';
 import './Sidebar.css';
 
 type Tone = 'red' | 'orange' | 'amber';
@@ -137,12 +141,37 @@ export function Sidebar({
         {section('admin', 'Admin', ADMIN)}
       </nav>
 
+      <AideDock />
+
       <div className="mn-user">
-        <div className="mn-avatar">AP</div>
-        <div className="mn-user-text">
-          <div>Admiral Piett</div>
-          <div className="mn-subtle">Rule governor</div>
-        </div>
+        {/* You: a menu with who you're signed in as, and signing out of the app (not the
+            company's sign-in, so "Continue as" brings you straight back). */}
+        <Menu.Root>
+          <Menu.Trigger className="mn-user-me" aria-label="Admiral Piett, account">
+            <div className="mn-avatar">AP</div>
+            <div className="mn-user-text">
+              <div>Admiral Piett</div>
+              <div className="mn-subtle">Rule governor</div>
+            </div>
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner side="top" sideOffset={6} align="start">
+              <Menu.Popup className="mn-menu">
+                <div className="mn-menu-label">piett@imperial.ops</div>
+                <Menu.Item
+                  className="mn-menu-item"
+                  onClick={() => {
+                    endSession();
+                    navigate('#/login');
+                  }}
+                >
+                  <LogOut size={13} />
+                  <span>Sign out</span>
+                </Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
         {onStartTour && (
           <button className="mn-icon-btn" onClick={onStartTour} aria-label="Take the tour" title="Take the tour  ?">
             <CircleHelp size={15} />

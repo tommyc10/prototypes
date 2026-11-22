@@ -1,7 +1,10 @@
 /* Which page is showing. The address after the # says so:
  *
  *   #/                       home (also what any address it doesn't know opens)
- *   #/login                  the sign-in page (a mock; nothing is gated behind it)
+ *   #/login                  "Continue as", where signing out lands (see pages/login/SignInPage)
+ *   #/login/form             …another account, with an email and password
+ *   #/login/sso?to=#/rules   …the loading screen on its own, then on to Rules
+ *   (Any page opened with no session shows the loading screen first: see App.)
  *   #/rules                  the rule list
  *   #/rules/RUL-0428         …opened on one rule
  *   #/rules?group=assignment.reactor   …filtered to one group (a pinned group in the sidebar)
@@ -38,7 +41,7 @@ export interface Route {
   query: URLSearchParams;
 }
 
-function parse(hash: string): Route {
+export function parse(hash: string): Route {
   const [path = '', search = ''] = hash.replace(/^#\/?/, '').split('?');
   const query = new URLSearchParams(search);
   const [page, ...parts] = path.split('/').filter(Boolean);

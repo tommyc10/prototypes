@@ -374,7 +374,8 @@ most one per view. *Secondary* (raised grey) is every other button. *Ghost* is c
 toolbar icons. *Danger* is a red wash with a red ring, never a solid red block. A button's
 shortcut sits inside it as a key cap, on the right. Disabled is 40% opacity. There is no
 loading spinner inside buttons, with two exceptions that wait on real work: Sign in
-("Signing in…") and a rule decision ("Activating…"), each ending in a wave (see Motion).
+("Signing in…", "Loading Home…") and a rule decision ("Activating…"), each ending in a wave
+(see Motion).
 Everything else resolves into a toast.
 
 **Status dot, badge, pill, chip.** The dot (8px, with a 3px halo at 14%) carries status in
@@ -433,9 +434,10 @@ colour (what the rule caught, in green); every other series is a grey from the t
   the decision form, 240ms shell columns. Interface transitions stay under 320ms; only data
   stories (the incident journey, a chart drawing itself, a chart morphing to new figures)
   run longer. A page that draws itself in does so once per load, not on every visit.
-- **Only `transform`, `opacity`, `filter` and colour animate.** Three exceptions: the shell's
+- **Only `transform`, `opacity`, `filter` and colour animate.** Four exceptions: the shell's
   `grid-template-columns`, a chart morphing to new figures, which re-draws its marks
-  each frame from the in-between figures (see Charts), and the sliding thumb of a segmented control whose options
+  each frame from the in-between figures (see Charts), Aide's panel gliding to a size a
+  pointer asked for (240ms, out), and the sliding thumb of a segmented control whose options
   differ in width, which moves by `transform` and changes `width` with it (240ms, in-out),
   because `scaleX` would squash its corners. A thumb over options of equal width only
   translates. A bar that grows is a fixed-width mark scaled with `scaleX` from its anchored end.
@@ -474,11 +476,13 @@ colour (what the rule caught, in green); every other series is a grey from the t
     result is what green means: a rule approved or activated, now suppressing. Never red, never
     decorative colour. No chromatic aberration (it splits text into red, green and blue), the
     band and rim dimmed, half the library's swell.
-  - **Sign in** (`useHandoff.ts`): across the window. The button says "Signed in" for 240ms,
-    then the wave carries the sign-in page into the page behind it. That page is the real
-    one, mounted under the sign-in page (both lie in one cell, `mn-stage`), so nothing redraws
-    once the wave has gone. The front crosses in 1.3s, the edges clear by 2s, 36 sparks. Aide
-    and the Halloween card wait until it has gone.
+  - **Sign in** (`useHandoff.ts`): across the window. From the loading screen it leaves the
+    brand mark once its ring has closed; from "Continue as" or the form, the button, once it
+    has said "Signed in" for 240ms. The wave carries the sign-in layer into the page behind it.
+    That page is the real one, mounted under the sign-in layer (both lie in one cell,
+    `mn-stage`), so nothing redraws once the wave has gone. The front crosses in 1.3s, the
+    edges clear by 2s, 36 sparks. Aide and the Halloween card wait until it has gone. Once a
+    session: a reload with one goes straight in, with no screen and no wave.
   - **A decision on a rule** (`WaveSwap.tsx`): in the rail's decision card only. The rule
     engine takes a moment (0.9s in the mock) while the button says "Approving…"; then the wave
     carries the form into the card, which now heads with what was done ("RUL-0447 activated",
@@ -529,6 +533,7 @@ that owns its keys, a focused field (`Esc`, `↵`, `↓` leave it), then the pag
 | `[` `]` | Tuck away the sidebar / the list |
 | `G` then a letter | Go to a page: `H` Home, `I` Incidents, `A` Alerts, `C` Change windows, `R` Rules, `P` Hindcast, `F` Forecast, `U` Access. Shown in each sidebar item's tooltip |
 | `?` | Start the guided tour |
+| `Q` | Open or shut Aide, the guide (shown on its dock at the foot of the sidebar) |
 | `Esc` | Step back one layer |
 | `⌘↵` | Submit the open decision |
 
@@ -553,15 +558,62 @@ first, each under its UTC date. A failed run ages nothing, and running a night t
 once. The refresh's health is kept apart from what it found: the heading says when it ran
 ("Refreshed 06:41", orange "Refresh failed 07:30" when the latest run failed), and one quiet
 line under it says how many incidents it read and whether a run was retried. Each night carries
-three grey pips, one per refresh it has used; the oldest is full and says "Moves to rules at next
-refresh". A pattern's three refreshes count from the one that first found it: seeing it again
+three grey pips, one per refresh it has used; the oldest is full and says "Moves to Unreviewed at
+next refresh". A pattern's three refreshes count from the one that first found it: seeing it again
 adds evidence ("Seen again last night") but never resets its age. With no decision it moves to
-the rule list as a proposed rule, so it hides nothing, and its row and header say it came from
-the nightly refresh. A dismissed pattern doesn't move. A night with nothing left says why:
-"Ran, nothing new" or "All decided".
+the **Unreviewed** tab, still a suggestion, never a rule: only a person sends something to
+Proposed, so that queue means "waiting on an approver". Its row says which night found it, and P,
+X and T work there as in the block. A dismissed pattern doesn't move. A night with nothing left
+says why: "Ran, nothing new" or "All decided".
+
+**The status tabs.** All · Proposed · Active · Inactive · Unreviewed. All is every rule; it
+leaves out Unreviewed, whose suggestions aren't rules, and the tab's count keeps them in sight.
+Nothing expires out of Unreviewed yet. Five tabs need the room: Rules' list column is 440px
+and its sort sits beside the search.
+
+**Signing in.** There is no form on the way in: the company's sign-in already knows who this
+is (`pages/login/`, `lib/session.ts`).
+- **Opening the app** with no session shows the loading screen over the page asked for (Home
+  by default). It's the sidebar's brand tile at 56px, its ring an open arc going round while
+  the work runs, "Imperial Ops" under it, and one line saying what is happening ("Checking
+  your account", then "Loading Home", with the person's name and role once it's known). It
+  fades in after 400ms, so a sign-in that answers at once never flashes it. When the page is
+  ready the ring closes into the mark and the wave leaves from it.
+- **The company's sign-in has ended its session:** the screen becomes the sign-in card, "Sign
+  in again", with one primary button, "Continue with Imperial SSO", that goes round the
+  company's sign-in and comes back to the loading screen.
+- **Signing out** (the account menu on your name in the sidebar) leaves the app, not the
+  company's sign-in, so it lands on "Continue as": the account named in a well, one primary
+  button ("Continue as Admiral Piett"), and "Use another account", which opens the email and
+  password form.
 
 **Empty and waiting.** An empty list says what would appear here and how to get it, in
 `fg-3`, centred, with no illustration. Waiting states say what is being computed.
+
+**Aide.** A small guide for someone new, on every page but sign-in (`components/Aide/`). It lives
+in a dock at the foot of the sidebar: Signal, a grey droid wearing headphones, a ring that fills as the first
+shift does, and `Q`. While the panel is shut it speaks only when it has something new, in a solid
+bubble beside the dock: hello on the first visit, a page it hasn't introduced, a step just done.
+The bubble leaves by itself after 8 seconds. The panel is glass, 360px, beside the sidebar so it
+never covers the sidebar. Drag its header and it snaps to the nearest corner, thrown in the
+direction it was moving. It resizes from the edges facing away from its corner (from the bottom-left:
+the top edge, the right edge, and the corner between them, marked by a short arc that follows the
+radius when the pointer is on the panel), between 320×360 and 640 wide by the window's height, and
+remembers the size. Past a limit it gives a little and springs back. Double-click the header for
+full height and again to go back; on the focused corner, arrow keys step 16px (Shift 64px) and
+Enter restores 360×600. It answers from a handbook (`model.tsx`), says so, and never makes up a
+live figure. When an answer is about something on screen, it points: a ring round the real
+element and a thin tether drawn from its eye, for 2.6s. Its first shift is seven steps that tick
+off from what the person really does (the address, `⌘K`, `G` then a letter, a pick in a list),
+never from a checkbox. Signal is one character, so it's only ever in one place: opened with the
+pointer it hops from the dock into the panel's header along an arc (320ms, in-out) and hops back
+when shut, leaving an empty ring in the dock while it's away. Opened from the keyboard it's simply
+there. Each movement carries a state: the head turns and tilts towards the pointer while the panel
+is open and towards whatever it points at, it leans in while you type, nods once when it answers,
+and hops once in the dock when the bubble has news. Reduced motion keeps it still. After the first
+shift a small check sits on the ring's edge, clear of the face. The avatar is a 144px image shown
+at 28px in the dock and floating button and 36px in the panel, never masked or cropped; if it
+can't load, the grey lens stands in. It has no colour of its own.
 
 **Tours.** `?` starts a guided tour: the page dims and blurs, a spotlight glides between
 real elements (320ms, in-out), and a glass card explains each one.
